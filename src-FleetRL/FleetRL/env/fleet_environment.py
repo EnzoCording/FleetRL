@@ -1,5 +1,6 @@
 from FleetRL.utils import data_processing
 from FleetRL.utils import charge_ev
+from FleetRL.utils import prices
 
 import os
 import random
@@ -13,20 +14,22 @@ class FleetEnv(gym.Env):
 
     def __init__(self):
 
+        # TODO: observation and action space
+
         # setting the frequency of the model
         self.freq = '15T'
         self.minutes = 15
         # self.freq = '1H'
         # self.minutes = 60
         self.hours = self.minutes / 60
-        self.episode_length = 3  # episode length in hours
+        self.episode_length = 36  # episode length in hours
         self.end_cutoff = 2  # cutoff length at the end of the dataframe, in days. Used for choose_time
 
         # initializing self.db as None
         self.db = None
 
         # initializing path name
-        self.path_name = os.path.dirname(__file__) + '/../Input_Files/full_test.csv'
+        self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
 
         # EV parameters
         self.target_soc = 0.85  # Target SoC - Vehicles should always leave with this SoC
@@ -34,10 +37,20 @@ class FleetEnv(gym.Env):
         self.obc_max_power = 100  # onboard charger max power in kW
         self.charging_eff = 0.91  # charging efficiency
         self.discharging_eff = 0.91  # discharging efficiency
+        # TODO max power could change, I even have that info in the schedule
         self.evse_max_power = 11  # EVSE (ev supply equipment) max power in kW
 
         self.db = data_processing.load_schedule(self)  # load schedule from defined pathname
         self.db = data_processing.compute_from_schedule(self)  # compute arriving SoC and time left for the trips
+
+        self.date_range = pd.DataFrame()
+
+        self.date_range["date"] = pd.date_range(start=self.db["date"].min(),
+                                                end=self.db["date"].max(),
+                                                freq=self.freq
+                                                )
+
+        self.spot_price = prices.load_prices(self)
 
         # first ID is 0
         # TODO: for now the number of cars is dictated by the data, but it could also be

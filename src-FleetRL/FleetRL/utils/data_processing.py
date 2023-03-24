@@ -11,13 +11,14 @@ import random
 def load_schedule(self):
     # schedule import from excel
     # self.db = pd.read_excel(os.path.dirname(__file__) + '/test_simple.xlsx')
-    self.db = pd.read_csv(self.path_name, parse_dates=["date"])
+    self.db = pd.read_csv(self.path_name + 'full_test.csv', parse_dates=["date"])
 
     # setting the index of the df to the date for resampling
     self.db.set_index("date", inplace=True, drop=False)
 
     # resampling the df. consumption and distance are summed, power rating mean like in emobpy
     # group by ID is needed so the different cars don't get overwritten (they have the same dates)
+    # TODO upsampling is not going to work
     self.db = self.db.groupby("ID").resample(self.freq).agg(
         {'Location': 'first', 'ID': 'first', 'Consumption_kWh': 'sum',
          'ChargingStation': 'first', 'PowerRating_kW': 'mean',
@@ -119,9 +120,6 @@ def compute_from_schedule(self):
     # add computed information to self.db
     self.db["last_trip_total_consumption"] = merged_cons.loc[:, "consumption"]
     self.db["time_left"] = merged_time_left.loc[:, "time_left"]
-
-    # delete temporary dfs
-    del merged_time_left, merged_cons
 
     # create BOC column and populate with zeros
     # calculate SOC on return, assuming the previous trip charged to the target soc

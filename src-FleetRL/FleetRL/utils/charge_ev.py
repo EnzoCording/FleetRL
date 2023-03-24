@@ -24,9 +24,9 @@ def charge(self, action):
                 charging_energy = 0
             # next soc is calculated based on charging energy
             # TODO: not all cars must have the same battery cap
-            self.next_soc.append(self.soc[car] + charging_energy / self.battery_cap)
+            self.next_soc.append(self.soc[car] + charging_energy * self.charging_eff / self.battery_cap)
             # TODO: variable charging cost based on spot price
-            charging_cost += -1 * charging_energy * 5
+            charging_cost += -1 * charging_energy * self.spot_price.loc[self.spot_price["date"] == self.time, "DELU"]
 
         # car is discharging
         elif action[car] < 0:
@@ -40,7 +40,7 @@ def charge(self, action):
             else:
                 discharging_energy = 0
             # calculate next soc, which will get smaller
-            self.next_soc.append(self.soc[car] + discharging_energy / self.battery_cap)
+            self.next_soc.append(self.soc[car] + discharging_energy * self.discharging_eff / self.battery_cap)
             # TODO: variable prices, V2G?
             # TODO: FCR could be modelled by deciding to commit to not charging and then random soc flux
             discharging_revenue += -1 * discharging_energy * 5
