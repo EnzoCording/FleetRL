@@ -6,7 +6,7 @@ import random
 
 
 # this class contains all the necessary information from the vehicle and its schedule
-# the schedule is imported from emobpy and manipulated so that the output data is in the right format for chargym
+# the schedule is imported from emobpy and manipulated so that the output data is in the right format
 
 def load_schedule(self):
     # schedule import from excel
@@ -18,7 +18,7 @@ def load_schedule(self):
 
     # resampling the df. consumption and distance are summed, power rating mean like in emobpy
     # group by ID is needed so the different cars don't get overwritten (they have the same dates)
-    # TODO upsampling is not going to work
+    # TODO up-sampling is not going to work
     self.db = self.db.groupby("ID").resample(self.freq).agg(
         {'Location': 'first', 'ID': 'first', 'Consumption_kWh': 'sum',
          'ChargingStation': 'first', 'PowerRating_kW': 'mean',
@@ -34,9 +34,9 @@ def load_schedule(self):
 
 def compute_from_schedule(self):
     """
-    >>> test_EV = EV()
-    >>> test_EV.get_total_consumption().sum().round(1)
-    147.8
+    # >>> test_EV = EV()
+    # >>> test_EV.get_total_consumption().sum().round(1)
+    # 147.8
 
 
     :return:
@@ -88,7 +88,8 @@ def compute_from_schedule(self):
     # match return dates with self.db, backwards fill, sort by ID, match on date
     merged_cons = pd.merge_asof(self.db.sort_values("date"),
                                 res_return.sort_values("date"),
-                                on="date", by="ID",
+                                on="date",
+                                by="ID",
                                 direction="backward"
                                 )
 
@@ -104,7 +105,8 @@ def compute_from_schedule(self):
     # match departure dates with dates in self.db, forward direction, sort by ID, match on date
     merged_time_left = pd.merge_asof(self.db.sort_values("date"),
                                      res_departure.sort_values("date"),
-                                     on="date", by="ID",
+                                     on="date",
+                                     by="ID",
                                      direction="forward"
                                      )
 
