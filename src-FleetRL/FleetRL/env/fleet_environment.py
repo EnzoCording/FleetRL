@@ -23,6 +23,10 @@ class FleetEnv(gym.Env):
         self.hours = self.minutes / 60  # Hours per timestep, variable used in the energy calculations
         self.episode_length = 36  # episode length in hours
         self.end_cutoff = 2  # cutoff length at the end of the dataframe, in days. Used for choose_time
+        self.price_window_size = 8  # number of hours look-ahead in price observation (day-ahead), max 12 hours
+
+        if not (self.episode_length + self.price_window_size <= self.end_cutoff * 24):
+            raise RuntimeError("Sum of episode length and price window size cannot exceed cutoff buffer.")
 
         # Setting EV parameters
         self.target_soc = 0.85  # Target SoC - Vehicles should always leave with this SoC
@@ -47,10 +51,14 @@ class FleetEnv(gym.Env):
         self.soc = None
         self.next_soc = None
         self.hours_left = None
+        self.price = None
         self.done = None
         self.info = {}
         self.reward_history = None
         self.cumulative_reward = None
+        self.penalty_record = None
+        self.max_time_left = None
+        self.max_spot = None
 
         # rewards and penalties
         self.penalty_soc_violation = -5000
@@ -72,6 +80,10 @@ class FleetEnv(gym.Env):
         # Load spot price
         self.spot_price = prices.load_prices(self)
 
+        # Get maximum values for normalization
+        self.max_time_left = max(self.db["time_left"])
+        self.max_spot = max(self.spot_price["DELU"])
+
         # Load building load and PV
         # TODO: implement these
         self.building_load = 35  # building load in kW
@@ -88,13 +100,15 @@ class FleetEnv(gym.Env):
         '''
         >>> 2 * self.cars because of SOC and time_left
         >>> 24 * 3 is still unclear but currently PV, building load and price
+        >>> for now 8 hours of price in to the future, always possible with DA
         '''
+
         # TODO: spot price updates during the day
         # TODO: how many points in the future should I give, do I need past values?
         # TODO: observation space has to always keep the same dimensions
 
-        low_obs = np.array(np.zeros((2 * self.cars + 24 * 3)), dtype=np.float32)
-        high_obs = np.array(np.ones((2 * self.cars + 24 * 3)), dtype=np.float32)
+        low_obs = np.array(np.zeros((2 * self.cars + self.price_window_size * (1.0/self.hours))), dtype=np.float32)
+        high_obs = np.array(np.ones((2 * self.cars + self.price_window_size * (1.0/self.hours))), dtype=np.float32)
 
         self.observation_space = gym.spaces.Box(
             low=low_obs,
@@ -108,12 +122,15 @@ class FleetEnv(gym.Env):
             shape=(self.cars,), dtype=np.float32
         )
 
-    def reset(self, **kwargs):
+    def reset(self, start_time=None, **kwargs):
         # set done to False, since the episode just started
         self.done = False
 
-        # choose a random start time
-        self.start_time = self.choose_time()
+        if not start_time:
+            # choose a random start time
+            self.start_time = self.choose_time()
+        else:
+            self.start_time = start_time
 
         # calculate the finish time based on the episode length
         self.finish_time = self.start_time + np.timedelta64(self.episode_length, 'h')
@@ -121,15 +138,37 @@ class FleetEnv(gym.Env):
         # set the model time to the start time
         self.time = self.start_time
 
+        obs = self.get_obs(self.time)
+
         # get the first soc and hours_left observation
-        self.soc = self.get_obs(self.time)[0]
-        self.hours_left = self.get_obs(self.time)[1]
+        self.soc = obs[0]
+        self.hours_left = obs[1]
+        self.price = obs[2]
+
+        ''' if time is insufficient due to unfavourable start date (for example loading an empty car with 15 min
+        time left), soc is set in such a way that the agent always has a chance to fulfil the objective
+        '''
+
+        for car in range(self.cars):
+            time_needed = ((self.target_soc - self.soc[car])
+                           * self.battery_cap
+                           / min([self.obc_max_power, self.evse_max_power]))
+
+            # times 0.95 to give some tolerance, check if hours_left > 0: car has to be plugged in
+            if (self.hours_left[car] > 0) and (time_needed > self.hours_left[car]):
+                self.soc[car] = (self.target_soc
+                                 - self.hours_left[car]
+                                 * min([self.obc_max_power, self.evse_max_power]) * 0.95
+                                 / self.battery_cap)
+                print("Initial SOC modified due to unfavourable starting condition.")
+                self.info["soc_mod"] = True
 
         # set the reward history back to an empty list, set cumulative reward to 0
         self.reward_history = []
         self.cumulative_reward = 0
+        self.penalty_record = 0
 
-        return [self.soc, self.hours_left], self.info
+        return self.normalize_obs([self.soc, self.hours_left, self.price]), self.info
 
     def step(self, action):  # , action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
 
@@ -141,6 +180,7 @@ class FleetEnv(gym.Env):
 
         if not load_calculation.check_violation(self, action):
             reward += self.penalty_overloading
+            self.penalty_record += self.penalty_overloading
             print(f"Grid connection has been overloaded. "
                   f"Max possible: {self.grid_connection} kW, "
                   f"Actual: {sum(action) * self.evse_max_power + self.building_load} kW")
@@ -152,8 +192,12 @@ class FleetEnv(gym.Env):
         self.time += np.timedelta64(self.minutes, 'm')
 
         # get the next observation
-        next_obs_soc = self.get_obs(self.time)[0]
-        next_obs_time_left = self.get_obs(self.time)[1]
+        next_obs = self.get_obs(self.time)
+        next_obs_soc = next_obs[0]
+        next_obs_time_left = next_obs[1]
+        next_obs_price = next_obs[2]
+
+        self.price = next_obs_price
 
         # go through the cars and check whether the same car is still there, no car, or a new car
         for car in range(self.cars):
@@ -164,9 +208,8 @@ class FleetEnv(gym.Env):
                     # TODO could scale with difference to SoC
                     # penalty for not fulfilling charging requirement
                     # TODO: this could be changed. No target SoC, but penalty if a car runs empty on a trip
-                    # TODO: the random initialization of episode start date causes situations, where a full charge
-                    #  is impossible. 0.25 hours left and 20% of SOC to charge doesnt work.
                     reward += self.penalty_soc_violation
+                    self.penalty_record += self.penalty_soc_violation
                     print("A car left the station without reaching the target SoC.")
 
             # same car in the next time step
@@ -197,16 +240,17 @@ class FleetEnv(gym.Env):
         self.cumulative_reward += reward
         self.reward_history.append([self.time, self.cumulative_reward])
 
+        # TODO: Here could be a saving function that saves the results of the episode
+
         # here, the reward is already in integer format
-        return [self.soc, self.hours_left], reward, self.done, self.info
+        return self.normalize_obs([self.soc, self.hours_left, self.price]), reward, self.done, self.info
 
     def close(self):
         pass
 
     def choose_time(self):
         # possible start times: remove last X days based on end_cutoff
-        # TODO: same day can be pulled multiple times - is this a problem
-        # TODO: days can be drawn where car is about to leave, charging impossible and violation occurs
+        # TODO: same day can be pulled multiple times - is this a problem?
         possible_start_times = pd.date_range(start=self.db["date"].min(),
                                              end=(self.db["date"].max() - np.timedelta64(self.end_cutoff, 'D')),
                                              freq=self.freq
@@ -222,8 +266,21 @@ class FleetEnv(gym.Env):
         # get the observation of soc and hours_left
         soc = self.db.loc[(self.db['date'] == time), 'SOC_on_return'].values
         hours_left = self.db.loc[(self.db['date'] == time), 'time_left'].values
+        price_start = np.where(self.spot_price["date"] == self.time)[0][0]
+        price_end = np.where(self.spot_price["date"] == (self.time + np.timedelta64(self.price_window_size,'h')))[0][0]
+        price = self.spot_price["DELU"][price_start : price_end].values
 
-        return [soc, hours_left]
+        return [soc, hours_left, price]
+
+    def normalize_obs(self, input_obs):
+        input_obs[0] = input_obs[0]  # soc is already normalized
+        input_obs[1] = input_obs[1] / self.max_time_left
+        input_obs[2] = input_obs[2] / self.max_spot
+
+        # TODO: concatenate everything into one np array
+
+        return input_obs
+
 
     def render(self):
         # TODO: graph of rewards for example, or charging power or sth like that

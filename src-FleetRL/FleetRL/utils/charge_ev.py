@@ -3,6 +3,7 @@ def charge(self, action):
     self.next_soc = []
     charging_cost = 0
     discharging_revenue = 0
+    reward = 0
 
     # go through the cars and calculate the actual deliverable power based on action and constraints
     for car in range(self.cars):
@@ -55,8 +56,8 @@ def charge(self, action):
         else:
             raise TypeError("The parsed action value was not recognised")
 
-    # calculate reward based on cost and revenue
-    reward = -1 * charging_cost + discharging_revenue
+        # calculate reward based on cost and revenue
+        reward = -1 * charging_cost + discharging_revenue
 
     # return soc, next soc and the value of reward (remove the index)
-    return self.soc, self.next_soc, reward.values[0]
+    return self.soc, self.next_soc, float(reward)
