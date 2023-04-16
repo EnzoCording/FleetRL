@@ -11,7 +11,7 @@ import random
 def load_schedule(self):
     # schedule import from excel
     # self.db = pd.read_excel(os.path.dirname(__file__) + '/test_simple.xlsx')
-    self.db = pd.read_csv(self.path_name + 'full_test.csv', parse_dates=["date"])
+    self.db = pd.read_csv(self.path_name + 'full_test_one_car.csv', parse_dates=["date"])
 
     # setting the index of the df to the date for resampling
     self.db.set_index("date", inplace=True, drop=False)

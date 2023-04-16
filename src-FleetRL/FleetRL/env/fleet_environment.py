@@ -16,11 +16,14 @@ class FleetEnv(gym.Env):
     def __init__(self):
 
         # setting time-related model parameters
-        self.freq = '15T'
-        self.minutes = 15
-        # self.freq = '1H'
-        # self.minutes = 60
+        # self.freq = '15T'
+        # self.minutes = 15
+        # self.time_steps_per_hour = 4
+        self.freq = '1H'
+        self.minutes = 60
+        self.time_steps_per_hour = 1
         self.hours = self.minutes / 60  # Hours per timestep, variable used in the energy calculations
+
         self.episode_length = 36  # episode length in hours
         self.end_cutoff = 2  # cutoff length at the end of the dataframe, in days. Used for choose_time
         self.price_window_size = 8  # number of hours look-ahead in price observation (day-ahead), max 12 hours
@@ -61,8 +64,8 @@ class FleetEnv(gym.Env):
         self.max_spot = None
 
         # rewards and penalties
-        self.penalty_soc_violation = -5000
-        self.penalty_overloading = -5000
+        self.penalty_soc_violation = -500_000
+        self.penalty_overloading = -50_000
 
         # initializing path name
         self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
@@ -83,6 +86,7 @@ class FleetEnv(gym.Env):
         # Get maximum values for normalization
         self.max_time_left = max(self.db["time_left"])
         self.max_spot = max(self.spot_price["DELU"])
+        self.min_spot = min(self.spot_price["DELU"])
 
         # Load building load and PV
         # TODO: implement these
@@ -107,8 +111,11 @@ class FleetEnv(gym.Env):
         # TODO: how many points in the future should I give, do I need past values?
         # TODO: observation space has to always keep the same dimensions
 
-        low_obs = np.array(np.zeros((2 * self.cars + self.price_window_size * (1.0/self.hours))), dtype=np.float32)
-        high_obs = np.array(np.ones((2 * self.cars + self.price_window_size * (1.0/self.hours))), dtype=np.float32)
+        low_obs = np.array(np.zeros((2 * self.cars + self.price_window_size
+                                     * self.time_steps_per_hour)), dtype=np.float32)
+
+        high_obs = np.array(np.ones((2 * self.cars + self.price_window_size
+                                     * self.time_steps_per_hour)), dtype=np.float32)
 
         self.observation_space = gym.spaces.Box(
             low=low_obs,
@@ -168,7 +175,7 @@ class FleetEnv(gym.Env):
         self.cumulative_reward = 0
         self.penalty_record = 0
 
-        return self.normalize_obs([self.soc, self.hours_left, self.price]), self.info
+        return self.normalize_obs([self.soc, self.hours_left, self.price])
 
     def step(self, action):  # , action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
 
@@ -177,6 +184,10 @@ class FleetEnv(gym.Env):
 
         # parse the action to the charging function and receive the soc, next soc and reward
         self.soc, self.next_soc, reward = charge_ev.charge(self, action)
+
+        print(f"Max possible: {self.grid_connection} kW" ,f"Actual: {sum(action) * self.evse_max_power + self.building_load} kW")
+        print(self.price[0])
+        print(self.hours_left)
 
         if not load_calculation.check_violation(self, action):
             reward += self.penalty_overloading
@@ -236,6 +247,8 @@ class FleetEnv(gym.Env):
         if self.time == self.finish_time:
             self.done = True
 
+        print(self.done)
+
         # append to the reward history
         self.cumulative_reward += reward
         self.reward_history.append([self.time, self.cumulative_reward])
@@ -246,7 +259,7 @@ class FleetEnv(gym.Env):
         return self.normalize_obs([self.soc, self.hours_left, self.price]), reward, self.done, self.info
 
     def close(self):
-        pass
+        return 0
 
     def choose_time(self):
         # possible start times: remove last X days based on end_cutoff
@@ -273,14 +286,20 @@ class FleetEnv(gym.Env):
         return [soc, hours_left, price]
 
     def normalize_obs(self, input_obs):
-        input_obs[0] = input_obs[0]  # soc is already normalized
-        input_obs[1] = input_obs[1] / self.max_time_left
-        input_obs[2] = input_obs[2] / self.max_spot
 
-        # TODO: concatenate everything into one np array
+        # normalization is done here, so if the rule is changed it is automatically adjusted in step and reset
 
-        return input_obs
+        input_obs[0] = np.array(input_obs[0])  # soc is already normalized
+        input_obs[1] = np.array(input_obs[1] / self.max_time_left)  # max hours plugged in of entire db
 
+        # normalize spot price between 0 and 1, there are negative values
+        # z_i = (x_i - min(x)) / (max(x) - min(x))
+        input_obs[2] = np.array((input_obs[2] - self.min_spot)
+                                / (self.max_spot - self.min_spot))
+
+        output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2]), dtype=np.float32, axis=None)
+
+        return output_obs
 
     def render(self):
         # TODO: graph of rewards for example, or charging power or sth like that

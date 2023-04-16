@@ -33,6 +33,7 @@ def charge(self, action):
             # charging cost calculated based on spot price
             # TODO: add german taxes and grid fees
             charging_cost += charging_energy * self.spot_price.loc[self.spot_price["date"] == self.time, "DELU"]
+            print(f"charging cost: {charging_cost.values[0]}")
 
         # car is discharging
         elif action[car] < 0:
@@ -52,6 +53,8 @@ def charge(self, action):
             discharging_revenue += (-1 * discharging_energy *
                                     self.spot_price.loc[self.spot_price["date"] == self.time, "DELU"]
                                     )
+
+            print(f"discharging revenue: {discharging_revenue.values[0]}")
 
         else:
             raise TypeError("The parsed action value was not recognised")
