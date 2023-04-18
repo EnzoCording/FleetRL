@@ -1,9 +1,9 @@
 import pandas as pd
 
-from FleetRL.env.config.ev_config import EvConfig
-from FleetRL.env.config.score_config import ScoreConfig
-from FleetRL.env.config.time_config import TimeConfig
-from FleetRL.env.episode import Episode
+from FleetRL.fleet_env.config.ev_config import EvConfig
+from FleetRL.fleet_env.config.score_config import ScoreConfig
+from FleetRL.fleet_env.config.time_config import TimeConfig
+from FleetRL.fleet_env.episode import Episode
 from FleetRL.utils.load_calculation.load_calculation import LoadCalculation
 
 
@@ -42,7 +42,7 @@ class EvCharger:
                     charging_energy = 0
                     if actions[car] > 0:
                         print(f"Invalid action, penalty: {score_conf.penalty_invalid_action}")
-                        invalid_action_penalty += score_conf.penalty_invalid_action
+                        invalid_action_penalty += score_conf.penalty_invalid_action * actions[car]
 
                 # next soc is calculated based on charging energy
                 # TODO: not all cars must have the same battery cap
@@ -74,7 +74,7 @@ class EvCharger:
                 else:
                     episode.discharging_energy = 0
                     print(f"Invalid action, penalty: {score_conf.penalty_invalid_action}")
-                    invalid_action_penalty += score_conf.penalty_invalid_action
+                    invalid_action_penalty += score_conf.penalty_invalid_action * -actions[car]
 
                 # calculate next soc, which will get smaller
                 episode.next_soc.append(

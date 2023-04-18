@@ -2,7 +2,7 @@ import datetime
 import unittest
 import pandas as pd
 
-from FleetRL.env.fleet_environment import FleetEnv
+from FleetRL.fleet_env.fleet_environment import FleetEnv
 
 
 class MyTestCase(unittest.TestCase):

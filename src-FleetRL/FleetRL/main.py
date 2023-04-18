@@ -1,6 +1,6 @@
 import random
 
-from FleetRL.env.fleet_environment import FleetEnv
+from FleetRL.fleet_env.fleet_environment import FleetEnv
 from FleetRL.utils.battery_depreciation.battery_depreciation import BatteryDepreciation
 from FleetRL.utils.battery_depreciation.my_battery_depreciation import MyBatteryDepreciation
 # from FleetRL.utils.prices import load_prices

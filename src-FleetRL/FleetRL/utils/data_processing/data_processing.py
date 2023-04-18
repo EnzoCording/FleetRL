@@ -3,8 +3,8 @@ import datetime
 import numpy as np
 import pandas as pd
 
-from FleetRL.env.config.ev_config import EvConfig
-from FleetRL.env.config.time_config import TimeConfig
+from FleetRL.fleet_env.config.ev_config import EvConfig
+from FleetRL.fleet_env.config.time_config import TimeConfig
 
 
 # this class contains all the necessary information from the vehicle and its schedule
@@ -141,7 +141,7 @@ class DataLoader:
         # TODO this could be changed in the future to make it more complex
         self.db["SOC_on_return"] = target_soc - self.db["last_trip_total_consumption"].div(
             ev_conf.battery_cap)
-        self.db.loc[self.db["There"] == 0, "SOC_on_return"] = 0
+        self.db.loc[self.db["There"] == 0, "SOC_on_return"] = -1
 
     @staticmethod
     def load_prices(path_name, spot_name, date_range):

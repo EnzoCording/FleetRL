@@ -3,10 +3,10 @@ import os
 import gym
 import numpy as np
 
-from FleetRL.env.config.ev_config import EvConfig
-from FleetRL.env.config.score_config import ScoreConfig
-from FleetRL.env.config.time_config import TimeConfig
-from FleetRL.env.episode import Episode
+from FleetRL.fleet_env.config.ev_config import EvConfig
+from FleetRL.fleet_env.config.score_config import ScoreConfig
+from FleetRL.fleet_env.config.time_config import TimeConfig
+from FleetRL.fleet_env.episode import Episode
 from FleetRL.utils.data_processing.data_processing import DataLoader
 from FleetRL.utils.ev_charging.ev_charger import EvCharger
 from FleetRL.utils.load_calculation.load_calculation import LoadCalculation, CompanyType
