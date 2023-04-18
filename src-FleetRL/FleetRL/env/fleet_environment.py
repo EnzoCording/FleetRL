@@ -2,9 +2,11 @@ from FleetRL.utils import data_processing
 from FleetRL.utils import charge_ev
 from FleetRL.utils import prices
 from FleetRL.utils import load_calculation
+from FleetRL.utils.time_picker.random_time_picker import RandomTimePicker
+from FleetRL.utils.time_picker.static_time_picker import StaticTimePicker
+from FleetRL.utils.time_picker.time_picker_base import TimePickerBase
 
 import os
-import random
 
 import gym
 import numpy as np
@@ -19,12 +21,13 @@ class FleetEnv(gym.Env):
         # self.freq = '15T'
         # self.minutes = 15
         # self.time_steps_per_hour = 4
-        self.freq = '1H'
-        self.minutes = 60
-        self.time_steps_per_hour = 1
-        self.hours = self.minutes / 60  # Hours per timestep, variable used in the energy calculations
+        self.time_picker: TimePickerBase = StaticTimePicker()
+        self.freq: str = '1H'
+        self.minutes: int = 60
+        self.time_steps_per_hour: int = 1
+        self.hours: float = self.minutes / 60  # Hours per timestep, variable used in the energy calculations
 
-        self.episode_length = 36  # episode length in hours
+        self.episode_length = 24  # episode length in hours
         self.end_cutoff = 2  # cutoff length at the end of the dataframe, in days. Used for choose_time
         self.price_window_size = 8  # number of hours look-ahead in price observation (day-ahead), max 12 hours
 
@@ -47,21 +50,23 @@ class FleetEnv(gym.Env):
         self.grid_connection, self.evse_max_power = load_calculation.import_company(self.company_case)
 
         # initiating variables inside __init__()
-        self.db = None
-        self.time = None
-        self.start_time = None
-        self.finish_time = None
-        self.soc = None
-        self.next_soc = None
-        self.hours_left = None
-        self.price = None
-        self.done = None
-        self.info = {}
-        self.reward_history = None
-        self.cumulative_reward = None
-        self.penalty_record = None
-        self.max_time_left = None
-        self.max_spot = None
+        self.db: pd.DataFrame = None  # database of EV schedules
+        self.time: pd.Timestamp = None  # information of current time
+        self.start_time: pd.Timestamp = None
+        self.finish_time: pd.Timestamp = None
+        self.soc: float = None  # State of charge of the battery
+        self.next_soc: float = None  # Next soc, information used in the step function
+        self.hours_left: float = None  # Hours left at the charger
+        self.price: float = None  # Price in €/kWh
+        self.done: bool = None  # Episode done or not
+        self.info: dict = {}  # Necessary for gym env (Double check because new implementation doesn't need it)
+        self.reward_history: list[float] = None  # History of reward development over the episode
+        self.cumulative_reward: float = None  # Cumulative reward over an episode
+        self.penalty_record: list[float] = None  # Record of penalty scores given
+        self.max_time_left: float = None  # The maximum value of time left in the db dataframe
+        self.max_spot: float = None  # The maximum spot market price in the db dataframe
+        self.current_charging_expense: float = None  # The amount spent per action
+        self.total_charging_energy: float = None  # The amount of energy used per action
 
         # rewards and penalties
         self.penalty_soc_violation = -500_000
@@ -69,6 +74,13 @@ class FleetEnv(gym.Env):
 
         # initializing path name
         self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
+
+        # names of files to use
+        # EV schedule database
+        # self.file_name = 'full_test_one_car.csv'
+        self.db_name = 'one_day_same_training.csv'
+        # Spot price database
+        self.spot_name = 'spot_2020.csv'
 
         self.db = data_processing.load_schedule(self)  # load schedule from defined pathname
         self.db = data_processing.compute_from_schedule(self)  # compute arriving SoC and time left for the trips
@@ -135,7 +147,7 @@ class FleetEnv(gym.Env):
 
         if not start_time:
             # choose a random start time
-            self.start_time = self.choose_time()
+            self.start_time = self.time_picker.choose_time(self.db, self.freq, self.end_cutoff)
         else:
             self.start_time = start_time
 
@@ -161,14 +173,13 @@ class FleetEnv(gym.Env):
                            * self.battery_cap
                            / min([self.obc_max_power, self.evse_max_power]))
 
-            # times 0.95 to give some tolerance, check if hours_left > 0: car has to be plugged in
+            # times 0.8 to give some tolerance, check if hours_left > 0: car has to be plugged in
             if (self.hours_left[car] > 0) and (time_needed > self.hours_left[car]):
                 self.soc[car] = (self.target_soc
                                  - self.hours_left[car]
-                                 * min([self.obc_max_power, self.evse_max_power]) * 0.95
+                                 * min([self.obc_max_power, self.evse_max_power]) * 0.8
                                  / self.battery_cap)
                 print("Initial SOC modified due to unfavourable starting condition.")
-                self.info["soc_mod"] = True
 
         # set the reward history back to an empty list, set cumulative reward to 0
         self.reward_history = []
@@ -185,9 +196,14 @@ class FleetEnv(gym.Env):
         # parse the action to the charging function and receive the soc, next soc and reward
         self.soc, self.next_soc, reward = charge_ev.charge(self, action)
 
-        print(f"Max possible: {self.grid_connection} kW" ,f"Actual: {sum(action) * self.evse_max_power + self.building_load} kW")
-        print(self.price[0])
-        print(self.hours_left)
+        # at this point, the reward only includes the current expense/revenue of the charging process
+        self.current_charging_expense = reward
+
+        self.print(action)
+
+        # print(f"Max possible: {self.grid_connection} kW" ,f"Actual: {sum(action) * self.evse_max_power + self.building_load} kW")
+        # print(self.price[0])
+        # print(self.hours_left)
 
         if not load_calculation.check_violation(self, action):
             reward += self.penalty_overloading
@@ -246,8 +262,7 @@ class FleetEnv(gym.Env):
         # TODO: where is the environment reset?
         if self.time == self.finish_time:
             self.done = True
-
-        print(self.done)
+            print(f"Episode done: {self.done}")
 
         # append to the reward history
         self.cumulative_reward += reward
@@ -255,25 +270,15 @@ class FleetEnv(gym.Env):
 
         # TODO: Here could be a saving function that saves the results of the episode
 
+        print(f"Reward signal: {reward}")
+        print("---------")
+        print("\n")
+
         # here, the reward is already in integer format
         return self.normalize_obs([self.soc, self.hours_left, self.price]), reward, self.done, self.info
 
     def close(self):
         return 0
-
-    def choose_time(self):
-        # possible start times: remove last X days based on end_cutoff
-        # TODO: same day can be pulled multiple times - is this a problem?
-        possible_start_times = pd.date_range(start=self.db["date"].min(),
-                                             end=(self.db["date"].max() - np.timedelta64(self.end_cutoff, 'D')),
-                                             freq=self.freq
-                                             )
-
-        # choose a random start time and start the episode there
-        chosen_start_time = random.choice(possible_start_times)
-
-        # return start time
-        return chosen_start_time
 
     def get_obs(self, time):
         # get the observation of soc and hours_left
@@ -285,21 +290,30 @@ class FleetEnv(gym.Env):
 
         return [soc, hours_left, price]
 
-    def normalize_obs(self, input_obs):
+    def normalize_obs(self, input_obs, normalize=True):
 
-        # normalization is done here, so if the rule is changed it is automatically adjusted in step and reset
-
-        input_obs[0] = np.array(input_obs[0])  # soc is already normalized
-        input_obs[1] = np.array(input_obs[1] / self.max_time_left)  # max hours plugged in of entire db
-
-        # normalize spot price between 0 and 1, there are negative values
-        # z_i = (x_i - min(x)) / (max(x) - min(x))
-        input_obs[2] = np.array((input_obs[2] - self.min_spot)
-                                / (self.max_spot - self.min_spot))
+        if normalize:
+            # normalization is done here, so if the rule is changed it is automatically adjusted in step and reset
+            input_obs[0] = np.array(input_obs[0])  # soc is already normalized
+            input_obs[1] = np.array(input_obs[1] / self.max_time_left)  # max hours plugged in of entire db
+            # normalize spot price between 0 and 1, there are negative values
+            # z_i = (x_i - min(x)) / (max(x) - min(x))
+            input_obs[2] = np.array((input_obs[2] - self.min_spot)
+                                    / (self.max_spot - self.min_spot))
 
         output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2]), dtype=np.float32, axis=None)
 
         return output_obs
+
+    def print(self, action):
+        print(f"Timestep: {self.time}")
+        print(f"Price: {self.price[0] / 1000} €/kWh")
+        print(f"SOC: {self.soc}, Time left: {self.hours_left} hours")
+        print(f"Action taken: {action}")
+        print(f"Actual charging energy: {self.total_charging_energy} kWh")
+        print(f"Charging cost/revenue: {self.current_charging_expense} €")
+        print("--------------------------")
+        print("\n")
 
     def render(self):
         # TODO: graph of rewards for example, or charging power or sth like that

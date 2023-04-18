@@ -4,7 +4,7 @@ import pandas as pd
 def load_prices(self):
 
     # load csv
-    spot = pd.read_csv(self.path_name + "spot_2020.csv", delimiter=";", decimal=",")
+    spot = pd.read_csv(self.path_name + self.spot_name, delimiter=";", decimal=",")
 
     # drop price information of other countries
     spot = spot.drop(columns=spot.columns[4:20])
