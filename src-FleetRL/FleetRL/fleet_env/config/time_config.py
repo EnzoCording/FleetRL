@@ -11,7 +11,12 @@ class TimeConfig:
             raise RuntimeError("Sum of episode length and price lookahead cannot exceed cutoff buffer, "
                                "otherwise the price lookahead would eventually be out of bounds.")
 
-        self.freq: str = '1H'  # TODO describe
-        self.minutes: int = 60  # TODO describe
-        self.time_steps_per_hour: int = 1  # TODO describe
+        # setting time-related model parameters
+        # self.freq = '15T'
+        # self.minutes = 15
+        # self.time_steps_per_hour = 4
+
+        self.freq: str = '1H'  # Frequency string needed to down-sample in pandas
+        self.minutes: int = 60  # Amount of minutes per time step
+        self.time_steps_per_hour: int = 1  # Number of time steps per hour, used in obs_space
         self.dt: float = self.minutes / 60  # Hours per timestep, variable used in the energy calculations

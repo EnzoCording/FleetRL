@@ -3,6 +3,8 @@ import numpy as np
 from FleetRL.utils.normalization.unit_normalization import Normalization
 
 
+# This normalizes based on the global maximum values. These could be in the future, hence the oracle prefix.
+# For more realistic approaches, a rolling average could be used, or the sb3 vec normalize function
 class OracleNormalization(Normalization):
     def __init__(self, db, spot_price):
         self.max_time_left = max(db["time_left"])

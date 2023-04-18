@@ -22,7 +22,7 @@ class DataLoader:
 
         # resampling the df. consumption and distance are summed, power rating mean like in emobpy
         # group by ID is needed so the different cars don't get overwritten (they have the same dates)
-        # TODO up-sampling is not going to work
+        # NB: up-sampling is not going to work
         self.db = self.db.groupby("ID").resample(time_conf.freq).agg(
             {'Location': 'first', 'ID': 'first', 'Consumption_kWh': 'sum',
              'ChargingStation': 'first', 'PowerRating_kW': 'mean',
@@ -141,7 +141,7 @@ class DataLoader:
         # TODO this could be changed in the future to make it more complex
         self.db["SOC_on_return"] = target_soc - self.db["last_trip_total_consumption"].div(
             ev_conf.battery_cap)
-        self.db.loc[self.db["There"] == 0, "SOC_on_return"] = -1
+        self.db.loc[self.db["There"] == 0, "SOC_on_return"] = 0
 
     @staticmethod
     def load_prices(path_name, spot_name, date_range):
@@ -161,10 +161,10 @@ class DataLoader:
 
         # TODO test if this also works for down-sampling. Right now this up-samples from hourly to quarter-hourly
         spot_price = pd.merge_asof(date_range,
-                                        spot.sort_values("date"),
-                                        on="date",
-                                        direction="backward"
-                                        )
+                                   spot.sort_values("date"),
+                                   on="date",
+                                   direction="backward"
+                                   )
 
         # return the spot price at the right granularity
         return spot_price
@@ -175,10 +175,10 @@ class DataLoader:
 
         # TODO test if this also works for down-sampling. Right now this up-samples from hourly to quarter-hourly
         building_load = pd.merge_asof(date_range,
-                                           b_load.sort_values("date"),
-                                           on="date",
-                                           direction="backward"
-                                           )
+                                      b_load.sort_values("date"),
+                                      on="date",
+                                      direction="backward"
+                                      )
 
         # return building load at right granularity
         return building_load
@@ -188,9 +188,9 @@ class DataLoader:
         pv = pd.read_csv(path_name + "pv_gen.csv", delimiter=",", decimal=",")
 
         pv_gen = pd.merge_asof(date_range,
-                                    pv.sort_values("date"),
-                                    on="date",
-                                    direction="backward")
+                               pv.sort_values("date"),
+                               on="date",
+                               direction="backward")
 
         # return pv generation
         return pv_gen

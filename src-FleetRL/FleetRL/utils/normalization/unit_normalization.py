@@ -3,6 +3,8 @@ import numpy as np
 from FleetRL.utils.normalization.normalization import Normalization
 
 
+# No normalization, just concatenation and properly adjusting the boundaries
+# NB: Also uses global max and min values that might not be known in a real case scenario for future time steps
 class UnitNormalization(Normalization):
 
     def __init__(self, db, spot_price, num_cars, price_lookahead, timestep_per_hour):

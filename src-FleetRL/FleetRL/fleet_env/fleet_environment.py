@@ -23,45 +23,41 @@ class FleetEnv(gym.Env):
 
     def __init__(self):
 
-        # setting time-related model parameters
-        # self.freq = '15T'
-        # self.minutes = 15
-        # self.time_steps_per_hour = 4
+        # Setting paths and file names
+        # path for input files
+        self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
+        # EV schedule database
+        # self.db_name = 'full_test_one_car.csv'
+        self.db_name = 'one_day_same_training.csv'
+        # Spot price database
+        self.spot_name = 'spot_2020.csv'
+
+        # Loading configs
+        self.time_conf = TimeConfig()
+        self.ev_conf = EvConfig()
+        self.score_conf = ScoreConfig()
+        self.load_calculation = LoadCalculation(CompanyType.Delivery)
+
+        # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
         self.time_picker: TimePicker = StaticTimePicker()  # when an episode starts, this class picks the starting time
         self.observer: Observer = BasicObserver()  # all observations are processed in the Observer class
-
-        self.time_conf = TimeConfig()
         self.episode = Episode(self.time_conf)
 
         # Setting EV parameters
         self.target_soc = 0.85  # Target SoC - Vehicles should always leave with this SoC
         self.eps = 0.005  # allowed SOC deviation from target: 0.5%
 
-        self.ev_conf = EvConfig()
-
-        self.load_calculation = LoadCalculation(CompanyType.Delivery)
-
-        # initiating variables inside __init__()
+        # initiating variables inside __init__() that are needed for gym.Env
         self.info: dict = {}  # Necessary for gym env (Double check because new implementation doesn't need it)
-
         self.max_time_left: float = None  # The maximum value of time left in the db dataframe
         self.max_spot: float = None  # The maximum spot market price in the db dataframe
 
-        self.score_conf = ScoreConfig()
-
-        # path for input files
-        self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
-
-        # names of files to use
-        # EV schedule database
-        # self.file_name = 'full_test_one_car.csv'
-        self.db_name = 'one_day_same_training.csv'
-        # Spot price database
-        self.spot_name = 'spot_2020.csv'
-
-        # Loading thdatabase of EV schedules
-        self.data_loader: DataLoader = DataLoader(self.path_name, self.db_name, self.spot_name, self.time_conf, self.ev_conf, self.target_soc)
+        # Loading the EV schedule database
+        self.data_loader: DataLoader = DataLoader(self.path_name, self.db_name,
+                                                  self.spot_name, self.time_conf,
+                                                  self.ev_conf, self.target_soc
+                                                  )
         self.db = self.data_loader.db
 
         # Load spot price
@@ -82,11 +78,14 @@ class FleetEnv(gym.Env):
         # TODO: how many points in the future should I give, do I need past values? probably not
         # Remember: observation space has to always keep the same dimensions
 
-        self.normalizer: Normalization = OracleNormalization(self.db, self.spot_price)
+        # Load gym observation spaces, decided which normalization strategy to choose
+        self.normalizer: Normalization = OracleNormalization(self.db, self.spot_price)  # object for normalization
+        # unit normalization: doesn't normalize, only concatenates
         # self.normalizer: Normalization = \
         #     UnitNormalization(self.db, self.spot_price, self.num_cars,
         #                       self.time_conf.price_lookahead, self.time_conf.time_steps_per_hour)
 
+        # set boundaries of the observation space, detects if normalized or not
         low_obs, high_obs = self.normalizer.make_boundaries(
             (2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour)
         )
@@ -101,16 +100,13 @@ class FleetEnv(gym.Env):
             high=1,
             shape=(self.num_cars,), dtype=np.float32)
 
-    def reset(self, start_time=None, **kwargs):
+    def reset(self, **kwargs):
         # set done to False, since the episode just started
         self.episode.done = False
 
-        if not start_time:
-            # choose a random start time
-            self.episode.start_time = self.time_picker.choose_time(self.db, self.time_conf.freq,
-                                                                   self.time_conf.end_cutoff)
-        else:
-            self.episode.start_time = start_time
+        self.episode.start_time = self.time_picker.choose_time(self.db, self.time_conf.freq,
+                                                               self.time_conf.end_cutoff
+                                                               )
 
         # calculate the finish time based on the episode length
         self.episode.finish_time = self.episode.start_time + np.timedelta64(self.time_conf.episode_length, 'h')
@@ -137,9 +133,10 @@ class FleetEnv(gym.Env):
             # times 0.8 to give some tolerance, check if hours_left > 0: car has to be plugged in
             if (self.episode.hours_left[car] > 0) and (time_needed > self.episode.hours_left[car]):
                 self.episode.soc[car] = (self.target_soc
-                                 - self.episode.hours_left[car]
-                                 * min([self.ev_conf.obc_max_power, self.load_calculation.evse_max_power]) * 0.8
-                                 / self.ev_conf.battery_cap)
+                                         - self.episode.hours_left[car]
+                                         * min([self.ev_conf.obc_max_power, self.load_calculation.evse_max_power])
+                                         * 0.8 / self.ev_conf.battery_cap
+                                         )
                 print("Initial SOC modified due to unfavourable starting condition.")
 
         # set the reward history back to an empty list, set cumulative reward to 0
@@ -151,15 +148,15 @@ class FleetEnv(gym.Env):
 
     def step(self, actions):  # , action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
 
-        # TODO: Testing, trying to break it
-        # TODO: comparing with chargym
-
         # parse the action to the charging function and receive the soc, next soc and reward
         self.episode.soc, self.episode.next_soc, reward = self.ev_charger.charge(
             self.db, self.spot_price, self.num_cars, actions, self.episode, self.load_calculation,
-            self.ev_conf,  self.time_conf, self.score_conf)
+            self.ev_conf, self.time_conf, self.score_conf
+        )
 
         # at this point, the reward only includes the current expense/revenue of the charging process
+        # not true anymore, violation of invalid charging
+        # TODO: decouple reward and economic metrics
         self.episode.current_charging_expense = reward
 
         # calling the print function
@@ -169,7 +166,7 @@ class FleetEnv(gym.Env):
         # print(self.price[0])
         # print(self.hours_left)
 
-        # check if the current load exceeds the trafo rating and penalize
+        # check if the current load exceeds the trafo rating and penalize accordingly
         if not self.load_calculation.check_violation(self.building_load, actions, self.pv):
             reward += self.score_conf.penalty_overloading
             self.episode.penalty_record += self.score_conf.penalty_overloading

@@ -41,7 +41,7 @@ class EvCharger:
                 else:
                     charging_energy = 0
                     if actions[car] > 0:
-                        print(f"Invalid action, penalty: {score_conf.penalty_invalid_action}")
+                        print(f"Invalid action, penalty given.")
                         invalid_action_penalty += score_conf.penalty_invalid_action * actions[car]
 
                 # next soc is calculated based on charging energy
@@ -73,7 +73,7 @@ class EvCharger:
                 # car is not there
                 else:
                     episode.discharging_energy = 0
-                    print(f"Invalid action, penalty: {score_conf.penalty_invalid_action}")
+                    print(f"Invalid action, penalty given.")
                     invalid_action_penalty += score_conf.penalty_invalid_action * -actions[car]
 
                 # calculate next soc, which will get smaller

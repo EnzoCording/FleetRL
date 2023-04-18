@@ -5,6 +5,7 @@ import gym
 import numpy as np
 from stable_baselines3 import TD3
 from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.noise import OrnsteinUhlenbeckActionNoise
 
 # code doesn't run if module not imported, requirement of gym.make
@@ -33,5 +34,16 @@ saving_interval = 20000
 for i in range(1, 5):
     model.learn(total_timesteps=saving_interval, reset_num_timesteps=False, tb_log_name="TD3")
     model.save(f"{trained_agents_dir}/{saving_interval * i}")
+
+del model
+model = TD3.load(f"{trained_agents_dir}/{saving_interval * 4}", env=env)
+mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=10)
+
+vec_env = model.get_env()
+obs = vec_env.reset()
+for i in range(24):
+    action, _states = model.predict(obs, deterministic=True)
+    obs, rewards, dones, info = vec_env.step(action)
+    vec_env.render()
 
 env.close()
