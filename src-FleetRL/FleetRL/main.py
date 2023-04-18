@@ -1,7 +1,7 @@
 import random
 
 from FleetRL.env.fleet_environment import FleetEnv
-from FleetRL.utils.battery_depreciation.battery_dep_base import BatteryDepreciationBase
+from FleetRL.utils.battery_depreciation.battery_depreciation import BatteryDepreciation
 from FleetRL.utils.battery_depreciation.my_battery_depreciation import MyBatteryDepreciation
 from FleetRL.utils.prices import load_prices
 
@@ -18,7 +18,7 @@ for i in range(14):
 print(env.reward_history)
 
 
-def something(b: BatteryDepreciationBase):
+def something(b: BatteryDepreciation):
     b.calculate(5, 5, 5)
 
 

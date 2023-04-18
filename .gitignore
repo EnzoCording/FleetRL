@@ -160,3 +160,5 @@ cython_debug/
 .idea/
 
 src-FleetRL/FleetRL/Input_Files/
+src-FleetRL/agents/RL/logs/*
+src-FleetRL/agents/RL/trained/*

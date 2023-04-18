@@ -3,10 +3,10 @@ import random
 import numpy as np
 import pandas as pd
 from pandas import Timestamp
-from FleetRL.utils.time_picker.time_picker_base import TimePickerBase
+from FleetRL.utils.time_picker.time_picker import TimePicker
 
 
-class RandomTimePicker(TimePickerBase):
+class RandomTimePicker(TimePicker):
     def choose_time(self, db: pd.Series, freq: str, end_cutoff: int) -> Timestamp:
         # possible start times: remove last X days based on end_cutoff
         # TODO: same day can be pulled multiple times - is this a problem?
