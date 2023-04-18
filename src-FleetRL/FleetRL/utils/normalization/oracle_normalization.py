@@ -18,11 +18,11 @@ class OracleNormalization(Normalization):
         input_obs[2] = np.array((input_obs[2] - self.min_spot)
                                 / (self.max_spot - self.min_spot))
 
-        output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2]))
+        output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2]), dtype=np.float32)
 
         return output_obs
 
     def make_boundaries(self, dim: tuple[int]) -> tuple[float, float] | tuple[np.ndarray, np.ndarray]:
-        low_obs = np.zeros((1, dim), dtype=np.float32)
-        high_obs = np.ones((1, dim), dtype=np.float32)
+        low_obs = np.zeros(dim, dtype=np.float32)
+        high_obs = np.ones(dim, dtype=np.float32)
         return low_obs, high_obs

@@ -1,20 +1,29 @@
 # import pandapower as pp
+from enum import Enum
+
+
+class CompanyType(Enum):
+    Delivery = 1
+    Caretaker = 2
+    Utility = 3
+
 
 class LoadCalculation:
 
-    def import_company(self):
+    @staticmethod
+    def _import_company(company_type: CompanyType):
         grid_connection: float  # max grid connection in kW
         evse_power: float  # charger capacity in kW
 
-        if self.company_name == "delivery":
+        if company_type == CompanyType.Delivery:
             grid_connection = 100
             evse_power = 11
 
-        elif self.company_name == "utility":
+        elif company_type == CompanyType.Utility:
             grid_connection = 100  # max grid connection in kW
             evse_power = 22  # charger cap in kW
 
-        elif self.company_name == "caretaker":
+        elif company_type == CompanyType.Caretaker:
             grid_connection = 30  # max grid in kW
             evse_power = 7.4  # charger cap in kW
 
@@ -25,14 +34,14 @@ class LoadCalculation:
 
         return grid_connection, evse_power
 
-    def __init__(self, company_name: str):
+    def __init__(self, company_type: CompanyType):
         # setting parameters of the company site
-        self.company_name = company_name    # "delivery", "caretaker", "utility"
+        self.company_type = company_type
 
         # TODO: max power could change, I even have that info in the schedule
         # Grid connection: grid connection point max capacity in kW
         # EVSE (ev supply equipment aka charger) max power in kW
-        self.grid_connection, self.evse_max_power = self.import_company()
+        self.grid_connection, self.evse_max_power = LoadCalculation._import_company(self.company_type)
 
     def build_grid(self):
         # TODO building the grid, figure out later

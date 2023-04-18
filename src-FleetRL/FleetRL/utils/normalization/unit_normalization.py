@@ -23,7 +23,7 @@ class UnitNormalization(Normalization):
              ), dtype=np.float32)
 
     def normalize_obs(self, obs: list) -> np.ndarray:
-        return np.concatenate(obs)
+        return np.concatenate(obs, dtype=np.float32)
 
     def make_boundaries(self, dim: tuple[int]) -> tuple[float, float] | tuple[np.ndarray, np.ndarray]:
         return self.low_obs, self.high_obs

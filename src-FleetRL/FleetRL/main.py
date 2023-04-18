@@ -3,7 +3,7 @@ import random
 from FleetRL.env.fleet_environment import FleetEnv
 from FleetRL.utils.battery_depreciation.battery_depreciation import BatteryDepreciation
 from FleetRL.utils.battery_depreciation.my_battery_depreciation import MyBatteryDepreciation
-from FleetRL.utils.prices import load_prices
+# from FleetRL.utils.prices import load_prices
 
 env = FleetEnv()
 env.reset()
@@ -11,11 +11,11 @@ for i in range(14):
     action = []
     # print(env.step([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
     # print(env.step([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
-    for j in range(env.cars):
+    for j in range(env.num_cars):
         action.append(random.random())
     print(env.step(action))
 
-print(env.reward_history)
+print(env.episode.reward_history)
 
 
 def something(b: BatteryDepreciation):
