@@ -37,7 +37,7 @@ class FleetEnv(gym.Env):
         # Setting EV parameters
         self.target_soc = 0.85  # Target SoC - Vehicles should always leave with this SoC
         self.eps = 0.005  # allowed SOC deviation from target: 0.5%
-        self.battery_cap = 65  # in kWh
+        self.battery_cap = 65  # battery capacity in kWh
         self.obc_max_power = 100  # onboard charger max power in kW
         self.charging_eff = 0.91  # charging efficiency
         self.discharging_eff = 0.91  # discharging efficiency
@@ -68,11 +68,14 @@ class FleetEnv(gym.Env):
         self.current_charging_expense: float = None  # The amount spent per action
         self.total_charging_energy: float = None  # The amount of energy used per action
 
-        # rewards and penalties
-        self.penalty_soc_violation = -500_000
-        self.penalty_overloading = -50_000
+        # penalties for violations
+        self.penalty_soc_violation = -500_000.0
+        self.penalty_overloading = -50_000.0
+        self.penalty_invalid_action = -1
 
-        # initializing path name
+        # possible reward: money spent/earned due to buying/selling electricity for charging/discharging
+
+        # path for input files
         self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
 
         # names of files to use
@@ -86,6 +89,7 @@ class FleetEnv(gym.Env):
         self.db = data_processing.compute_from_schedule(self)  # compute arriving SoC and time left for the trips
 
         # create a date range with the chosen frequency
+        # Given the desired frequency, create a (down-sampled) column of timestamps
         self.date_range = pd.DataFrame()
         self.date_range["date"] = pd.date_range(start=self.db["date"].min(),
                                                 end=self.db["date"].max(),
@@ -96,6 +100,7 @@ class FleetEnv(gym.Env):
         self.spot_price = prices.load_prices(self)
 
         # Get maximum values for normalization
+        # TODO move into normalization class
         self.max_time_left = max(self.db["time_left"])
         self.max_spot = max(self.spot_price["DELU"])
         self.min_spot = min(self.spot_price["DELU"])
@@ -103,7 +108,7 @@ class FleetEnv(gym.Env):
         # Load building load and PV
         # TODO: implement these
         self.building_load = 35  # building load in kW
-        self.pv = 0
+        self.pv = 0  # local PV rooftop production
 
         # first ID is 0
         # TODO: for now the number of cars is dictated by the data, but it could also be
@@ -119,10 +124,11 @@ class FleetEnv(gym.Env):
         >>> for now 8 hours of price in to the future, always possible with DA
         '''
 
-        # TODO: spot price updates during the day
-        # TODO: how many points in the future should I give, do I need past values?
-        # TODO: observation space has to always keep the same dimensions
+        # TODO: spot price updates during the day, to allow more than 8 hour lookahead at some times (use clipping if not available, repeat last value in window)
+        # TODO: how many points in the future should I give, do I need past values? probably not
+        # Remember: observation space has to always keep the same dimensions
 
+        # TODO move this into normalization, these bounds depend on normalization strategy
         low_obs = np.array(np.zeros((2 * self.cars + self.price_window_size
                                      * self.time_steps_per_hour)), dtype=np.float32)
 
