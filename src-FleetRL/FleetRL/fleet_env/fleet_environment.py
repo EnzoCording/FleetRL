@@ -1,6 +1,6 @@
 import os
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from FleetRL.fleet_env.config.ev_config import EvConfig
@@ -13,7 +13,7 @@ from FleetRL.utils.load_calculation.load_calculation import LoadCalculation, Com
 from FleetRL.utils.normalization.normalization import Normalization
 from FleetRL.utils.normalization.oracle_normalization import OracleNormalization
 from FleetRL.utils.normalization.unit_normalization import UnitNormalization
-from FleetRL.utils.observation.basic_observer import BasicObserver
+from FleetRL.utils.observation.observer_with_building_load import ObserverWithBuildingLoad
 from FleetRL.utils.observation.observer import Observer
 from FleetRL.utils.time_picker.static_time_picker import StaticTimePicker
 from FleetRL.utils.time_picker.time_picker import TimePicker
@@ -24,13 +24,23 @@ class FleetEnv(gym.Env):
     def __init__(self):
 
         # Setting paths and file names
-        # path for input files
+        # path for input files, needs to be the same for all inputs
         self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
         # EV schedule database
         # self.db_name = 'full_test_one_car.csv'
-        self.db_name = 'one_day_same_training.csv'
+        self.schedule_name = 'one_day_same_training.csv'
         # Spot price database
         self.spot_name = 'spot_2020.csv'
+        # Building load database
+        self.building_name = 'caretaker.csv'
+        # PV gen database
+        self.pv_name = None
+
+        # Setting flags for the type of environment to build
+        # NOTE: they are appended to the db in the order specified here
+        # NOTE: import the right observer!
+        self.include_building_load = True
+        self.include_pv = False
 
         # Loading configs
         self.time_conf = TimeConfig()
@@ -41,7 +51,7 @@ class FleetEnv(gym.Env):
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
         self.time_picker: TimePicker = StaticTimePicker()  # when an episode starts, this class picks the starting time
-        self.observer: Observer = BasicObserver()  # all observations are processed in the Observer class
+        self.observer: Observer = ObserverWithBuildingLoad()  # all observations are processed in the Observer class
         self.episode = Episode(self.time_conf)
 
         # Setting EV parameters
@@ -53,20 +63,27 @@ class FleetEnv(gym.Env):
         self.max_time_left: float = None  # The maximum value of time left in the db dataframe
         self.max_spot: float = None  # The maximum spot market price in the db dataframe
 
-        # Loading the EV schedule database
-        self.data_loader: DataLoader = DataLoader(self.path_name, self.db_name,
-                                                  self.spot_name, self.time_conf,
-                                                  self.ev_conf, self.target_soc
+        # Loading the inputs
+        self.data_loader: DataLoader = DataLoader(self.path_name, self.schedule_name,
+                                                  self.spot_name, self.building_name, self.pv_name,
+                                                  self.time_conf, self.ev_conf, self.target_soc,
+                                                  self.include_building_load, self.include_pv
                                                   )
+        # # Get schedule
+        # self.schedule = self.data_loader.schedule
+        #
+        # # Get spot price
+        # self.spot_price = self.data_loader.spot_price
+        #
+        # # Get building load
+        # self.building_load = self.data_loader.building_load
+        #
+        # get the total database
         self.db = self.data_loader.db
 
-        # Load spot price
-        self.spot_price = self.data_loader.spot_price
-
-        # Load building load and PV
-        # TODO: implement these
-        self.building_load = 35  # building load in kW
-        self.pv = 0  # local PV rooftop production
+        # Load PV
+        # TODO: implement this
+        # self.pv = 0  # local PV rooftop production
 
         # first ID is 0
         # TODO: for now the number of cars is dictated by the data, but it could also be
@@ -79,16 +96,24 @@ class FleetEnv(gym.Env):
         # Remember: observation space has to always keep the same dimensions
 
         # Load gym observation spaces, decided which normalization strategy to choose
-        self.normalizer: Normalization = OracleNormalization(self.db, self.spot_price)  # object for normalization
+        self.normalizer: Normalization = OracleNormalization(self.db, self.include_building_load, self.include_pv)
         # unit normalization: doesn't normalize, only concatenates
         # self.normalizer: Normalization = \
         #     UnitNormalization(self.db, self.spot_price, self.num_cars,
         #                       self.time_conf.price_lookahead, self.time_conf.time_steps_per_hour)
 
         # set boundaries of the observation space, detects if normalized or not
-        low_obs, high_obs = self.normalizer.make_boundaries(
-            (2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour)
-        )
+
+        if not self.include_building_load and not self.include_pv:
+            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour
+            low_obs, high_obs = self.normalizer.make_boundaries(dim)
+        elif self.include_building_load and not self.include_pv:
+            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + 1
+            low_obs, high_obs = self.normalizer.make_boundaries(dim)
+        else:
+            low_obs = None
+            high_obs = None
+            raise RuntimeError("Problem with components. Check building and pv flags.")
 
         self.observation_space = gym.spaces.Box(
             low=low_obs,
@@ -114,7 +139,7 @@ class FleetEnv(gym.Env):
         # set the model time to the start time
         self.episode.time = self.episode.start_time
 
-        obs = self.observer.get_obs(self.db, self.spot_price, self.time_conf.price_lookahead, self.episode.time)
+        obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.episode.time)
 
         # get the first soc and hours_left observation
         self.episode.soc = obs[0]
@@ -144,19 +169,24 @@ class FleetEnv(gym.Env):
         self.episode.cumulative_reward = 0
         self.episode.penalty_record = 0
 
-        return self.normalizer.normalize_obs([self.episode.soc, self.episode.hours_left, self.episode.price])
+        obs[0] = self.episode.soc
+        obs[1] = self.episode.hours_left
+        obs[2] = self.episode.price
+
+        return self.normalizer.normalize_obs(obs)
 
     def step(self, actions):  # , action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
 
-        # parse the action to the charging function and receive the soc, next soc and reward
-        self.episode.soc, self.episode.next_soc, reward = self.ev_charger.charge(
-            self.db, self.spot_price, self.num_cars, actions, self.episode, self.load_calculation,
+        # parse the action to the charging function and receive the soc, next soc, reward and cashflow
+        self.episode.soc, self.episode.next_soc, reward, cashflow = self.ev_charger.charge(
+            self.db, self.num_cars, actions, self.episode, self.load_calculation,
             self.ev_conf, self.time_conf, self.score_conf
         )
 
         # at this point, the reward only includes the current expense/revenue of the charging process
         # not true anymore, violation of invalid charging
         # TODO: decouple reward and economic metrics
+        # todo remove this
         self.episode.current_charging_expense = reward
 
         # calling the print function
@@ -167,21 +197,34 @@ class FleetEnv(gym.Env):
         # print(self.hours_left)
 
         # check if the current load exceeds the trafo rating and penalize accordingly
-        if not self.load_calculation.check_violation(self.building_load, actions, self.pv):
+
+        if self.include_building_load:
+            current_load = self.db.loc[self.db["date"] == self.episode.time, "load"].values
+        else:
+            current_load = 0
+
+        if self.include_pv:
+            current_pv = self.db[self.db["date"] == self.episode.time, "pv"].values
+        else:
+            current_pv = 0
+
+        if not self.load_calculation.check_violation(current_load, actions, current_pv):
             reward += self.score_conf.penalty_overloading
             self.episode.penalty_record += self.score_conf.penalty_overloading
             print(f"Grid connection has been overloaded. "
                   f"Max possible: {self.load_calculation.grid_connection} kW, "
                   f"Actual: {sum(actions) * self.load_calculation.evse_max_power + self.building_load} kW")
 
+        # save the old soc for logging purposes
         # set the soc to the next soc
+        old_soc = self.episode.soc
         self.episode.soc = self.episode.next_soc.copy()
 
         # advance one time step
         self.episode.time += np.timedelta64(self.time_conf.minutes, 'm')
 
         # get the next observation
-        next_obs = self.observer.get_obs(self.db, self.spot_price, self.time_conf.price_lookahead, self.episode.time)
+        next_obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.episode.time)
         next_obs_soc = next_obs[0]
         next_obs_time_left = next_obs[1]
         next_obs_price = next_obs[2]
@@ -220,8 +263,8 @@ class FleetEnv(gym.Env):
                 raise TypeError("Observation format not recognized")
 
         # if the finish time is reached, set done to True
+        # The RL agent then resets the environment
         # TODO: do I still experience the last timestep or do I finish when I reach it?
-        # TODO: where is the environment reset?
         if self.episode.time == self.episode.finish_time:
             self.episode.done = True
             print(f"Episode done: {self.episode.done}")
@@ -236,9 +279,13 @@ class FleetEnv(gym.Env):
         print("---------")
         print("\n")
 
+        next_obs[0] = self.episode.soc
+        next_obs[1] = self.episode.hours_left
+        next_obs[2] = self.episode.price
+
         # here, the reward is already in integer format
-        return (self.normalizer.normalize_obs([self.episode.soc, self.episode.hours_left, self.episode.price]),
-                reward, self.episode.done, self.info)
+        # Todo integer or float?
+        return self.normalizer.normalize_obs(next_obs), reward, self.episode.done, self.info
 
     def close(self):
         return 0

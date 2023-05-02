@@ -47,9 +47,8 @@ class LoadCalculation:
         # TODO building the grid, figure out later
         pass
 
-    def check_violation(self, building_load: float,
-                        action: list[float], pv: float):
-        # grid connection - building load - total ev + pv > 0
+    def check_violation(self, building_load: float, actions: list[float], pv: float) -> bool:
+        # grid connection - building load - total ev + pv >= 0
         # TODO: double check that this makes sense from a component point of view
-        capacity_left = self.grid_connection - building_load - sum(action) * self.evse_max_power + pv
+        capacity_left = self.grid_connection - building_load - sum(actions) * self.evse_max_power + pv
         return capacity_left >= 0

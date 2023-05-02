@@ -9,8 +9,22 @@ from FleetRL.utils.load_calculation.load_calculation import LoadCalculation
 
 class EvCharger:
 
-    def charge(self, db: pd.DataFrame, spot_price: pd.DataFrame, num_cars: int, actions, episode: Episode,
+    def charge(self, db: pd.DataFrame, num_cars: int, actions, episode: Episode,
                load_calculation: LoadCalculation, ev_conf: EvConfig, time_conf: TimeConfig, score_conf: ScoreConfig):
+
+        """
+        :param db: The schedule database of the EVs
+        :param spot_price: Spot price information
+        :param num_cars: Number of cars in the model
+        :param actions: Actions taken by the agent
+        :param episode: Episode object with its parameters and functions
+        :param load_calculation: Load calc object with its parameters and functions
+        :param ev_conf: Config of the EVs
+        :param time_conf: Time configuration
+        :param score_conf: Score and penalty configuration
+        :return: soc, next soc, the reward and the monetary value (cashflow)
+        """
+
         # reset next_soc, cost and revenue
         episode.next_soc = []
         episode.charging_cost = 0
@@ -50,8 +64,9 @@ class EvCharger:
 
                 # charging cost calculated based on spot price
                 # TODO: add german taxes and grid fees
+                # Divide by 1000 because we are in kWh
                 episode.charging_cost += (charging_energy *
-                                          spot_price.loc[spot_price["date"] == episode.time, "DELU"]
+                                          db.loc[db["date"] == episode.time, "DELU"]
                                           ) / 1000.0
                 # print(f"charging cost: {charging_cost.values[0]}")
 
@@ -81,8 +96,9 @@ class EvCharger:
                     episode.soc[car] + episode.discharging_energy * ev_conf.discharging_eff / ev_conf.battery_cap)
                 # TODO: variable prices, V2G?
                 # TODO: FCR could be modelled by deciding to commit to not charging and then random soc flux
+                # Divide by 1000 because we are calculating in kWh
                 episode.discharging_revenue += (-1 * episode.discharging_energy *
-                                                spot_price.loc[spot_price["date"] == episode.time, "DELU"]
+                                                db.loc[db["date"] == episode.time, "DELU"]
                                                 ) / 1000.0
 
                 # print(f"discharging revenue: {discharging_revenue.values[0]}")
@@ -94,9 +110,9 @@ class EvCharger:
                 raise TypeError("The parsed action value was not recognised")
 
         # add reward based on cost and revenue
-        charging_reward = -1 * episode.charging_cost + episode.discharging_revenue
+        cashflow = -1 * episode.charging_cost + episode.discharging_revenue
 
-        reward = (1000 * charging_reward) + invalid_action_penalty
+        reward = (1000 * cashflow) + invalid_action_penalty
 
         # return soc, next soc and the value of reward (remove the index)
-        return episode.soc, episode.next_soc, float(reward)
+        return episode.soc, episode.next_soc, float(reward), float(cashflow)

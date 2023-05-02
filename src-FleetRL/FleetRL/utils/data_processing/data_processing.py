@@ -12,40 +12,58 @@ from FleetRL.fleet_env.config.time_config import TimeConfig
 
 class DataLoader:
 
-    def __init__(self, path_name, db_name, spot_name, time_conf: TimeConfig, ev_conf: EvConfig, target_soc):
+    def __init__(self, path_name, schedule_name, spot_name, building_name, pv_name,
+                 time_conf: TimeConfig, ev_conf: EvConfig,
+                 target_soc, building_flag, pv_flag):
         # schedule import from excel
         # db = pd.read_excel(os.path.dirname(__file__) + '/test_simple.xlsx')
-        self.db = pd.read_csv(path_name + db_name, parse_dates=["date"])
+        self.schedule = pd.read_csv(path_name + schedule_name, parse_dates=["date"])
 
         # setting the index of the df to the date for resampling
-        self.db.set_index("date", inplace=True, drop=False)
+        self.schedule.set_index("date", inplace=True, drop=False)
 
         # resampling the df. consumption and distance are summed, power rating mean like in emobpy
         # group by ID is needed so the different cars don't get overwritten (they have the same dates)
         # NB: up-sampling is not going to work
-        self.db = self.db.groupby("ID").resample(time_conf.freq).agg(
+        self.schedule = self.schedule.groupby("ID").resample(time_conf.freq).agg(
             {'Location': 'first', 'ID': 'first', 'Consumption_kWh': 'sum',
              'ChargingStation': 'first', 'PowerRating_kW': 'mean',
              'Distance_km': 'sum', 'date': 'first'})
 
         # resetting the index to a numerical value
-        self.db.index = range(len(self.db))
+        self.schedule.index = range(len(self.schedule))
 
         self.compute_from_schedule(ev_conf, time_conf, target_soc)
 
         # create a date range with the chosen frequency
         # Given the desired frequency, create a (down-sampled) column of timestamps
         self.date_range = pd.DataFrame()
-        self.date_range["date"] = pd.date_range(start=self.db["date"].min(),
-                                                end=self.db["date"].max(),
+        self.date_range["date"] = pd.date_range(start=self.schedule["date"].min(),
+                                                end=self.schedule["date"].max(),
                                                 freq=time_conf.freq
                                                 )
 
         self.spot_price = DataLoader.load_prices(path_name, spot_name, self.date_range)
 
-        # TODO
-        # self.building_load = DataLoader.load_building_load(path_name, self.date_range)
-        # self.pv_gen = DataLoader.load_pv(path_name, self.date_range)
+        if building_flag:
+            self.building_load = DataLoader.load_building_load(path_name, building_name, self.date_range)
+
+        if pv_flag:
+            self.pv_gen = DataLoader.load_pv(path_name, pv_name, self.date_range)
+
+        if not building_flag and not pv_flag:
+            self.db = pd.concat([self.schedule, self.spot_price["DELU"]], axis=1)
+
+        elif building_flag and not pv_flag:
+            self.db = pd.concat([self.schedule, self.spot_price["DELU"], self.building_load["load"]], axis=1)
+
+        elif building_flag and pv_flag:
+            self.db = pd.concat([self.schedule, self.spot_price["DELU"], self.building_load["load"],
+                                 self.pv_gen["pv"]], axis=1)
+
+        else:
+            self.db = None
+            raise RuntimeError("Problem with components. Check building and PV flags.")
 
     def compute_from_schedule(self, ev_conf, time_conf, target_soc):
         """
@@ -56,32 +74,32 @@ class DataLoader:
         :return:
         """
         # new column with flag if EV is there or not
-        self.db["There"] = (np.array(self.db["PowerRating_kW"] != 0, dtype=int))
+        self.schedule["There"] = (np.array(self.schedule["PowerRating_kW"] != 0, dtype=int))
 
         # make a new column in db that checks whether the charging station value changed
-        self.db["Change"] = np.array(self.db["ChargingStation"] != self.db["ChargingStation"].shift(1), dtype=int)
+        self.schedule["Change"] = np.array(self.schedule["ChargingStation"] != self.schedule["ChargingStation"].shift(1), dtype=int)
 
         # create a group, so they can be easily grouped by change (home->none or none->home)
-        self.db["Group"] = self.db["Change"].cumsum()
+        self.schedule["Group"] = self.schedule["Change"].cumsum()
 
         # create a column for the total consumption that will later be populated
-        self.db["TotalConsumption"] = np.zeros(len(self.db))
+        self.schedule["TotalConsumption"] = np.zeros(len(self.schedule))
 
         # calculate the total consumption of a single trip by summing over a group
         # only choose the groups where the car is driving (=="none")
-        # sum over consumption
+        # sum over the consumption
         # resetting the index and dropping the old group index
-        consumption = (self.db.loc[self.db["ChargingStation"] == "none"]
+        consumption = (self.schedule.loc[self.schedule["ChargingStation"] == "none"]
                        .groupby('Group')["Consumption_kWh"].sum().reset_index(drop=True))
 
         # get the last dates of each trip
         # resetting the index so the group index goes away
-        last_dates = (self.db.loc[self.db["ChargingStation"] == "none"]
+        last_dates = (self.schedule.loc[self.schedule["ChargingStation"] == "none"]
                       .groupby('Group')["date"].last().reset_index(drop=True))
 
         # get the first dates of each trip
         # resetting the index so the group index goes away
-        departure_dates = (self.db.loc[self.db["ChargingStation"] == "none"]
+        departure_dates = (self.schedule.loc[self.schedule["ChargingStation"] == "none"]
                            .groupby('Group')["date"].first().reset_index(drop=True))
 
         # the return dates are on the next timestep
@@ -90,7 +108,7 @@ class DataLoader:
         # get the vehicle ids of the trips
         # resetting the index so the group index goes away
         # dropping duplicates because the loop iterates through both dates and ids anyway
-        ids = self.db.loc[self.db["ChargingStation"] == "none"].groupby('Group')["ID"].first().reset_index(drop=True)
+        ids = self.schedule.loc[self.schedule["ChargingStation"] == "none"].groupby('Group')["ID"].first().reset_index(drop=True)
 
         # creating a dataframe for calculating the consumption, the info of ID and date is needed
         res_return = pd.DataFrame({"ID": ids, "consumption": consumption, "date": return_dates})
@@ -99,7 +117,7 @@ class DataLoader:
         res_departure = pd.DataFrame({"ID": ids, "dep": departure_dates, "date": departure_dates})
 
         # match return dates with db, backwards fill, sort by ID, match on date
-        merged_cons = pd.merge_asof(self.db.sort_values("date"),
+        merged_cons = pd.merge_asof(self.schedule.sort_values("date"),
                                     res_return.sort_values("date"),
                                     on="date",
                                     by="ID",
@@ -116,7 +134,7 @@ class DataLoader:
         merged_cons.fillna(0, inplace=True)
 
         # match departure dates with dates in db, forward direction, sort by ID, match on date
-        merged_time_left = pd.merge_asof(self.db.sort_values("date"),
+        merged_time_left = pd.merge_asof(self.schedule.sort_values("date"),
                                          res_departure.sort_values("date"),
                                          on="date",
                                          by="ID",
@@ -133,15 +151,16 @@ class DataLoader:
         merged_time_left.loc[:, "time_left"].fillna(0, inplace=True)
 
         # add computed information to db
-        self.db["last_trip_total_consumption"] = merged_cons.loc[:, "consumption"]
-        self.db["time_left"] = merged_time_left.loc[:, "time_left"]
+        self.schedule["last_trip_total_consumption"] = merged_cons.loc[:, "consumption"]
+        self.schedule["time_left"] = merged_time_left.loc[:, "time_left"]
 
         # create BOC column and populate with zeros
         # calculate SOC on return, assuming the previous trip charged to the target soc
         # TODO this could be changed in the future to make it more complex
-        self.db["SOC_on_return"] = target_soc - self.db["last_trip_total_consumption"].div(
+        self.schedule["SOC_on_return"] = target_soc - self.schedule["last_trip_total_consumption"].div(
             ev_conf.battery_cap)
-        self.db.loc[self.db["There"] == 0, "SOC_on_return"] = 0
+        # TODO could be set to -1
+        self.schedule.loc[self.schedule["There"] == 0, "SOC_on_return"] = 0
 
     @staticmethod
     def load_prices(path_name, spot_name, date_range):
@@ -154,7 +173,7 @@ class DataLoader:
         # put the date in the same format as the schedule
         spot = spot.rename(columns={"Date": "date"})
         spot["date"] = spot["date"] + " " + spot["Start"] + ":00"
-        spot["date"] = pd.to_datetime(spot["date"])
+        spot["date"] = pd.to_datetime(spot["date"], format="mixed")
 
         # rename column for accessibility
         spot = spot.rename(columns={"Deutschland/Luxemburg [€/MWh] Original resolutions": "DELU"})
@@ -170,8 +189,10 @@ class DataLoader:
         return spot_price
 
     @staticmethod
-    def load_building_load(path_name, date_range):
-        b_load = pd.read_csv(path_name + "building_load.csv", delimiter=",", decimal=",")
+    def load_building_load(path_name, file_name, date_range):
+        b_load = pd.read_csv(path_name + file_name, delimiter=",")
+        b_load.rename(columns={"Date": "date"}, inplace=True)
+        b_load["date"] = pd.to_datetime(b_load["date"])
 
         # TODO test if this also works for down-sampling. Right now this up-samples from hourly to quarter-hourly
         building_load = pd.merge_asof(date_range,
@@ -184,8 +205,8 @@ class DataLoader:
         return building_load
 
     @staticmethod
-    def load_pv(path_name, date_range):
-        pv = pd.read_csv(path_name + "pv_gen.csv", delimiter=",", decimal=",")
+    def load_pv(path_name, pv_name, date_range):
+        pv = pd.read_csv(path_name + pv_name, delimiter=",", decimal=",")
 
         pv_gen = pd.merge_asof(date_range,
                                pv.sort_values("date"),

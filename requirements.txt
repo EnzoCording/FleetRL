@@ -1,5 +1,4 @@
 FleetRL~=0.0.1
-gym~=0.26.2
-pandas~=1.5.3
-numpy~=1.24.2
-setuptools~=60.2.0
+gymnasium~=0.28.1
+pandas~=2.0.1
+numpy~=1.24.3
