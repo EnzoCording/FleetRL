@@ -15,6 +15,10 @@ class DataLoader:
     def __init__(self, path_name, schedule_name, spot_name, building_name, pv_name,
                  time_conf: TimeConfig, ev_conf: EvConfig,
                  target_soc, building_flag, pv_flag):
+
+        # save the time_conf within DataLoader as well because it is used in some functions
+        self.time_conf = time_conf
+
         # schedule import from excel
         # db = pd.read_excel(os.path.dirname(__file__) + '/test_simple.xlsx')
         self.schedule = pd.read_csv(path_name + schedule_name, parse_dates=["date"])
@@ -92,6 +96,9 @@ class DataLoader:
         consumption = (self.schedule.loc[self.schedule["ChargingStation"] == "none"]
                        .groupby('Group')["Consumption_kWh"].sum().reset_index(drop=True))
 
+        trip_length = (self.schedule.loc[self.schedule["ChargingStation"] == "none"]
+                       .groupby('Group')["date"].count().reset_index(drop=True))
+
         # get the last dates of each trip
         # resetting the index so the group index goes away
         last_dates = (self.schedule.loc[self.schedule["ChargingStation"] == "none"]
@@ -111,7 +118,7 @@ class DataLoader:
         ids = self.schedule.loc[self.schedule["ChargingStation"] == "none"].groupby('Group')["ID"].first().reset_index(drop=True)
 
         # creating a dataframe for calculating the consumption, the info of ID and date is needed
-        res_return = pd.DataFrame({"ID": ids, "consumption": consumption, "date": return_dates})
+        res_return = pd.DataFrame({"ID": ids, "consumption": consumption, "date": return_dates, "len": trip_length})
 
         # creating a dataframe for calculating the time_left, ID and date needed for pd.merge_asof()
         res_departure = pd.DataFrame({"ID": ids, "dep": departure_dates, "date": departure_dates})
@@ -127,8 +134,11 @@ class DataLoader:
         # sort the df into the right order and reset the index
         merged_cons = merged_cons.sort_values(["ID", "date"]).reset_index(drop=True)
 
-        # set consumption to 0 where the car is not there because information is unknown to the agent then
+        # set consumption to 0 where the car is not there because information is unknown to the agent at that point
         merged_cons.loc[merged_cons["There"] == 0, "consumption"] = 0
+
+        # set trip length to 0 where the car is not there because information unknown to agent at that point
+        merged_cons.loc[merged_cons["There"] == 0, "len"] = 0
 
         # fill NaN values
         merged_cons.fillna(0, inplace=True)
@@ -152,6 +162,7 @@ class DataLoader:
 
         # add computed information to db
         self.schedule["last_trip_total_consumption"] = merged_cons.loc[:, "consumption"]
+        self.schedule["last_trip_total_length_hours"] = merged_cons.loc[:, "len"].div(self.time_conf.time_steps_per_hour)
         self.schedule["time_left"] = merged_time_left.loc[:, "time_left"]
 
         # create BOC column and populate with zeros

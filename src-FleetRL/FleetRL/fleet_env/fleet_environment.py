@@ -6,17 +6,27 @@ import numpy as np
 from FleetRL.fleet_env.config.ev_config import EvConfig
 from FleetRL.fleet_env.config.score_config import ScoreConfig
 from FleetRL.fleet_env.config.time_config import TimeConfig
+
 from FleetRL.fleet_env.episode import Episode
+
 from FleetRL.utils.data_processing.data_processing import DataLoader
 from FleetRL.utils.ev_charging.ev_charger import EvCharger
 from FleetRL.utils.load_calculation.load_calculation import LoadCalculation, CompanyType
+
 from FleetRL.utils.normalization.normalization import Normalization
 from FleetRL.utils.normalization.oracle_normalization import OracleNormalization
 from FleetRL.utils.normalization.unit_normalization import UnitNormalization
+
 from FleetRL.utils.observation.observer_with_building_load import ObserverWithBuildingLoad
+from FleetRL.utils.observation.basic_observer import BasicObserver
 from FleetRL.utils.observation.observer import Observer
+
+from FleetRL.utils.time_picker.random_time_picker import RandomTimePicker
 from FleetRL.utils.time_picker.static_time_picker import StaticTimePicker
 from FleetRL.utils.time_picker.time_picker import TimePicker
+
+from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDegradation
+from FleetRL.utils.battery_degradation.battery_degradation import BatteryDegradation
 
 
 class FleetEnv(gym.Env):
@@ -27,8 +37,8 @@ class FleetEnv(gym.Env):
         # path for input files, needs to be the same for all inputs
         self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
         # EV schedule database
-        # self.db_name = 'full_test_one_car.csv'
-        self.schedule_name = 'one_day_same_training.csv'
+        self.schedule_name = 'full_test_one_car.csv'
+        # self.schedule_name = 'one_day_same_training.csv'
         # Spot price database
         self.spot_name = 'spot_2020.csv'
         # Building load database
@@ -50,13 +60,15 @@ class FleetEnv(gym.Env):
 
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
-        self.time_picker: TimePicker = StaticTimePicker()  # when an episode starts, this class picks the starting time
+        self.time_picker: TimePicker = RandomTimePicker()  # when an episode starts, this class picks the starting time
         self.observer: Observer = ObserverWithBuildingLoad()  # all observations are processed in the Observer class
-        self.episode = Episode(self.time_conf)
+        self.episode: Episode = Episode(self.time_conf)
+        self.battery_degradation: BatteryDegradation = EmpiricalDegradation()
 
         # Setting EV parameters
         self.target_soc = 0.85  # Target SoC - Vehicles should always leave with this SoC
         self.eps = 0.005  # allowed SOC deviation from target: 0.5%
+        self.initial_soh = 1.0  # initial degree of battery degradation, assumed equal for all cars
 
         # initiating variables inside __init__() that are needed for gym.Env
         self.info: dict = {}  # Necessary for gym env (Double check because new implementation doesn't need it)
@@ -89,6 +101,8 @@ class FleetEnv(gym.Env):
         # TODO: for now the number of cars is dictated by the data, but it could also be
         #  initialized in the class and then random EVs get picked from the database
         self.num_cars = self.db["ID"].max() + 1
+
+        self.episode.soh = np.ones(self.num_cars) * self.initial_soh  # initialize soh for each battery
 
         # TODO: spot price updates during the day, to allow more than 8 hour lookahead at some times
         #  (use clipping if not available, repeat last value in window)
@@ -129,6 +143,8 @@ class FleetEnv(gym.Env):
         # set done to False, since the episode just started
         self.episode.done = False
 
+        self.episode.soh = np.ones(self.num_cars) * self.initial_soh
+
         self.episode.start_time = self.time_picker.choose_time(self.db, self.time_conf.freq,
                                                                self.time_conf.end_cutoff
                                                                )
@@ -142,7 +158,7 @@ class FleetEnv(gym.Env):
         obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.episode.time)
 
         # get the first soc and hours_left observation
-        self.episode.soc = obs[0]
+        self.episode.soc = obs[0] * self.episode.soh
         self.episode.hours_left = obs[1]
         self.episode.price = obs[2]
 
@@ -173,15 +189,19 @@ class FleetEnv(gym.Env):
         obs[1] = self.episode.hours_left
         obs[2] = self.episode.price
 
-        return self.normalizer.normalize_obs(obs)
+        # TODO Unit normalizer boundaries
+        return self.normalizer.normalize_obs(obs), self.info
 
     def step(self, actions):  # , action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
 
         # parse the action to the charging function and receive the soc, next soc, reward and cashflow
+        # the soh is taken into account within the charge function
         self.episode.soc, self.episode.next_soc, reward, cashflow = self.ev_charger.charge(
             self.db, self.num_cars, actions, self.episode, self.load_calculation,
-            self.ev_conf, self.time_conf, self.score_conf
-        )
+            self.ev_conf, self.time_conf, self.score_conf)
+
+        # save the old soc for logging purposes
+        self.episode.old_soc = self.episode.soc
 
         # at this point, the reward only includes the current expense/revenue of the charging process
         # not true anymore, violation of invalid charging
@@ -211,13 +231,9 @@ class FleetEnv(gym.Env):
         if not self.load_calculation.check_violation(current_load, actions, current_pv):
             reward += self.score_conf.penalty_overloading
             self.episode.penalty_record += self.score_conf.penalty_overloading
-            print(f"Grid connection has been overloaded. "
-                  f"Max possible: {self.load_calculation.grid_connection} kW, "
-                  f"Actual: {sum(actions) * self.load_calculation.evse_max_power + self.building_load} kW")
+            print(f"Grid connection has been overloaded.")
 
-        # save the old soc for logging purposes
         # set the soc to the next soc
-        old_soc = self.episode.soc
         self.episode.soc = self.episode.next_soc.copy()
 
         # advance one time step
@@ -234,6 +250,8 @@ class FleetEnv(gym.Env):
         # go through the cars and check whether the same car is still there, no car, or a new car
         for car in range(self.num_cars):
 
+            self.episode.soh -= self.battery_degradation.calculate_cycle_loss(self.episode.old_soc[car], self.episode.soc[car], 11)
+
             # check if a car just left and didn't fully charge
             if (self.episode.hours_left[car] != 0) and (next_obs_time_left[car] == 0):
                 if self.target_soc - self.episode.soc[car] > self.eps:
@@ -247,6 +265,7 @@ class FleetEnv(gym.Env):
             # same car in the next time step
             if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
                 self.episode.hours_left[car] -= self.time_conf.dt
+                self.episode.soh -= self.battery_degradation.calculate_calendar_aging_while_parked(self.episode.old_soc[car], self.episode.soc[car], self.time_conf)
 
             # no car in the next time step
             elif next_obs_time_left[car] == 0:
@@ -256,7 +275,10 @@ class FleetEnv(gym.Env):
             # new car in the next time step
             elif (self.episode.hours_left[car] == 0) and (next_obs_time_left[car] != 0):
                 self.episode.hours_left[car] = next_obs_time_left[car]
+                self.episode.old_soc[car] = self.episode.soc[car]
                 self.episode.soc[car] = next_obs_soc[car]
+                trip_len = self.observer.get_trip_len(self.db, car, self.episode.time)
+                self.episode.soh -= self.battery_degradation.calculate_calendar_aging_on_arrival(trip_len, self.episode.old_soc[car], self.episode.soc[car])
 
             # this shouldn't happen but if it does, an error is thrown
             else:
@@ -285,7 +307,7 @@ class FleetEnv(gym.Env):
 
         # here, the reward is already in integer format
         # Todo integer or float?
-        return self.normalizer.normalize_obs(next_obs), reward, self.episode.done, self.info
+        return self.normalizer.normalize_obs(next_obs), reward, self.episode.done, False, self.info
 
     def close(self):
         return 0
@@ -297,6 +319,7 @@ class FleetEnv(gym.Env):
         print(f"Action taken: {action}")
         print(f"Actual charging energy: {self.episode.total_charging_energy} kWh")
         print(f"Charging cost/revenue: {self.episode.current_charging_expense} €")
+        print(f"SoH: {self.episode.soh}")
         print("--------------------------")
 
     def render(self):

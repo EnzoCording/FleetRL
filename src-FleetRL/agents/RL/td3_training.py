@@ -1,7 +1,7 @@
 import os
 import time
 
-import gym
+import gymnasium as gym
 import numpy as np
 from stable_baselines3 import TD3
 from stable_baselines3.common.env_checker import check_env
