@@ -28,6 +28,7 @@ from FleetRL.utils.time_picker.time_picker import TimePicker
 from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDegradation
 from FleetRL.utils.battery_degradation.battery_degradation import BatteryDegradation
 
+from FleetRL.utils.data_logger.log_data import DataLogger
 
 class FleetEnv(gym.Env):
 
@@ -65,6 +66,12 @@ class FleetEnv(gym.Env):
         self.episode: Episode = Episode(self.time_conf)
         self.battery_degradation: BatteryDegradation = EmpiricalDegradation()
 
+        # Defining number of EVs
+        # TODO: This could even be extended to the point that more cars can be pulled that the dataset contains
+        # For now, defined here and error thrown if cars > max cars of schedule file
+        self.number_of_cars = 2
+        self.car_choice_random = False  # if False, takes the first n cars
+
         # Setting EV parameters
         self.target_soc = 0.85  # Target SoC - Vehicles should always leave with this SoC
         self.eps = 0.005  # allowed SOC deviation from target: 0.5%
@@ -74,6 +81,9 @@ class FleetEnv(gym.Env):
         self.info: dict = {}  # Necessary for gym env (Double check because new implementation doesn't need it)
         self.max_time_left: float = None  # The maximum value of time left in the db dataframe
         self.max_spot: float = None  # The maximum spot market price in the db dataframe
+
+        # Loading the data logger
+        self.data_logger: DataLogger = DataLogger(self.episode)
 
         # Loading the inputs
         self.data_loader: DataLoader = DataLoader(self.path_name, self.schedule_name,
@@ -189,6 +199,8 @@ class FleetEnv(gym.Env):
         obs[1] = self.episode.hours_left
         obs[2] = self.episode.price
 
+        self.data_logger.log_soc(self.episode)
+
         # TODO Unit normalizer boundaries
         return self.normalizer.normalize_obs(obs), self.info
 
@@ -289,6 +301,7 @@ class FleetEnv(gym.Env):
         # TODO: do I still experience the last timestep or do I finish when I reach it?
         if self.episode.time == self.episode.finish_time:
             self.episode.done = True
+            self.data_logger.add_log_entry()
             print(f"Episode done: {self.episode.done}")
 
         # append to the reward history
@@ -304,6 +317,8 @@ class FleetEnv(gym.Env):
         next_obs[0] = self.episode.soc
         next_obs[1] = self.episode.hours_left
         next_obs[2] = self.episode.price
+
+        self.data_logger.log_soc(self.episode)
 
         # here, the reward is already in integer format
         # Todo integer or float?
