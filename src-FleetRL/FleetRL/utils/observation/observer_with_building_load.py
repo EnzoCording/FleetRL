@@ -14,7 +14,9 @@ class ObserverWithBuildingLoad(Observer):
         price_end = np.where(db["date"] == (time + np.timedelta64(price_lookahead, 'h')))[0][0]
         price = db["DELU"][price_start: price_end].values
 
-        building_load = db.loc[db["date"] == time, "load"].values
+        # reshape necessary because concatenation happens in the normalizer
+        # when using values[0], only an int is returned, but we need a np.ndarray(1,)
+        building_load = np.array(db.loc[db["date"] == time, "load"].values[0]).reshape(1,)
 
         return [soc, hours_left, price, building_load]
 

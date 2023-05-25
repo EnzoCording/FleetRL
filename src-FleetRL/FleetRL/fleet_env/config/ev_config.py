@@ -5,3 +5,4 @@ class EvConfig:
         self.obc_max_power = 100  # onboard charger max power in kW
         self.charging_eff = 0.91  # charging efficiency
         self.discharging_eff = 0.91  # discharging efficiency
+        self.def_soc = 0.5  # default soc that is assumed in the beginning

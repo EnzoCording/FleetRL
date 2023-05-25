@@ -28,11 +28,11 @@ n_actions = env.action_space.shape[-1]
 param_noise = None
 action_noise = OrnsteinUhlenbeckActionNoise(mean=np.zeros(n_actions), sigma=float(0.5)*np.ones(n_actions))
 
-model = TD3('MlpPolicy', env, action_noise=action_noise, verbose=1)
+model = TD3('CnnPolicy', env, verbose=1, tensorboard_log="./FleetRl_tensorboard_single/", learning_rate=0.0001, learning_starts=1000)
 
 saving_interval = 20000
 for i in range(1, 5):
-    model.learn(total_timesteps=saving_interval, reset_num_timesteps=False, tb_log_name="TD3")
+    model.learn(total_timesteps=saving_interval, reset_num_timesteps=False, tb_log_name=f"TD3_{time_now}")
     model.save(f"{trained_agents_dir}/{saving_interval * i}")
 
 del model

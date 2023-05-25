@@ -24,7 +24,7 @@ class LoadCalculation:
             evse_power = 22  # charger cap in kW
 
         elif company_type == CompanyType.Caretaker:
-            grid_connection = 30  # max grid in kW
+            grid_connection = 120  # max grid in kW
             evse_power = 7.4  # charger cap in kW
 
         else:

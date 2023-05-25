@@ -7,7 +7,7 @@ from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDeg
 
 env = FleetEnv()
 env.reset()
-for i in range(140):
+for i in range(2):
     action = []
     # print(env.step([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
     # print(env.step([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))

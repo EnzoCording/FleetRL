@@ -27,6 +27,7 @@ from FleetRL.utils.time_picker.time_picker import TimePicker
 
 from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDegradation
 from FleetRL.utils.battery_degradation.battery_degradation import BatteryDegradation
+from FleetRL.utils.battery_degradation.rainflow_sei_degradation import RainFlowSei
 
 from FleetRL.utils.data_logger.log_data import DataLogger
 
@@ -38,7 +39,8 @@ class FleetEnv(gym.Env):
         # path for input files, needs to be the same for all inputs
         self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
         # EV schedule database
-        self.schedule_name = 'full_test_one_car.csv'
+        self.schedule_name = "full_test.csv"
+        # self.schedule_name = 'full_test_one_car.csv'
         # self.schedule_name = 'one_day_same_training.csv'
         # Spot price database
         self.spot_name = 'spot_2020.csv'
@@ -57,18 +59,26 @@ class FleetEnv(gym.Env):
         self.time_conf = TimeConfig()
         self.ev_conf = EvConfig()
         self.score_conf = ScoreConfig()
-        self.load_calculation = LoadCalculation(CompanyType.Delivery)
+        self.load_calculation = LoadCalculation(CompanyType.Caretaker)
+
+        # Set printing and logging parameters, false can increase training fps
+        self.print_updates = True
+        self.print_reward = False
+        self.print_function = True
+        self.logging = False
 
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
         self.time_picker: TimePicker = RandomTimePicker()  # when an episode starts, this class picks the starting time
         self.observer: Observer = ObserverWithBuildingLoad()  # all observations are processed in the Observer class
-        self.episode: Episode = Episode(self.time_conf)
-        self.battery_degradation: BatteryDegradation = EmpiricalDegradation()
+        self.episode: Episode = Episode(self.time_conf)  # Episode object contains all episode-specific information
+        self.battery_degradation: BatteryDegradation = EmpiricalDegradation()  # battery degradation method
+        self.rainflow: RainFlowSei = RainFlowSei()  # TODO
 
         # Defining number of EVs
-        # TODO: This could even be extended to the point that more cars can be pulled that the dataset contains
+        # This could even be extended to the point that more cars can be pulled that the dataset contains
         # For now, defined here and error thrown if cars > max cars of schedule file
+        # TODO
         self.number_of_cars = 2
         self.car_choice_random = False  # if False, takes the first n cars
 
@@ -149,12 +159,15 @@ class FleetEnv(gym.Env):
             high=1,
             shape=(self.num_cars,), dtype=np.float32)
 
-    def reset(self, **kwargs):
+    def reset(self, **kwargs) -> tuple[np.array, dict]:
+
         # set done to False, since the episode just started
         self.episode.done = False
 
+        # instantiate soh - depending on initial health settings
         self.episode.soh = np.ones(self.num_cars) * self.initial_soh
 
+        # choose a start time based on the type of choice: same, random, deterministic
         self.episode.start_time = self.time_picker.choose_time(self.db, self.time_conf.freq,
                                                                self.time_conf.end_cutoff
                                                                )
@@ -165,6 +178,7 @@ class FleetEnv(gym.Env):
         # set the model time to the start time
         self.episode.time = self.episode.start_time
 
+        # get observation from observer module
         obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.episode.time)
 
         # get the first soc and hours_left observation
@@ -188,7 +202,13 @@ class FleetEnv(gym.Env):
                                          * min([self.ev_conf.obc_max_power, self.load_calculation.evse_max_power])
                                          * 0.8 / self.ev_conf.battery_cap
                                          )
-                print("Initial SOC modified due to unfavourable starting condition.")
+                if self.print_updates:
+                    print("Initial SOC modified due to unfavourable starting condition.")
+
+            if self.episode.soc[car] == 0:
+                self.episode.soc[car] = self.ev_conf.def_soc
+                if self.print_updates:
+                    print(f"Initial SoC changed from 0 to default value: {self.ev_conf.def_soc}")
 
         # set the reward history back to an empty list, set cumulative reward to 0
         self.episode.reward_history = []
@@ -199,18 +219,19 @@ class FleetEnv(gym.Env):
         obs[1] = self.episode.hours_left
         obs[2] = self.episode.price
 
-        self.data_logger.log_soc(self.episode)
+        if self.logging:
+            self.data_logger.log_soc(self.episode)
 
         # TODO Unit normalizer boundaries
         return self.normalizer.normalize_obs(obs), self.info
 
-    def step(self, actions):  # , action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
+    def step(self, actions: np.array) -> tuple[np.array, float, bool, bool, dict]:
 
         # parse the action to the charging function and receive the soc, next soc, reward and cashflow
         # the soh is taken into account within the charge function
         self.episode.soc, self.episode.next_soc, reward, cashflow = self.ev_charger.charge(
             self.db, self.num_cars, actions, self.episode, self.load_calculation,
-            self.ev_conf, self.time_conf, self.score_conf)
+            self.ev_conf, self.time_conf, self.score_conf, self.print_updates, self.target_soc)
 
         # save the old soc for logging purposes
         self.episode.old_soc = self.episode.soc
@@ -222,28 +243,31 @@ class FleetEnv(gym.Env):
         self.episode.current_charging_expense = reward
 
         # calling the print function
-        self.print(actions)
+        if self.print_function:
+            self.print(actions)
 
-        # print(f"Max possible: {self.grid_connection} kW" ,f"Actual: {sum(action) * self.evse_max_power + self.building_load} kW")
+        # ToDo
+        # print(f"Max possible: {self.grid_connection} kW" ,f"Actual: {sum(actions) * self.evse_max_power + self.building_load} kW")
         # print(self.price[0])
         # print(self.hours_left)
 
         # check if the current load exceeds the trafo rating and penalize accordingly
 
         if self.include_building_load:
-            current_load = self.db.loc[self.db["date"] == self.episode.time, "load"].values
+            current_load = self.db.loc[self.db["date"] == self.episode.time, "load"].values[0]
         else:
             current_load = 0
 
         if self.include_pv:
-            current_pv = self.db[self.db["date"] == self.episode.time, "pv"].values
+            current_pv = self.db[self.db["date"] == self.episode.time, "pv"].values[0]
         else:
             current_pv = 0
 
         if not self.load_calculation.check_violation(current_load, actions, current_pv):
             reward += self.score_conf.penalty_overloading
             self.episode.penalty_record += self.score_conf.penalty_overloading
-            print(f"Grid connection has been overloaded.")
+            if self.print_updates:
+                print(f"Grid connection has been overloaded.")
 
         # set the soc to the next soc
         self.episode.soc = self.episode.next_soc.copy()
@@ -270,9 +294,11 @@ class FleetEnv(gym.Env):
                     # TODO could scale with difference to SoC
                     # penalty for not fulfilling charging requirement
                     # TODO: this could be changed. No target SoC, but penalty if a car runs empty on a trip
-                    reward += self.score_conf.penalty_soc_violation
-                    self.episode.penalty_record += self.score_conf.penalty_soc_violation
-                    print("A car left the station without reaching the target SoC.")
+                    current_soc_pen = self.score_conf.penalty_soc_violation * (self.target_soc - self.episode.soc[car])
+                    reward += current_soc_pen
+                    self.episode.penalty_record += current_soc_pen
+                    if self.print_updates:
+                        print(f"A car left the station without reaching the target SoC. Penalty: {current_soc_pen}")
 
             # same car in the next time step
             if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
@@ -282,7 +308,9 @@ class FleetEnv(gym.Env):
             # no car in the next time step
             elif next_obs_time_left[car] == 0:
                 self.episode.hours_left[car] = next_obs_time_left[car]
-                self.episode.soc[car] = next_obs_soc[car]
+                # self.episode.soc[car] = next_obs_soc[car]
+                # instead of 0, leave soc at last known soc
+                self.episode.soc[car] = self.episode.old_soc[car]
 
             # new car in the next time step
             elif (self.episode.hours_left[car] == 0) and (next_obs_time_left[car] != 0):
@@ -301,8 +329,10 @@ class FleetEnv(gym.Env):
         # TODO: do I still experience the last timestep or do I finish when I reach it?
         if self.episode.time == self.episode.finish_time:
             self.episode.done = True
-            self.data_logger.add_log_entry()
-            print(f"Episode done: {self.episode.done}")
+            if self.logging:
+                self.data_logger.add_log_entry()
+            if self.print_updates:
+                print(f"Episode done: {self.episode.done}")
 
         # append to the reward history
         self.episode.cumulative_reward += reward
@@ -310,15 +340,20 @@ class FleetEnv(gym.Env):
 
         # TODO: Here could be a saving function that saves the results of the episode
 
-        print(f"Reward signal: {reward}")
-        print("---------")
-        print("\n")
+        if self.print_reward:
+            print(f"Reward signal: {reward}")
+            print("---------")
+            print("\n")
 
         next_obs[0] = self.episode.soc
         next_obs[1] = self.episode.hours_left
         next_obs[2] = self.episode.price
 
-        self.data_logger.log_soc(self.episode)
+        if self.logging:
+            self.data_logger.log_soc(self.episode)
+
+        # ToDo
+        # self.rainflow.print_rainflow(self.data_logger.soc_list, self.num_cars)
 
         # here, the reward is already in integer format
         # Todo integer or float?

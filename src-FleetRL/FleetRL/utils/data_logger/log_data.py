@@ -10,5 +10,6 @@ class DataLogger:
         self.soc_list.append(episode.soc)
 
     def add_log_entry(self):
-        self.log.append({"soc": self.soc_list, "econ": self.econ_list})
-        print(self.log)
+        self.log.append({"soc": self.soc_list})  # , "econ": self.econ_list})
+        #print("printing log:")
+        #print(self.log)
