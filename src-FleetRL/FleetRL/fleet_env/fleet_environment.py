@@ -29,6 +29,10 @@ from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDeg
 from FleetRL.utils.battery_degradation.battery_degradation import BatteryDegradation
 from FleetRL.utils.battery_degradation.rainflow_sei_degradation import RainFlowSei
 
+from FleetRL.utils.new_battery_degradation.new_batt_deg import NewBatteryDegradation
+from FleetRL.utils.new_battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
+from FleetRL.utils.new_battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
+
 from FleetRL.utils.data_logger.log_data import DataLogger
 
 class FleetEnv(gym.Env):
@@ -63,9 +67,9 @@ class FleetEnv(gym.Env):
 
         # Set printing and logging parameters, false can increase training fps
         self.print_updates = True
-        self.print_reward = False
+        self.print_reward = True
         self.print_function = True
-        self.logging = False
+        self.logging = True
 
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
@@ -123,6 +127,9 @@ class FleetEnv(gym.Env):
         self.num_cars = self.db["ID"].max() + 1
 
         self.episode.soh = np.ones(self.num_cars) * self.initial_soh  # initialize soh for each battery
+
+        self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.episode.soh)
+        self.new_emp_batt: NewBatteryDegradation = NewEmpiricalDegradation()
 
         # TODO: spot price updates during the day, to allow more than 8 hour lookahead at some times
         #  (use clipping if not available, repeat last value in window)
@@ -351,6 +358,9 @@ class FleetEnv(gym.Env):
 
         if self.logging:
             self.data_logger.log_soc(self.episode)
+
+        self.new_battery_degradation.calculate_degradation(self.data_logger.soc_log, self.load_calculation.evse_max_power, self.time_conf, self.ev_conf.temperature)
+        self.new_emp_batt.calculate_degradation(self.data_logger.soc_log, self.load_calculation.evse_max_power, self.time_conf, self.ev_conf.temperature)
 
         # ToDo
         # self.rainflow.print_rainflow(self.data_logger.soc_list, self.num_cars)

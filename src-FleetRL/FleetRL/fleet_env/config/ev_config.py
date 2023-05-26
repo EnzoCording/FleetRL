@@ -6,3 +6,4 @@ class EvConfig:
         self.charging_eff = 0.91  # charging efficiency
         self.discharging_eff = 0.91  # discharging efficiency
         self.def_soc = 0.5  # default soc that is assumed in the beginning
+        self.temperature = 25  # °C needed for battery degradation

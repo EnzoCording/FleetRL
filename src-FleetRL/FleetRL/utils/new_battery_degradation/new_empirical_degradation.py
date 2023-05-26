@@ -1,0 +1,80 @@
+import numpy as np
+
+from FleetRL.fleet_env.config.time_config import TimeConfig
+from FleetRL.utils.new_battery_degradation.new_batt_deg import NewBatteryDegradation
+class NewEmpiricalDegradation(NewBatteryDegradation):
+
+    def __init__(self):
+
+        # http://queenbattery.com.cn/our-products/677-lg-e63-376v-63ah-li-po-li-polymer-battery-cell.html?search_query=lg+e63&results=1
+        # read off the graphs in section 4: cycle and calendar aging
+
+        self.cycle_loss_11 = 0.000125  # Cycle loss per full cycle (100% DoD discharge and charge) at 11 kW
+        self.cycle_loss_22 = 0.000125  # Cycle loss per full cycle (100% DoD discharge and charge) at 11 kW
+        self.cycle_loss_43 = 0.000167  # Cycle loss per full cycle (100% DoD discharge and charge) at 43 kW
+
+        self.calendar_aging_0 = 0.0065  # Calendar aging per year if battery at 0% SoC
+        self.calendar_aging_40 = 0.0293  # Calendar aging per year if battery at 40% SoC
+        self.calendar_aging_90 = 0.065  # Calendar aging per year if battery at 90% SoC
+
+        self.soh = np.ones(11)
+
+    def calculate_degradation(self, soc_log: list, charging_power: float, time_conf: TimeConfig, temp: float) -> np.array:
+        # find out the most recent entries in the soc list
+        # get old and new soc
+        # get average soc
+        # compute cycle and calendar based on avg soc and charging power
+
+        # compute sorted soc list based on the log records of the episode so far
+        # go from: t1:[soc_car1, soc_car2, ...], t2:[soc_car1, soc_car2,...]
+        # to this: car 1: [soc_t1, soc_t2, ...], car 2: [soc_t1, soc_t2, ...]
+        sorted_soc_list = []
+
+        # range(len(soc_log[0])) gives the number of cars
+        for j in range(len(soc_log[0])):
+            # range(len(soc_log)) gives the number of time steps that the cars go through
+            sorted_soc_list.append([soc_log[i][j] for i in range(len(soc_log))])
+
+        # empty list, appends a degradation kWh value for each car
+        degradation = []
+
+        for i in range(len(sorted_soc_list)):
+
+            # get old and new soc
+            old_soc = sorted_soc_list[i][-2]
+            new_soc = sorted_soc_list[i][-1]
+
+            # compute average for calendar aging
+            avg_soc = (old_soc + new_soc) / 2
+
+            # find the closest avg soc for calendar aging
+            cal_soc = np.asarray([0, 40, 90])
+            closest_index = np.abs(cal_soc - avg_soc).argmin()
+            closest = cal_soc[closest_index]
+
+            if closest == 0:
+                cal_aging = self.calendar_aging_0 * time_conf.dt / 8760
+            elif closest == 40:
+                cal_aging = self.calendar_aging_40 * time_conf.dt / 8760
+            elif closest == 90:
+                cal_aging = self.calendar_aging_90 * time_conf.dt / 8760
+            else:
+                cal_aging = None
+                raise RuntimeError("Closest calendar aging SoC not recognised.")
+
+            # calculate DoD of timestep
+            dod = abs(new_soc - old_soc)
+
+            # distinguish between high and low power charging according to input graph data
+            if charging_power <= 22.0:
+                cycle_loss = dod * self.cycle_loss_11 / 2  # convert to equivalent full cycles, that's why divided by 2
+            else:
+                cycle_loss = dod * self.cycle_loss_43 / 2  # convert to equivalent full cycles, that's why divided by 2
+
+            # aggregate calendar and cyclic aging and append to degradation list
+            degradation.append(cal_aging + cycle_loss)
+
+        self.soh -= degradation
+        print(f"emp soh: {self.soh}")
+
+        return np.array(degradation)
