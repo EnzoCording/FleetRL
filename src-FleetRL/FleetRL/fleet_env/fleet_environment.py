@@ -46,8 +46,8 @@ class FleetEnv(gym.Env):
 
         # EV schedule database
         # generating own schedules or importing them
-        self.generate_schedule = False
-        self.schedule_name = "schedule_1685372177_one_year_15_min_delivery.csv"
+        self.generate_schedule = True
+        # self.schedule_name = "schedule_1685372177_one_year_15_min_delivery.csv"
         # self.schedule_name = "full_test.csv"
         # self.schedule_name = 'full_test_one_car.csv'
         # self.schedule_name = 'one_day_same_training.csv'
@@ -62,9 +62,17 @@ class FleetEnv(gym.Env):
         self.pv_name = None
 
         if self.generate_schedule:
-            self.schedule_gen = ScheduleGenerator(file_comment="one_year_15_min_delivery", schedule_dir=self.path_name, ending_date="01/04/2020")
+
+            self.schedule_gen = ScheduleGenerator(file_comment="one_year_15_min_delivery",
+                                                  schedule_dir=self.path_name,
+                                                  schedule_type=ScheduleType.Delivery,
+                                                  ending_date="01/05/2020")
+
+            # self.schedule_gen.generate_schedule()
+            self.schedule_gen.generate_multiple_ev_schedule(num_evs=10)
+
             self.schedule_name = self.schedule_gen.get_file_name()
-            self.schedule_gen.generate_schedule()
+
 
         # Setting flags for the type of environment to build
         # NOTE: they are appended to the db in the order specified here
@@ -142,7 +150,7 @@ class FleetEnv(gym.Env):
         self.episode.soh_2 = np.ones(self.num_cars) * self.initial_soh
 
         self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh, self.num_cars)
-        self.new_emp_batt: NewBatteryDegradation = NewEmpiricalDegradation()
+        self.new_emp_batt: NewBatteryDegradation = NewEmpiricalDegradation(self.initial_soh, self.num_cars)
 
         # TODO: spot price updates during the day, to allow more than 8 hour lookahead at some times
         #  (use clipping if not available, repeat last value in window)

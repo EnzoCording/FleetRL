@@ -4,7 +4,7 @@ from FleetRL.fleet_env.config.time_config import TimeConfig
 from FleetRL.utils.new_battery_degradation.new_batt_deg import NewBatteryDegradation
 class NewEmpiricalDegradation(NewBatteryDegradation):
 
-    def __init__(self):
+    def __init__(self, init_soh: float, num_cars: int):
 
         # http://queenbattery.com.cn/our-products/677-lg-e63-376v-63ah-li-po-li-polymer-battery-cell.html?search_query=lg+e63&results=1
         # read off the graphs in section 4: cycle and calendar aging
@@ -17,7 +17,9 @@ class NewEmpiricalDegradation(NewBatteryDegradation):
         self.calendar_aging_40 = 0.0293  # Calendar aging per year if battery at 40% SoC
         self.calendar_aging_90 = 0.065  # Calendar aging per year if battery at 90% SoC
 
-        self.soh = np.ones(11)
+        self.init_soh = init_soh
+        self.num_cars = num_cars
+        self.soh = np.ones(self.num_cars) * self.init_soh
 
     def calculate_degradation(self, soc_log: list, charging_power: float, time_conf: TimeConfig, temp: float) -> np.array:
         # find out the most recent entries in the soc list
