@@ -15,11 +15,13 @@ class TimeConfig:
         '''
 
         # setting time-related model parameters
-        # self.freq = '15T'
-        # self.minutes = 15
-        # self.time_steps_per_hour = 4
+        # self.freq = '1H'
+        # self.minutes = '60'
+        # self.time_steps_per_hour = 1
 
-        self.freq: str = '1H'  # Frequency string needed to down-sample in pandas
-        self.minutes: int = 60  # Amount of minutes per time step
-        self.time_steps_per_hour: int = 1  # Number of time steps per hour, used in obs_space
+        # when using hourly frequency, some info can get lost, causing minor inaccuracies
+
+        self.freq: str = '15T'  # Frequency string needed to down-sample in pandas
+        self.minutes: int = 15  # Amount of minutes per time step
+        self.time_steps_per_hour: int = 4  # Number of time steps per hour, used in obs_space
         self.dt: float = self.minutes / 60  # Hours per timestep, variable used in the energy calculations

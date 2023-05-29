@@ -9,7 +9,7 @@ from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDeg
 
 env = FleetEnv()
 env.reset()
-for i in range(7500):
+for i in range(75):
     action = []
     # print(env.step([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
     # print(env.step([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
@@ -32,8 +32,8 @@ soh_log = []
 soh_2 = []
 
 for j in range(env.num_cars):
-    soh_log.append([env.data_logger.soh_log[i][j] for i in range(7500)])
-    soh_2.append([env.data_logger.soh_2[i][j] for i in range(7500)])
+    soh_log.append([env.data_logger.soh_log[i][j] for i in range(75)])
+    soh_2.append([env.data_logger.soh_2[i][j] for i in range(75)])
     plt.plot(soh_log[j])
     plt.plot(soh_2[j])
 plt.show()

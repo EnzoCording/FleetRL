@@ -34,6 +34,7 @@ from FleetRL.utils.new_battery_degradation.new_empirical_degradation import NewE
 from FleetRL.utils.new_battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
 
 from FleetRL.utils.data_logger.log_data import DataLogger
+from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType, ScheduleConfig
 
 class FleetEnv(gym.Env):
 
@@ -42,16 +43,28 @@ class FleetEnv(gym.Env):
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs
         self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
+
         # EV schedule database
-        self.schedule_name = "full_test.csv"
+        # generating own schedules or importing them
+        self.generate_schedule = False
+        self.schedule_name = "schedule_1685372177_one_year_15_min_delivery.csv"
+        # self.schedule_name = "full_test.csv"
         # self.schedule_name = 'full_test_one_car.csv'
         # self.schedule_name = 'one_day_same_training.csv'
+
         # Spot price database
         self.spot_name = 'spot_2020.csv'
+
         # Building load database
         self.building_name = 'caretaker.csv'
+
         # PV gen database
         self.pv_name = None
+
+        if self.generate_schedule:
+            self.schedule_gen = ScheduleGenerator(file_comment="one_year_15_min_delivery", schedule_dir=self.path_name, ending_date="01/04/2020")
+            self.schedule_name = self.schedule_gen.get_file_name()
+            self.schedule_gen.generate_schedule()
 
         # Setting flags for the type of environment to build
         # NOTE: they are appended to the db in the order specified here
@@ -77,7 +90,6 @@ class FleetEnv(gym.Env):
         self.observer: Observer = ObserverWithBuildingLoad()  # all observations are processed in the Observer class
         self.episode: Episode = Episode(self.time_conf)  # Episode object contains all episode-specific information
         self.battery_degradation: BatteryDegradation = EmpiricalDegradation()  # battery degradation method
-        self.rainflow: RainFlowSei = RainFlowSei()  # TODO
 
         # Defining number of EVs
         # This could even be extended to the point that more cars can be pulled that the dataset contains

@@ -108,10 +108,8 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
                 # calculate degradation of the 2nd last rainflow entry (the most recent might still change)
                 last_complete_entry = rainflow_result[-2]
 
-                # dod is equal to the range times 2, according to the paper
-                # this is probably because we are looking at equivalent full cycles, but recheck
-                # ToDo
-                dod = last_complete_entry[0] * 2
+                # dod is equal to the range
+                dod = last_complete_entry[0]
 
                 # average soc is equal to the mean
                 avg_soc = last_complete_entry[1]
