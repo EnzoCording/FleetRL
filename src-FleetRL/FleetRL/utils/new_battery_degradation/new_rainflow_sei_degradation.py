@@ -109,6 +109,8 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
                 last_complete_entry = rainflow_result[-2]
 
                 # dod is equal to the range times 2, according to the paper
+                # this is probably because we are looking at equivalent full cycles, but recheck
+                # ToDo
                 dod = last_complete_entry[0] * 2
 
                 # average soc is equal to the mean
@@ -165,5 +167,7 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
                 raise TypeError("Degradation negative, might have to do with DoD > 1.")
 
         self.soh -= degradation
+
+        print(f"sei soh: {self.soh}")
 
         return np.array(degradation)

@@ -73,7 +73,7 @@ class FleetEnv(gym.Env):
 
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
-        self.time_picker: TimePicker = RandomTimePicker()  # when an episode starts, this class picks the starting time
+        self.time_picker: TimePicker = StaticTimePicker()  # when an episode starts, this class picks the starting time
         self.observer: Observer = ObserverWithBuildingLoad()  # all observations are processed in the Observer class
         self.episode: Episode = Episode(self.time_conf)  # Episode object contains all episode-specific information
         self.battery_degradation: BatteryDegradation = EmpiricalDegradation()  # battery degradation method
@@ -127,6 +127,7 @@ class FleetEnv(gym.Env):
         self.num_cars = self.db["ID"].max() + 1
 
         self.episode.soh = np.ones(self.num_cars) * self.initial_soh  # initialize soh for each battery
+        self.episode.soh_2 = np.ones(self.num_cars) * self.initial_soh
 
         self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh, self.num_cars)
         self.new_emp_batt: NewBatteryDegradation = NewEmpiricalDegradation()
@@ -228,6 +229,7 @@ class FleetEnv(gym.Env):
 
         if self.logging:
             self.data_logger.log_soc(self.episode)
+            self.data_logger.log_soh(self.episode)
 
         # TODO Unit normalizer boundaries
         return self.normalizer.normalize_obs(obs), self.info
@@ -293,7 +295,7 @@ class FleetEnv(gym.Env):
         # go through the cars and check whether the same car is still there, no car, or a new car
         for car in range(self.num_cars):
 
-            self.episode.soh -= self.battery_degradation.calculate_cycle_loss(self.episode.old_soc[car], self.episode.soc[car], 11)
+            #self.episode.soh -= self.battery_degradation.calculate_cycle_loss(self.episode.old_soc[car], self.episode.soc[car], 11)
 
             # check if a car just left and didn't fully charge
             if (self.episode.hours_left[car] != 0) and (next_obs_time_left[car] == 0):
@@ -310,7 +312,7 @@ class FleetEnv(gym.Env):
             # same car in the next time step
             if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
                 self.episode.hours_left[car] -= self.time_conf.dt
-                self.episode.soh -= self.battery_degradation.calculate_calendar_aging_while_parked(self.episode.old_soc[car], self.episode.soc[car], self.time_conf)
+                #self.episode.soh -= self.battery_degradation.calculate_calendar_aging_while_parked(self.episode.old_soc[car], self.episode.soc[car], self.time_conf)
 
             # no car in the next time step
             elif next_obs_time_left[car] == 0:
@@ -325,7 +327,7 @@ class FleetEnv(gym.Env):
                 self.episode.old_soc[car] = self.episode.soc[car]
                 self.episode.soc[car] = next_obs_soc[car]
                 trip_len = self.observer.get_trip_len(self.db, car, self.episode.time)
-                self.episode.soh -= self.battery_degradation.calculate_calendar_aging_on_arrival(trip_len, self.episode.old_soc[car], self.episode.soc[car])
+                #self.episode.soh -= self.battery_degradation.calculate_calendar_aging_on_arrival(trip_len, self.episode.old_soc[car], self.episode.soc[car])
 
             # this shouldn't happen but if it does, an error is thrown
             else:
@@ -359,11 +361,11 @@ class FleetEnv(gym.Env):
         if self.logging:
             self.data_logger.log_soc(self.episode)
 
-        self.new_battery_degradation.calculate_degradation(self.data_logger.soc_log, self.load_calculation.evse_max_power, self.time_conf, self.ev_conf.temperature)
-        self.new_emp_batt.calculate_degradation(self.data_logger.soc_log, self.load_calculation.evse_max_power, self.time_conf, self.ev_conf.temperature)
+        self.episode.soh -= self.new_battery_degradation.calculate_degradation(self.data_logger.soc_log, self.load_calculation.evse_max_power, self.time_conf, self.ev_conf.temperature)
+        self.episode.soh_2 -= self.new_emp_batt.calculate_degradation(self.data_logger.soc_log, self.load_calculation.evse_max_power, self.time_conf, self.ev_conf.temperature)
 
-        # ToDo
-        # self.rainflow.print_rainflow(self.data_logger.soc_list, self.num_cars)
+        if self.logging:
+            self.data_logger.log_soh(self.episode)
 
         # here, the reward is already in integer format
         # Todo integer or float?
