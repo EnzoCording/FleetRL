@@ -4,20 +4,23 @@ import numpy as np
 from FleetRL.utils.new_battery_degradation.new_batt_deg import NewBatteryDegradation
 from FleetRL.fleet_env.config.time_config import TimeConfig
 
-import rainflow as rf
 
 class NewRainflowSeiDegradation(NewBatteryDegradation):
 
-    def __init__(self, init_soh: list):
+    def __init__(self, init_soh: float, num_cars: int):
 
         # Source: Modeling of Lithium-Ion Battery Degradation for Cell Life Assessment
         # https://ieeexplore.ieee.org/document/7488267
 
+        self.num_cars = num_cars
+        self.adj_counter = 0
+
         # initial state of health of the battery
-        self.soh = init_soh
+        self.init_soh = init_soh
+        self.soh = np.ones(self.num_cars) * self.init_soh
 
         # battery life, according to the paper notation
-        self.l = np.ones(len(self.soh)) - self.soh
+        self.l = np.ones(self.num_cars) - self.soh
 
         # non-linear degradation model
         self.alpha_sei = 5.75E-2
@@ -40,13 +43,16 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
         self.k_dt = 4.14E-10  # 1/s -> per second
 
         # rainflow list counter to check when to calculate next degradation
-        self.rainflow_length = np.ones(len(self.soh))
+        self.rainflow_length = np.ones(self.num_cars)
+
+        self.fd: np.array = np.zeros(self.num_cars)
 
     def stress_dod(self, dod): return (self.kd1 * (dod ** self.kd2) + self.kd3) ** -1
 
     def stress_soc(self, soc): return np.e ** (self.k_sigma * (soc - self.sigma_ref))
 
-    def stress_temp(self, temp): return np.e ** (self.k_temp * (temp - self.temp_ref) * (self.temp_ref / temp))
+    def stress_temp(self, temp): return np.e ** (self.k_temp * (temp - self.temp_ref)
+                                                 * ((self.temp_ref + 273.15) / (temp + 273.15)))
 
     def stress_time(self, t): return self.k_dt * t
 
@@ -61,13 +67,10 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
     def deg_rate_total(self, dod, avg_soc, temp, t): return (self.deg_rate_cycle(dod, avg_soc, temp)
                                                              + self.deg_rate_calendar(t, avg_soc, temp))
 
-    def deg_rate_sei(self, dod, avg_soc, temp, t): return (self.beta_sei
-                                                           * self.deg_rate_total(dod, avg_soc, temp, t))
+    def l_with_sei(self, car): return (1 - self.alpha_sei * np.e ** (-1 * self.beta_sei * self.fd[car])
+                                  - (1 - self.alpha_sei) * np.e ** (-1 * self.fd[car]))
 
-    def l_with_sei(self, l, dod, avg_soc, temp, t): return (1 - self.alpha_sei * np.e ** (-1 * self.deg_rate_sei(dod, avg_soc, temp, t))
-                                     - (1 - self.alpha_sei) * np.e ** (-1 * self.deg_rate_total(dod, avg_soc, temp, t)))
-
-    def l_without_sei(self, l, dod, avg_soc, temp, t): return (1 - (1 - l) * np.e ** (-1 * self.deg_rate_total(dod, avg_soc, temp, t)))
+    def l_without_sei(self, l, car): return 1 - (1 - l) * np.e ** (-1 * self.fd[car])
 
     def calculate_degradation(self, soc_log: list, charging_power: float, time_conf: TimeConfig, temp: float) -> np.array:
 
@@ -76,8 +79,7 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
         # to this: car 1: [soc_t1, soc_t2, ...], car 2: [soc_t1, soc_t2, ...]
         sorted_soc_list = []
 
-        # range(len(soc_log[0])) gives the number of cars
-        for j in range(len(soc_log[0])):
+        for j in range(self.num_cars):
 
             # range(len(soc_log)) gives the number of time steps that the cars go through
             sorted_soc_list.append([soc_log[i][j] for i in range(len(soc_log))])
@@ -91,7 +93,7 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
         # I need the 0.5 / 1.0, the start and end, the average, the DoD
 
         # len(sorted_soc_list) gives the number of cars
-        for i in range(len(sorted_soc_list)):
+        for i in range(self.num_cars):
 
             # empty list, then fill it with the results of rainflow and check if it got longer
             rainflow_result = []
@@ -106,8 +108,8 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
                 # calculate degradation of the 2nd last rainflow entry (the most recent might still change)
                 last_complete_entry = rainflow_result[-2]
 
-                # dod is equal to the range
-                dod = last_complete_entry[0]
+                # dod is equal to the range times 2, according to the paper
+                dod = last_complete_entry[0] * 2
 
                 # average soc is equal to the mean
                 avg_soc = last_complete_entry[1]
@@ -115,37 +117,53 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
                 # severity is equal to count: either 0.5 or 1.0
                 degradation_severity = last_complete_entry[2]
 
-                # half or full cycle
-                effective_dod = dod * degradation_severity
+                # self.deg_rate_total becomes negative for DoD > 1
+                # the two checks below count how many times dod is adjusted and in severe cases stops the code
+
+                if (dod > 2) and (degradation_severity == 0.5):
+                    self.adj_counter += 1
+                    print("Minor adjustment made to DoD for degradation calculation.")
+
+                if dod > 5:
+                    print("Dod should be checked. Split cycle into multiple cycles.")
+                    print("Remove this Error if problem should be ignored.")
+                    raise TypeError("DoD too large.")
+
+                # half or full cycle, max of 1
+                effective_dod = min([1, dod * degradation_severity])
 
                 # time of the cycle
                 t = (last_complete_entry[4] - last_complete_entry[3]) * time_conf.dt * 3600
 
-                # check if L is smaller than 0.1 -> sei film formation ongoing
-                if self.l[i] < 0.1:
-                    new_l = self.l_with_sei(self.l[i], effective_dod, avg_soc, temp, t)
+                # check if new battery, otherwise ignore sei film formation
+                if self.init_soh == 1.0:
+                    self.fd[i] += self.deg_rate_total(effective_dod, avg_soc, temp, t)
+                    new_l = self.l_with_sei(i)
 
                     # check if l is negative, then something is wrong
                     if new_l < 0:
                         raise TypeError("Life degradation is negative")
 
-                # if L bigger than 0.1, sei film formation is done
+                # if battery used, sei film formation is done and can be ignored
                 else:
-                    new_l = self.l_without_sei(self.l[i], effective_dod, avg_soc, temp, t)
-                    print("Using the other way")
-                print(f"new_l: {new_l}")
+                    self.fd[i] += self.deg_rate_total(effective_dod, avg_soc, temp, t)
+                    new_l = self.l_without_sei(self.l[i], i)
 
+                # calculate degradation based on the change of l
                 degradation[i] = new_l - self.l[i]
 
+                # update lifetime variable
                 self.l[i] = new_l
+
+                # set new rainflow_length for this car
                 self.rainflow_length[i] = len(rainflow_result)
 
             else:
-                # degradation = 0
-                lifetime = self.l
+                degradation[i] = 0
 
-        self.l = lifetime
+            if degradation[i] < 0:
+                raise TypeError("Degradation negative, might have to do with DoD > 1.")
+
         self.soh -= degradation
-        print(f"soh sei: {self.soh}")
 
-        return np.array(lifetime)
+        return np.array(degradation)

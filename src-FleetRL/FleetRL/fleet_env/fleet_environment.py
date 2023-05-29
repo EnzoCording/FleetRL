@@ -128,7 +128,7 @@ class FleetEnv(gym.Env):
 
         self.episode.soh = np.ones(self.num_cars) * self.initial_soh  # initialize soh for each battery
 
-        self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.episode.soh)
+        self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh, self.num_cars)
         self.new_emp_batt: NewBatteryDegradation = NewEmpiricalDegradation()
 
         # TODO: spot price updates during the day, to allow more than 8 hour lookahead at some times
