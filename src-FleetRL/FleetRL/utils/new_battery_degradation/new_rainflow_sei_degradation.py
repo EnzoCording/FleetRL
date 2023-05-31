@@ -77,6 +77,7 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
         # compute sorted soc list based on the log records of the episode so far
         # go from: t1:[soc_car1, soc_car2, ...], t2:[soc_car1, soc_car2,...]
         # to this: car 1: [soc_t1, soc_t2, ...], car 2: [soc_t1, soc_t2, ...]
+
         sorted_soc_list = []
 
         for j in range(self.num_cars):
@@ -166,6 +167,10 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
 
         self.soh -= degradation
 
-        print(f"sei soh: {self.soh}")
+        # check that the adding up of degradation is equivalent to the newest lifetime value calculated
+        if abs(self.soh - (1 - self.l[i])) > 0.0001:
+            raise RuntimeError("Degradation calculation is not correct")
+
+        # print(f"sei soh: {self.soh}")
 
         return np.array(degradation)

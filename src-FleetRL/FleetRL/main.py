@@ -9,7 +9,8 @@ from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDeg
 
 env = FleetEnv()
 env.reset()
-for i in range(75):
+steps = 900
+for i in range(steps):
     action = []
     # print(env.step([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
     # print(env.step([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
@@ -32,10 +33,11 @@ soh_log = []
 soh_2 = []
 
 for j in range(env.num_cars):
-    soh_log.append([env.data_logger.soh_log[i][j] for i in range(75)])
-    soh_2.append([env.data_logger.soh_2[i][j] for i in range(75)])
+    soh_log.append([env.data_logger.soh_log[i][j] for i in range(steps)])
+    soh_2.append([env.data_logger.soh_2[i][j] for i in range(steps)])
     plt.plot(soh_log[j])
     plt.plot(soh_2[j])
+    plt.legend(["SEI formation + Rainflow cycle counting", "Empirical linear degradation"])
 plt.show()
 
 # %% Rainflow

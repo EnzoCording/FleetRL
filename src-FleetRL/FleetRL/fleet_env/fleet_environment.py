@@ -46,8 +46,8 @@ class FleetEnv(gym.Env):
 
         # EV schedule database
         # generating own schedules or importing them
-        self.generate_schedule = True
-        # self.schedule_name = "schedule_1685372177_one_year_15_min_delivery.csv"
+        self.generate_schedule = False
+        self.schedule_name = "schedule_1685458125_one_year_15_min_delivery.csv"
         # self.schedule_name = "full_test.csv"
         # self.schedule_name = 'full_test_one_car.csv'
         # self.schedule_name = 'one_day_same_training.csv'
@@ -66,10 +66,10 @@ class FleetEnv(gym.Env):
             self.schedule_gen = ScheduleGenerator(file_comment="one_year_15_min_delivery",
                                                   schedule_dir=self.path_name,
                                                   schedule_type=ScheduleType.Delivery,
-                                                  ending_date="01/05/2020")
+                                                  ending_date="30/12/2023")
 
-            # self.schedule_gen.generate_schedule()
-            self.schedule_gen.generate_multiple_ev_schedule(num_evs=10)
+            self.schedule_gen.generate_schedule()
+            # self.schedule_gen.generate_multiple_ev_schedule(num_evs=1)
 
             self.schedule_name = self.schedule_gen.get_file_name()
 
@@ -103,8 +103,8 @@ class FleetEnv(gym.Env):
         # This could even be extended to the point that more cars can be pulled that the dataset contains
         # For now, defined here and error thrown if cars > max cars of schedule file
         # TODO
-        self.number_of_cars = 2
-        self.car_choice_random = False  # if False, takes the first n cars
+        # self.number_of_cars = 2
+        # self.car_choice_random = False  # if False, takes the first n cars
 
         # Setting EV parameters
         self.target_soc = 0.85  # Target SoC - Vehicles should always leave with this SoC
@@ -125,6 +125,7 @@ class FleetEnv(gym.Env):
                                                   self.time_conf, self.ev_conf, self.target_soc,
                                                   self.include_building_load, self.include_pv
                                                   )
+
         # # Get schedule
         # self.schedule = self.data_loader.schedule
         #

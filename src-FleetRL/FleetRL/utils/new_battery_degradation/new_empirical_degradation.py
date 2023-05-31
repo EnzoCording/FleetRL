@@ -37,6 +37,7 @@ class NewEmpiricalDegradation(NewBatteryDegradation):
             # range(len(soc_log)) gives the number of time steps that the cars go through
             sorted_soc_list.append([soc_log[i][j] for i in range(len(soc_log))])
 
+
         # empty list, appends a degradation kWh value for each car
         degradation = []
 
@@ -77,6 +78,6 @@ class NewEmpiricalDegradation(NewBatteryDegradation):
             degradation.append(cal_aging + cycle_loss)
 
         self.soh -= degradation
-        print(f"emp soh: {self.soh}")
+        # print(f"emp soh: {self.soh}")
 
         return np.array(degradation)
