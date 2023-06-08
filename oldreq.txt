@@ -1,0 +1,7 @@
+FleetRL~=0.0.1
+gymnasium~=0.28.1
+pandas~=2.0.1
+numpy~=1.24.3
+rainflow~=3.2.0
+matplotlib~=3.7.1
+setuptools~=60.2.0
