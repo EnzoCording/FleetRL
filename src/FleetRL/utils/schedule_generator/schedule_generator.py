@@ -89,6 +89,7 @@ class ScheduleGenerator:
                     ret_hour = int(math.modf(ret_time)[1])
                     # clip return to a maximum
                     ret_hour = min([ret_hour, self.sc.max_return_hour])
+                    ret_hour = max([ret_hour, self.sc.min_return])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(ret_time)[0]*60)).argmin()
                     ret_min = minutes[closest_index]
@@ -102,7 +103,10 @@ class ScheduleGenerator:
 
                     # total distance travelled that day
                     total_distance = np.random.normal(self.sc.avg_distance_wd, self.sc.dev_distance_wd)
-                    total_distance = max([total_distance, self.min_distance])
+                    total_distance = max([total_distance, self.sc.min_distance])
+                    total_distance = min([total_distance, self.sc.max_distance])
+                    if total_distance < 0:
+                        raise ValueError("Distance is negative")
 
                 # weekend
                 elif step.weekday == 5:
@@ -116,6 +120,7 @@ class ScheduleGenerator:
                     ret_hour = int(math.modf(ret_time)[1])
                     # clip return to a maximum
                     ret_hour = min([ret_hour, self.sc.max_return_hour])
+                    ret_hour = max([ret_hour, self.sc.min_return])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(ret_time)[0]*60)).argmin()
                     ret_min = minutes[closest_index]
@@ -128,7 +133,10 @@ class ScheduleGenerator:
 
                     trip_steps = (ret_date - dep_date).total_seconds() / 3600 * 4
                     total_distance = np.random.normal(self.sc.avg_distance_we, self.sc.dev_distance_we)
-                    total_distance = max([total_distance, self.min_distance])
+                    total_distance = max([total_distance, self.sc.min_distance])
+                    total_distance = min([total_distance, self.sc.max_distance])
+                    if total_distance < 0:
+                        raise ValueError("Distance is negative")
 
                 # Assuming no operation on Sundays
                 else:
@@ -212,22 +220,33 @@ class ScheduleGenerator:
                     ret_hour = int(math.modf(ret_time)[1])
                     # clip return to a maximum
                     ret_hour = min([ret_hour, self.sc.max_return_hour])
+                    ret_hour = max([ret_hour, self.sc.min_return_wd])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(ret_time)[0] * 60)).argmin()
                     ret_min = minutes[closest_index]
 
                     # make dates for easier comparison
                     dep_date = dt.datetime(step.year, step.month, step.day, hour=dep_hour, minute=dep_min)
-                    pause_beg_date = dt.datetime(step.year, step.month, step.day, hour=pause_beg_hour, min=pause_beg_min)
-                    pause_end_date = dt.datetime(step.year, step.month, step.day, hour=pause_end_hour, min=pause_end_min)
+                    pause_beg_date = dt.datetime(step.year, step.month, step.day, hour=pause_beg_hour, minute=pause_beg_min)
+                    pause_end_date = dt.datetime(step.year, step.month, step.day, hour=pause_end_hour, minute=pause_end_min)
+                    if (pause_end_date - pause_beg_date).total_seconds() < 0:
+                        diff = (pause_end_date - pause_beg_date).total_seconds()
+                        pause_end_date += dt.timedelta(seconds=abs(diff))
+                        pause_end_date += dt.timedelta(minutes=15)
                     ret_date = dt.datetime(step.year, step.month, step.day, hour=ret_hour, minute=ret_min)
 
                     # amount of time steps per trip
-                    trip_steps = (ret_date - dep_date).total_seconds() / 3600 * 4
+                    first_trip_steps = (pause_beg_date - dep_date).total_seconds() / 3600 * 4
+                    second_trip_steps = (ret_date - pause_end_date).total_seconds() / 3600 * 4
+                    total_distance = np.random.normal(self.sc.avg_distance_wd, self.sc.dev_distance_wd)
+                    total_distance = max([total_distance, self.sc.min_distance])
 
                     # total distance travelled that day
                     total_distance = np.random.normal(self.sc.avg_distance_wd, self.sc.dev_distance_wd)
-                    total_distance = max([total_distance, self.min_distance])
+                    total_distance = max([total_distance, self.sc.min_distance])
+                    total_distance = min([total_distance, self.sc.max_distance])
+                    if total_distance < 0:
+                        raise ValueError("Distance is negative")
 
                 # weekend
                 else:
@@ -251,17 +270,28 @@ class ScheduleGenerator:
 
                     ret_time = np.random.normal(self.sc.ret_mean_we, self.sc.ret_dev_we)
                     ret_hour = int(math.modf(ret_time)[1])
+                    ret_hour = min([ret_hour, self.sc.max_return_hour])
+                    ret_hour = max([ret_hour, self.sc.min_return_we])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(ret_time)[0] * 60)).argmin()
                     ret_min = minutes[closest_index]
 
                     dep_date = dt.datetime(step.year, step.month, step.day, hour=dep_hour, minute=dep_min)
+                    pause_beg_date = dt.datetime(step.year, step.month, step.day, hour=pause_beg_hour, minute=pause_beg_min)
+                    pause_end_date = dt.datetime(step.year, step.month, step.day, hour=pause_end_hour, minute=pause_end_min)
+                    if (pause_end_date - pause_beg_date).total_seconds() < 0:
+                        diff = (pause_end_date - pause_beg_date).total_seconds()
+                        pause_end_date += dt.timedelta(seconds=abs(diff))
+                        pause_end_date += dt.timedelta(minutes=15)
                     ret_date = dt.datetime(step.year, step.month, step.day, hour=ret_hour, minute=ret_min)
 
                     first_trip_steps = (pause_beg_date - dep_date).total_seconds() / 3600 * 4
                     second_trip_steps = (ret_date - pause_end_date).total_seconds() / 3600 * 4
                     total_distance = np.random.normal(self.sc.avg_distance_we, self.sc.dev_distance_we)
-                    total_distance = max([total_distance, self.min_distance])
+                    total_distance = max([total_distance, self.sc.min_distance])
+                    total_distance = min([total_distance, self.sc.max_distance])
+                    if total_distance < 0:
+                        raise ValueError("Distance is negative")
 
             # if trip is ongoing
             if (step >= dep_date) and (step < pause_beg_date):
@@ -371,6 +401,7 @@ class ScheduleGenerator:
                     ret_hour = int(math.modf(ret_time)[1])
                     # clip return to a maximum
                     ret_hour = min([ret_hour, self.sc.max_return_hour])
+                    ret_hour = max([ret_hour, self.sc.min_return])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(ret_time)[0]*60)).argmin()
                     ret_min = minutes[closest_index]
@@ -384,6 +415,10 @@ class ScheduleGenerator:
 
                     # total distance travelled that day
                     total_distance = np.random.normal(self.sc.avg_distance_wd, self.sc.dev_distance_wd)
+                    total_distance = max([total_distance, self.sc.min_distance])
+                    total_distance = min([total_distance, self.sc.max_distance])
+                    if total_distance < 0:
+                        raise ValueError("Distance is negative")
 
                 # weekend
                 elif step.weekday == 5:
@@ -397,6 +432,7 @@ class ScheduleGenerator:
                     ret_hour = int(math.modf(ret_time)[1])
                     # clip return to a maximum
                     ret_hour = min([ret_hour, self.sc.max_return_hour])
+                    ret_hour = max([ret_hour, self.sc.min_return])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(ret_time)[0]*60)).argmin()
                     ret_min = minutes[closest_index]
@@ -409,7 +445,10 @@ class ScheduleGenerator:
 
                     trip_steps = (ret_date - dep_date).total_seconds() / 3600 * 4
                     total_distance = np.random.normal(self.sc.avg_distance_we, self.sc.dev_distance_we)
-                    total_distance = max([total_distance, self.min_distance])
+                    total_distance = max([total_distance, self.sc.min_distance])
+                    total_distance = min([total_distance, self.sc.max_distance])
+                    if total_distance < 0:
+                        raise ValueError("Distance is negative")
 
                 elif (step.weekday == 6) and (np.random.random() > 0.95):
                     dep_time = np.random.normal(self.sc.dep_mean_we, self.sc.dep_dev_we)
@@ -422,6 +461,7 @@ class ScheduleGenerator:
                     ret_hour = int(math.modf(ret_time)[1])
                     # clip return to a maximum
                     ret_hour = min([ret_hour, self.sc.max_return_hour])
+                    ret_hour = max([ret_hour, self.sc.min_return])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(ret_time)[0] * 60)).argmin()
                     ret_min = minutes[closest_index]
@@ -434,7 +474,10 @@ class ScheduleGenerator:
 
                     trip_steps = (ret_date - dep_date).total_seconds() / 3600 * 4
                     total_distance = np.random.normal(self.sc.avg_distance_we, self.sc.dev_distance_we)
-                    total_distance = max([total_distance, self.min_distance])
+                    total_distance = max([total_distance, self.sc.min_distance])
+                    total_distance = min([total_distance, self.sc.max_distance])
+                    if total_distance < 0:
+                        raise ValueError("Distance is negative")
 
                 # Assuming normally no operation on Sundays, apart from unlikely emergencies
                 else:
