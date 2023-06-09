@@ -165,10 +165,10 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
             if degradation[i] < 0:
                 raise TypeError("Degradation negative, might have to do with DoD > 1.")
 
-        self.soh -= degradation
+        self.soh[i] -= degradation[i]
 
         # check that the adding up of degradation is equivalent to the newest lifetime value calculated
-        if abs(self.soh - (1 - self.l[i])) > 0.0001:
+        if abs(self.soh[i] - (1 - self.l[i])) > 0.0001:
             raise RuntimeError("Degradation calculation is not correct")
 
         # print(f"sei soh: {self.soh}")

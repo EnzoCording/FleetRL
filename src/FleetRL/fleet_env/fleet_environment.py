@@ -47,8 +47,8 @@ class FleetEnv(gym.Env):
         # EV schedule database
         # generating own schedules or importing them
         self.generate_schedule = False
-        self.schedule_name = "schedule_1685458125_one_year_15_min_delivery.csv"
-        # self.schedule_name = "full_test.csv"
+        # self.schedule_name = "schedule_1685458125_one_year_15_min_delivery.csv"
+        self.schedule_name = "full_test.csv"
         # self.schedule_name = 'full_test_one_car.csv'
         # self.schedule_name = 'one_day_same_training.csv'
 
@@ -91,6 +91,7 @@ class FleetEnv(gym.Env):
         self.print_reward = True
         self.print_function = True
         self.logging = True
+        self.log_to_csv = True
 
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
@@ -189,6 +190,12 @@ class FleetEnv(gym.Env):
             shape=(self.num_cars,), dtype=np.float32)
 
     def reset(self, **kwargs) -> tuple[np.array, dict]:
+
+        # reset logs for new episode
+        self.data_logger.log = []
+        self.data_logger.soc_log = []
+        self.data_logger.soh_log = []
+        self.data_logger.soh_2 = []
 
         # set done to False, since the episode just started
         self.episode.done = False
@@ -363,6 +370,8 @@ class FleetEnv(gym.Env):
                 self.data_logger.add_log_entry()
             if self.print_updates:
                 print(f"Episode done: {self.episode.done}")
+            if self.log_to_csv:
+                self.data_logger.permanent_log()
 
         # append to the reward history
         self.episode.cumulative_reward += reward

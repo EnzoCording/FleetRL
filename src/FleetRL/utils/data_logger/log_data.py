@@ -1,4 +1,5 @@
 import pandas as pd
+import time
 
 class DataLogger:
     def __init__(self, episode):
@@ -19,3 +20,8 @@ class DataLogger:
         self.log.append({"soc": self.soc_log, "soh": self.soh_log, "soh2": self.soh_2})  # , "econ": self.econ_list})
         #print("printing log:")
         #print(self.log)
+
+    def permanent_log(self):
+        time_now = int(time.time())
+        log = pd.DataFrame(self.log)
+        log.to_csv(f"log_{time_now}.csv")

@@ -30,7 +30,7 @@ vec_env = make_vec_env('FleetEnv-v0', n_envs=n_cpu)
 # param_noise = None
 # action_noise = OrnsteinUhlenbeckActionNoise(mean=np.zeros(n_actions), sigma=float(0.5)*np.ones(n_actions))
 
-model = TD3("MlpPolicy", vec_env, verbose=1, train_freq=8, tensorboard_log="./FleetRl_tensorboard_1/", learning_starts=1000, learning_rate=0.0001)
+model = TD3("MlpPolicy", vec_env, verbose=1, train_freq=8, tensorboard_log="./FleetRl_tensorboard_1/", learning_starts=10000, learning_rate=0.001, buffer_size=50000, batch_size=128)
 
 model.learn(total_timesteps=100000, reset_num_timesteps=False, tb_log_name=f"vec_TD3_{time_now}")
 
