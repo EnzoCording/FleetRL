@@ -258,7 +258,7 @@ class ScheduleGenerator:
                     dep_date = dt.datetime(step.year, step.month, step.day, hour=dep_hour, minute=dep_min)
                     ret_date = dt.datetime(step.year, step.month, step.day, hour=ret_hour, minute=ret_min)
 
-                    first_trip_steps = (pause_beg_date - dep_date).total_seconds() / 3600 * 4 #TODO time config dt
+                    first_trip_steps = (pause_beg_date - dep_date).total_seconds() / 3600 * 4
                     second_trip_steps = (ret_date - pause_end_date).total_seconds() / 3600 * 4
                     total_distance = np.random.normal(self.sc.avg_distance_we, self.sc.dev_distance_we)
                     total_distance = max([total_distance, self.min_distance])
