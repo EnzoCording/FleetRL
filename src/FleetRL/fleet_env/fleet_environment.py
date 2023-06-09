@@ -91,7 +91,7 @@ class FleetEnv(gym.Env):
         self.print_reward = True
         self.print_function = True
         self.logging = True
-        self.log_to_csv = True
+        self.log_to_csv = False
 
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
