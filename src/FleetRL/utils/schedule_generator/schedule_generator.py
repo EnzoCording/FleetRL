@@ -161,7 +161,7 @@ class ScheduleGenerator:
                                    self.sc.consumption_min])
                 # Clipping to max
                 cons_rating = min([cons_rating, self.sc.consumption_max])
-                ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = total_distance / trip_steps * cons_rating
+                ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = (total_distance / trip_steps) * cons_rating
 
                 # set relevant entries
                 ev_schedule.loc[ev_schedule["date"] == step, "Location"] = "driving"
@@ -305,7 +305,7 @@ class ScheduleGenerator:
                                    self.sc.consumption_min])
                 # Clipping to max
                 cons_rating = min([cons_rating, self.sc.consumption_max])
-                ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = total_distance / first_trip_steps * cons_rating
+                ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = (total_distance / first_trip_steps) * cons_rating
 
                 # set relevant entries
                 ev_schedule.loc[ev_schedule["date"] == step, "Location"] = "driving"
@@ -323,7 +323,7 @@ class ScheduleGenerator:
                                    self.sc.consumption_min])
                 # Clipping to max
                 cons_rating = min([cons_rating, self.sc.consumption_max])
-                ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = total_distance / second_trip_steps * cons_rating
+                ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = (total_distance / second_trip_steps) * cons_rating
 
                 # set relevant entries
                 ev_schedule.loc[ev_schedule["date"] == step, "Location"] = "driving"
@@ -360,7 +360,7 @@ class ScheduleGenerator:
                         # Clipping to max
                         cons_rating = min([cons_rating, self.sc.consumption_max])
                         ev_schedule.loc[ev_schedule[
-                                            "date"] == step, "Consumption_kWh"] = total_distance / second_trip_steps * cons_rating
+                                            "date"] == step, "Consumption_kWh"] = (total_distance / trip_steps) * cons_rating
 
                         # set relevant entries
                         ev_schedule.loc[ev_schedule["date"] == step, "Location"] = "driving"
@@ -502,7 +502,7 @@ class ScheduleGenerator:
                                    self.sc.consumption_min])
                 # Clipping to max
                 cons_rating = min([cons_rating, self.sc.consumption_max])
-                ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = total_distance / trip_steps * cons_rating
+                ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = (total_distance / trip_steps) * cons_rating
 
                 # set relevant entries
                 ev_schedule.loc[ev_schedule["date"] == step, "Location"] = "driving"
