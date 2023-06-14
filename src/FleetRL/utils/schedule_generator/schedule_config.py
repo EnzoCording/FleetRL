@@ -9,6 +9,7 @@ class ScheduleConfig:
     def __init__(self, schedule_type: ScheduleType):
 
         if schedule_type == schedule_type.Delivery:
+            # Benz eVito: https://www.mercedes-benz.de/vans/models/evito/panel-van/overview.html
             self.dep_mean_wd = 7  # mean departure time weekday
             self.dep_dev_wd = 1  # std deviation departure time weekday
             self.ret_mean_wd = 19  # mean return time weekday
@@ -26,7 +27,7 @@ class ScheduleConfig:
             self.min_distance = 20
             self.max_distance = 280
 
-            self.consumption_mean = 0.29  # Average consumption in kWh/km of Benz e-Vito
+            self.consumption_mean = 0.213  # Average consumption in kWh/km of Benz e-Vito
             self.consumption_std = 0.167463672468669  # Standard deviation of consumption in kWh/km
             self.consumption_min = 0.0994  # Minimum value of consumption, used as a floor for consumption levels
             self.consumption_max = 0.453  # Maximum consumption, ceiling of consumption levels
@@ -36,6 +37,7 @@ class ScheduleConfig:
             self.charging_power = 11  # Charging power in kW #TODO connect with company type
 
         if schedule_type == schedule_type.Caretaker:
+            # Smart EQ: https://www.smart.mercedes-benz.com/de/de/modelle/smart-eq-fortwo-coupe
             self.dep_mean_wd = 6  # mean departure time weekday
             self.dep_dev_wd = 1  # std deviation departure time weekday
             self.pause_beg_mean_wd = 12  # mean pause beginning weekday
@@ -77,6 +79,7 @@ class ScheduleConfig:
             self.charging_power = 4.7  # kW
 
         if schedule_type == schedule_type.Utility:
+            # Citroen e Berlingo: https://business.citroen.de/modellpalette/berlingo-kastenwagen.html
             self.dep_mean_wd = 7  # mean departure time weekday
             self.dep_dev_wd = 1  # std deviation departure time weekday
             self.ret_mean_wd = 19  # mean return time weekday
@@ -96,7 +99,7 @@ class ScheduleConfig:
             self.min_distance = 20
             self.max_distance = 220
 
-            self.consumption_mean = 0.23  # Average consumption in kWh/km of e-Berlingo Citroen
+            self.consumption_mean = 0.224  # Average consumption in kWh/km of e-Berlingo Citroen
             self.consumption_std = 0.167463672468669  # Standard deviation of consumption in kWh/km
             self.consumption_min = 0.0994  # Minimum value of consumption, used as a floor for consumption levels
             self.consumption_max = 0.453  # Maximum consumption, ceiling of consumption levels
