@@ -53,7 +53,7 @@ class DataLoader:
             self.building_load = DataLoader.load_building_load(path_name, building_name, self.date_range)
 
         if pv_flag:
-            self.pv_gen = DataLoader.load_pv(path_name, pv_name, self.date_range)
+            self.pv = DataLoader.load_pv(path_name, pv_name, self.date_range)
 
         if not building_flag and not pv_flag:
             self.db = pd.concat([self.schedule, self.spot_price["DELU"]], axis=1)
@@ -61,9 +61,12 @@ class DataLoader:
         elif building_flag and not pv_flag:
             self.db = pd.concat([self.schedule, self.spot_price["DELU"], self.building_load["load"]], axis=1)
 
+        elif not building_flag and pv_flag:
+            self.db = pd.concat([self.schedule, self.spot_price["DELU"], self.pv["pv"]], axis=1)
+
         elif building_flag and pv_flag:
             self.db = pd.concat([self.schedule, self.spot_price["DELU"], self.building_load["load"],
-                                 self.pv_gen["pv"]], axis=1)
+                                 self.pv["pv"]], axis=1)
 
         else:
             self.db = None
@@ -202,8 +205,7 @@ class DataLoader:
     @staticmethod
     def load_building_load(path_name, file_name, date_range):
         b_load = pd.read_csv(path_name + file_name, delimiter=",")
-        b_load.rename(columns={"Date": "date"}, inplace=True)
-        b_load["date"] = pd.to_datetime(b_load["date"])
+        b_load["date"] = pd.to_datetime(b_load["date"], format="mixed")
 
         # TODO test if this also works for down-sampling. Right now this up-samples from hourly to quarter-hourly
         building_load = pd.merge_asof(date_range,
@@ -218,11 +220,14 @@ class DataLoader:
     @staticmethod
     def load_pv(path_name, pv_name, date_range):
         pv = pd.read_csv(path_name + pv_name, delimiter=",", decimal=",")
+        pv["date"] = pd.to_datetime(pv["date"], format="mixed")
 
-        pv_gen = pd.merge_asof(date_range,
-                               pv.sort_values("date"),
-                               on="date",
-                               direction="backward")
+        pv["pv"] = pv["pv"].astype(float)
+
+        pv = pd.merge_asof(date_range,
+                           pv.sort_values("date"),
+                           on="date",
+                           direction="backward")
 
         # return pv generation
-        return pv_gen
+        return pv

@@ -3,12 +3,13 @@ import pandas as pd
 
 
 class Observer:
-    def get_obs(self, db: pd.DataFrame, price_window_size: int,
+    def get_obs(self, db: pd.DataFrame, price_lookahead: int, bl_pv_lookahead:int,
                 time: pd.Timestamp) -> list:
         """
-        :param db: from the env
-        :param price_window_size: from the env
-        :param time: from the env
+        :param db: database from the env
+        :param price_lookahead: lookahead window for spot price
+        :param bl_pv_lookahead: lookahead window for building load and pv
+        :param time: current time of time step
         :return: Returns a list of np arrays that make up different parts of the observation.
         """
         raise NotImplementedError("This is an abstract class")

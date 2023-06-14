@@ -3,8 +3,7 @@ import pandas as pd
 
 from FleetRL.utils.observation.observer import Observer
 
-
-class ObserverWithBuildingLoad(Observer):
+class ObserverWithBoth(Observer):
     def get_obs(self, db: pd.DataFrame, price_lookahead: int, bl_pv_lookahead:int, time: pd.Timestamp) -> list:
 
         soc = db.loc[(db['date'] == time), 'SOC_on_return'].values
@@ -18,7 +17,11 @@ class ObserverWithBuildingLoad(Observer):
         bl_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead, 'h')))[0][0]
         building_load = db["load"][bl_start: bl_end].values
 
-        return [soc, hours_left, price, building_load]
+        pv_start = np.where(db["date"] == time)[0][0]
+        pv_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead, 'h')))[0][0]
+        pv = db["pv"][pv_start: pv_end].values
+
+        return [soc, hours_left, price, building_load, pv]
 
     @staticmethod
     def get_trip_len(db: pd.DataFrame, car: int, time: pd.Timestamp) -> float:

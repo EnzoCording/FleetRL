@@ -4,8 +4,9 @@ import pandas as pd
 class TimeConfig:
     def __init__(self):
         self.episode_length = 24  # episode length in hours
-        self.end_cutoff = 2  # cutoff length at the end of the dataframe, in days. Used for choose_time
+        self.end_cutoff = 8  # cutoff length at the end of the dataframe, in days. Used for choose_time
         self.price_lookahead = 8  # number of hours look-ahead in price observation (day-ahead), max 12 hours
+        self.bl_pv_lookahead = 4  # look-ahead in load and pv, using future values, should be forecasted
 
         # TODO: needs to be dealt with using dates
         '''

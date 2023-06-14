@@ -17,7 +17,6 @@ class Episode:
         self.next_soc: list = None  # Next soc, information used in the step function
         self.old_soc: list = None  # Previous soc, used to compute battery degradation
         self.soh: list = None
-        self.soh_2: list = None
         self.hours_left: list[float] = None  # Hours left at the charger
         self.price: list[float] = None  # Price in €/kWh
         self.done: bool = None  # Episode done or not

@@ -15,7 +15,7 @@ class OracleNormalization(Normalization):
         if self.building_flag:
             self.max_building = max(db["load"])
         if self.pv_flag:
-            self.max_pv = max(db["pv_gen"])
+            self.max_pv = max(db["pv"])
 
     def normalize_obs(self, input_obs: list) -> np.ndarray:
         # normalization is done here, so if the rule is changed it is automatically adjusted in step and reset
@@ -29,6 +29,9 @@ class OracleNormalization(Normalization):
             output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2]), dtype=np.float32)
         elif self.building_flag and not self.pv_flag:
             input_obs[3] = np.array(input_obs[3] / self.max_building)
+            output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2], input_obs[3]), dtype=np.float32)
+        elif not self.building_flag and self.pv_flag:
+            input_obs[3] = np.array(input_obs[3] / self.max_pv)
             output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2], input_obs[3]), dtype=np.float32)
         elif self.building_flag and self.pv_flag:
             input_obs[3] = np.array(input_obs[3] / self.max_building)

@@ -20,6 +20,8 @@ from FleetRL.utils.normalization.unit_normalization import UnitNormalization
 from FleetRL.utils.observation.observer_with_building_load import ObserverWithBuildingLoad
 from FleetRL.utils.observation.basic_observer import BasicObserver
 from FleetRL.utils.observation.observer import Observer
+from FleetRL.utils.observation.observer_with_pv import ObserverWithPV
+from FleetRL.utils.observation.observer_bl_pv import ObserverWithBoth
 
 from FleetRL.utils.time_picker.random_time_picker import RandomTimePicker
 from FleetRL.utils.time_picker.static_time_picker import StaticTimePicker
@@ -38,17 +40,24 @@ from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerato
 
 class FleetEnv(gym.Env):
 
-    def __init__(self):
+    def __init__(self, schedule_name:str="lmd_sched_single.csv",
+                 building_name:str="load_lmd.csv",
+                 include_building:bool=False,
+                 include_pv:bool=False,
+                 static:bool=False,
+                 target_soc:float=0.85,
+                 init_soh:float=1.0,
+                 deg_emp:bool=False):
 
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs
-        self.path_name = os.path.dirname(__file__) + '/../Input_Files/'
+        self.path_name = os.path.dirname(__file__) + '/../Final_Inputs/'
 
         # EV schedule database
         # generating own schedules or importing them
         self.generate_schedule = False
         # self.schedule_name = "schedule_1685458125_one_year_15_min_delivery.csv"
-        self.schedule_name = "full_test.csv"
+        self.schedule_name = schedule_name
         # self.schedule_name = 'full_test_one_car.csv'
         # self.schedule_name = 'one_day_same_training.csv'
 
@@ -56,10 +65,10 @@ class FleetEnv(gym.Env):
         self.spot_name = 'spot_2020.csv'
 
         # Building load database
-        self.building_name = 'caretaker.csv'
+        self.building_name = building_name
 
-        # PV gen database
-        self.pv_name = None
+        # PV database is the same in this case
+        self.pv_name = building_name
 
         if self.generate_schedule:
 
@@ -77,8 +86,8 @@ class FleetEnv(gym.Env):
         # Setting flags for the type of environment to build
         # NOTE: they are appended to the db in the order specified here
         # NOTE: import the right observer!
-        self.include_building_load = True
-        self.include_pv = False
+        self.include_building_load = include_building
+        self.include_pv = include_pv
 
         # Loading configs
         self.time_conf = TimeConfig()
@@ -96,21 +105,20 @@ class FleetEnv(gym.Env):
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
         self.time_picker: TimePicker = StaticTimePicker()  # when an episode starts, this class picks the starting time
-        self.observer: Observer = ObserverWithBuildingLoad()  # all observations are processed in the Observer class
+        if not self.include_building_load and not self.include_pv:
+            self.observer: Observer = BasicObserver()
+        if self.include_building_load and not self.include_pv:
+            self.observer: Observer = ObserverWithBuildingLoad()  # all observations are processed in the Observer class
+        if not self.include_building_load and self.include_pv:
+            self.observer: Observer = ObserverWithPV()
+        if self.include_building_load and self.include_pv:
+            self.observer: Observer = ObserverWithBoth()
         self.episode: Episode = Episode(self.time_conf)  # Episode object contains all episode-specific information
-        self.battery_degradation: BatteryDegradation = EmpiricalDegradation()  # battery degradation method
-
-        # Defining number of EVs
-        # This could even be extended to the point that more cars can be pulled that the dataset contains
-        # For now, defined here and error thrown if cars > max cars of schedule file
-        # TODO
-        # self.number_of_cars = 2
-        # self.car_choice_random = False  # if False, takes the first n cars
 
         # Setting EV parameters
-        self.target_soc = 0.85  # Target SoC - Vehicles should always leave with this SoC
+        self.target_soc = target_soc  # Target SoC - Vehicles should always leave with this SoC
         self.eps = 0.005  # allowed SOC deviation from target: 0.5%
-        self.initial_soh = 1.0  # initial degree of battery degradation, assumed equal for all cars
+        self.initial_soh = init_soh  # initial degree of battery degradation, assumed equal for all cars
 
         # initiating variables inside __init__() that are needed for gym.Env
         self.info: dict = {}  # Necessary for gym env (Double check because new implementation doesn't need it)
@@ -127,37 +135,18 @@ class FleetEnv(gym.Env):
                                                   self.include_building_load, self.include_pv
                                                   )
 
-        # # Get schedule
-        # self.schedule = self.data_loader.schedule
-        #
-        # # Get spot price
-        # self.spot_price = self.data_loader.spot_price
-        #
-        # # Get building load
-        # self.building_load = self.data_loader.building_load
-        #
         # get the total database
         self.db = self.data_loader.db
 
-        # Load PV
-        # TODO: implement this
-        # self.pv = 0  # local PV rooftop production
-
         # first ID is 0
-        # TODO: for now the number of cars is dictated by the data, but it could also be
-        #  initialized in the class and then random EVs get picked from the database
         self.num_cars = self.db["ID"].max() + 1
 
         self.episode.soh = np.ones(self.num_cars) * self.initial_soh  # initialize soh for each battery
-        self.episode.soh_2 = np.ones(self.num_cars) * self.initial_soh
 
-        self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh, self.num_cars)
-        self.new_emp_batt: NewBatteryDegradation = NewEmpiricalDegradation(self.initial_soh, self.num_cars)
-
-        # TODO: spot price updates during the day, to allow more than 8 hour lookahead at some times
-        #  (use clipping if not available, repeat last value in window)
-        # TODO: how many points in the future should I give, do I need past values? probably not
-        # Remember: observation space has to always keep the same dimensions
+        if deg_emp:
+            self.new_emp_batt: NewBatteryDegradation = NewEmpiricalDegradation(self.initial_soh, self.num_cars)
+        else:
+            self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh, self.num_cars)
 
         # Load gym observation spaces, decided which normalization strategy to choose
         self.normalizer: Normalization = OracleNormalization(self.db, self.include_building_load, self.include_pv)
@@ -172,12 +161,18 @@ class FleetEnv(gym.Env):
             dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
         elif self.include_building_load and not self.include_pv:
-            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + 1
+            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + self.time_conf.bl_pv_lookahead
+            low_obs, high_obs = self.normalizer.make_boundaries(dim)
+        elif not self.include_building_load and self.include_pv:
+            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + self.time_conf.bl_pv_lookahead
+            low_obs, high_obs = self.normalizer.make_boundaries(dim)
+        elif self.include_building_load and self.include_pv:
+            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + 2 * self.time_conf.bl_pv_lookahead
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
         else:
             low_obs = None
             high_obs = None
-            raise RuntimeError("Problem with components. Check building and pv flags.")
+            raise ValueError("Problem with components. Check building and pv flags.")
 
         self.observation_space = gym.spaces.Box(
             low=low_obs,
@@ -195,7 +190,6 @@ class FleetEnv(gym.Env):
         self.data_logger.log = []
         self.data_logger.soc_log = []
         self.data_logger.soh_log = []
-        self.data_logger.soh_2 = []
 
         # set done to False, since the episode just started
         self.episode.done = False
@@ -215,7 +209,7 @@ class FleetEnv(gym.Env):
         self.episode.time = self.episode.start_time
 
         # get observation from observer module
-        obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.episode.time)
+        obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.time_conf.bl_pv_lookahead, self.episode.time)
 
         # get the first soc and hours_left observation
         self.episode.soc = obs[0] * self.episode.soh
@@ -296,7 +290,7 @@ class FleetEnv(gym.Env):
             current_load = 0
 
         if self.include_pv:
-            current_pv = self.db[self.db["date"] == self.episode.time, "pv"].values[0]
+            current_pv = self.db.loc[self.db["date"] == self.episode.time, "pv"].values[0]
         else:
             current_pv = 0
 
@@ -313,7 +307,7 @@ class FleetEnv(gym.Env):
         self.episode.time += np.timedelta64(self.time_conf.minutes, 'm')
 
         # get the next observation
-        next_obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.episode.time)
+        next_obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.time_conf.bl_pv_lookahead, self.episode.time)
         next_obs_soc = next_obs[0]
         next_obs_time_left = next_obs[1]
         next_obs_price = next_obs[2]
@@ -392,7 +386,6 @@ class FleetEnv(gym.Env):
             self.data_logger.log_soc(self.episode)
 
         self.episode.soh -= self.new_battery_degradation.calculate_degradation(self.data_logger.soc_log, self.load_calculation.evse_max_power, self.time_conf, self.ev_conf.temperature)
-        self.episode.soh_2 -= self.new_emp_batt.calculate_degradation(self.data_logger.soc_log, self.load_calculation.evse_max_power, self.time_conf, self.ev_conf.temperature)
 
         if self.logging:
             self.data_logger.log_soh(self.episode)

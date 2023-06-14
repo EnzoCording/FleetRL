@@ -5,7 +5,7 @@ from FleetRL.utils.observation.observer import Observer
 
 
 class BasicObserver(Observer):
-    def get_obs(self, db: pd.DataFrame, price_lookahead: int,
+    def get_obs(self, db: pd.DataFrame, price_lookahead: int, bl_pv_lookahead: int,
                 time: pd.Timestamp) -> list:
 
         soc = db.loc[(db['date'] == time), 'SOC_on_return'].values
