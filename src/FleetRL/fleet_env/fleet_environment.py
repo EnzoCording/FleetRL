@@ -18,10 +18,11 @@ from FleetRL.utils.normalization.oracle_normalization import OracleNormalization
 from FleetRL.utils.normalization.unit_normalization import UnitNormalization
 
 from FleetRL.utils.observation.observer_with_building_load import ObserverWithBuildingLoad
-from FleetRL.utils.observation.basic_observer import BasicObserver
+from FleetRL.utils.observation.observer_price_only import ObserverPriceOnly
 from FleetRL.utils.observation.observer import Observer
 from FleetRL.utils.observation.observer_with_pv import ObserverWithPV
 from FleetRL.utils.observation.observer_bl_pv import ObserverWithBoth
+from FleetRL.utils.observation.observer_soc_time_only import ObserverSocTimeOnly
 
 from FleetRL.utils.time_picker.random_time_picker import RandomTimePicker
 from FleetRL.utils.time_picker.static_time_picker import StaticTimePicker
@@ -44,10 +45,16 @@ class FleetEnv(gym.Env):
                  building_name:str="load_lmd.csv",
                  include_building:bool=False,
                  include_pv:bool=False,
-                 static:bool=False,
+                 include_price:bool=True,
+                 static_time_picker:bool=False,
                  target_soc:float=0.85,
                  init_soh:float=1.0,
-                 deg_emp:bool=False):
+                 deg_emp:bool=False,
+                 ignore_price_reward = False,
+                 ignore_overloading_penalty = False,
+                 ignore_invalid_penalty = False,
+                 ignore_overcharging_penalty = False,
+                 episode_length:int = 24):
 
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs
@@ -88,12 +95,27 @@ class FleetEnv(gym.Env):
         # NOTE: import the right observer!
         self.include_building_load = include_building
         self.include_pv = include_pv
+        self.include_price = include_price
 
         # Loading configs
         self.time_conf = TimeConfig()
         self.ev_conf = EvConfig()
         self.score_conf = ScoreConfig()
         self.load_calculation = LoadCalculation(CompanyType.Caretaker)
+
+        # Changing TimeConfig, if specified
+        if episode_length > 24:
+            self.time_conf.episode_length = episode_length
+
+        # Changing ScoreConfig, if specified
+        if ignore_price_reward:
+            self.score_conf.price_multiplier = 0
+        if ignore_overloading_penalty:
+            self.score_conf.penalty_overloading = 0
+        if ignore_invalid_penalty:
+            self.score_conf.penalty_invalid_action = 0
+        if ignore_overcharging_penalty:
+            self.score_conf.penalty_overcharging = 0
 
         # Set printing and logging parameters, false can increase training fps
         self.print_updates = True
@@ -104,14 +126,25 @@ class FleetEnv(gym.Env):
 
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
-        self.time_picker: TimePicker = StaticTimePicker()  # when an episode starts, this class picks the starting time
-        if not self.include_building_load and not self.include_pv:
-            self.observer: Observer = BasicObserver()
-        if self.include_building_load and not self.include_pv:
+        if static_time_picker:
+            self.time_picker: TimePicker = StaticTimePicker()  # when an episode starts, this class picks the same starting time
+        else:
+            self.time_picker: TimePicker = RandomTimePicker()  # picks random starting times
+
+        # not even price: only soc and time left
+        if not self.include_price:
+            self.observer: Observer = ObserverSocTimeOnly()
+        # only price
+        elif not self.include_building_load and not self.include_pv:
+            self.observer: Observer = ObserverPriceOnly()
+        # price and building load
+        elif self.include_building_load and not self.include_pv:
             self.observer: Observer = ObserverWithBuildingLoad()  # all observations are processed in the Observer class
-        if not self.include_building_load and self.include_pv:
+        # price and pv
+        elif not self.include_building_load and self.include_pv:
             self.observer: Observer = ObserverWithPV()
-        if self.include_building_load and self.include_pv:
+        # price, building load and pv
+        elif self.include_building_load and self.include_pv:
             self.observer: Observer = ObserverWithBoth()
         self.episode: Episode = Episode(self.time_conf)  # Episode object contains all episode-specific information
 
@@ -149,26 +182,33 @@ class FleetEnv(gym.Env):
             self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh, self.num_cars)
 
         # Load gym observation spaces, decided which normalization strategy to choose
-        self.normalizer: Normalization = OracleNormalization(self.db, self.include_building_load, self.include_pv)
+        self.normalizer: Normalization = OracleNormalization(self.db, self.include_building_load, self.include_pv, self.include_price)
         # unit normalization: doesn't normalize, only concatenates
         # self.normalizer: Normalization = \
         #     UnitNormalization(self.db, self.spot_price, self.num_cars,
         #                       self.time_conf.price_lookahead, self.time_conf.time_steps_per_hour)
 
         # set boundaries of the observation space, detects if normalized or not
+        if not self.include_price:
+            dim = 2 * self.num_cars
+            low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
-        if not self.include_building_load and not self.include_pv:
+        elif not self.include_building_load and not self.include_pv:
             dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
+
         elif self.include_building_load and not self.include_pv:
             dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + self.time_conf.bl_pv_lookahead
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
+
         elif not self.include_building_load and self.include_pv:
             dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + self.time_conf.bl_pv_lookahead
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
+
         elif self.include_building_load and self.include_pv:
             dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + 2 * self.time_conf.bl_pv_lookahead
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
+
         else:
             low_obs = None
             high_obs = None
@@ -214,7 +254,8 @@ class FleetEnv(gym.Env):
         # get the first soc and hours_left observation
         self.episode.soc = obs[0] * self.episode.soh
         self.episode.hours_left = obs[1]
-        self.episode.price = obs[2]
+        if self.include_price:
+            self.episode.price = obs[2]
 
         ''' if time is insufficient due to unfavourable start date (for example loading an empty car with 15 min
         time left), soc is set in such a way that the agent always has a chance to fulfil the objective
@@ -247,7 +288,8 @@ class FleetEnv(gym.Env):
 
         obs[0] = self.episode.soc
         obs[1] = self.episode.hours_left
-        obs[2] = self.episode.price
+        if self.include_price:
+            obs[2] = self.episode.price
 
         if self.logging:
             self.data_logger.log_soc(self.episode)
@@ -310,9 +352,11 @@ class FleetEnv(gym.Env):
         next_obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.time_conf.bl_pv_lookahead, self.episode.time)
         next_obs_soc = next_obs[0]
         next_obs_time_left = next_obs[1]
-        next_obs_price = next_obs[2]
 
-        self.episode.price = next_obs_price
+        if self.include_price:
+            next_obs_price = next_obs[2]
+
+            self.episode.price = next_obs_price
 
         # go through the cars and check whether the same car is still there, no car, or a new car
         for car in range(self.num_cars):
@@ -325,7 +369,7 @@ class FleetEnv(gym.Env):
                     # TODO could scale with difference to SoC
                     # penalty for not fulfilling charging requirement
                     # TODO: this could be changed. No target SoC, but penalty if a car runs empty on a trip
-                    current_soc_pen = self.score_conf.penalty_soc_violation * (self.target_soc - self.episode.soc[car])
+                    current_soc_pen = self.score_conf.penalty_soc_violation * (self.target_soc - self.episode.soc[car]) ** 2
                     reward += current_soc_pen
                     self.episode.penalty_record += current_soc_pen
                     if self.print_updates:
@@ -380,7 +424,8 @@ class FleetEnv(gym.Env):
 
         next_obs[0] = self.episode.soc
         next_obs[1] = self.episode.hours_left
-        next_obs[2] = self.episode.price
+        if self.include_price:
+            next_obs[2] = self.episode.price
 
         if self.logging:
             self.data_logger.log_soc(self.episode)
@@ -399,7 +444,8 @@ class FleetEnv(gym.Env):
 
     def print(self, action):
         print(f"Timestep: {self.episode.time}")
-        print(f"Price: {self.episode.price[0] / 1000} €/kWh")
+        if self.include_price:
+            print(f"Price: {self.episode.price[0] / 1000} €/kWh")
         print(f"SOC: {self.episode.soc}, Time left: {self.episode.hours_left} hours")
         print(f"Action taken: {action}")
         print(f"Actual charging energy: {self.episode.total_charging_energy} kWh")

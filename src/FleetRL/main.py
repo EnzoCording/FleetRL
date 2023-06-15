@@ -7,7 +7,7 @@ from FleetRL.utils.battery_degradation.battery_degradation import BatteryDegrada
 from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDegradation
 # from FleetRL.utils.prices import load_prices
 
-env = FleetEnv(include_pv=True, include_building=True)
+env = FleetEnv(include_pv=False, include_building=False, include_price=False)
 env.reset()
 steps = 900
 for i in range(steps):

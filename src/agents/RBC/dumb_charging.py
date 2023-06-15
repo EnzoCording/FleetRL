@@ -84,7 +84,7 @@ def MyFun(SOC_profile: np.array):
         new_row = pd.DataFrame({'Range': [rng], 'Mean': [mean], 'Count': [count], 'Start': [i_start], 'End': [i_end]})
         rainflow = pd.concat([rainflow, new_row], ignore_index=True)
 
-    for i in range(1, 101):
+    for i in range(1, 11):
         rnflow_data = rainflow.loc[rainflow.index.repeat((i - 1) * 8760 * 4 / len(SOC_profile))]
 
         rf.count_cycles(SOC_profile)
@@ -164,12 +164,15 @@ for j in range(1, 11):
         # print(f"emp soh: {self.soh}")
 
 soh_emp = np.insert(soh_emp, 0, 1)
-
+#plt.figure(figsize=[16,9])
 a = (a[0], np.insert(a[1], 0, 1))
 plt.plot(a[1])
 plt.plot(soh_emp)
 plt.grid(True)
-plt.ylim([0, 1])
+plt.xlim([0,10])
+plt.ylim([0.8, 1])
 plt.legend(["SEI formation + Cycle counting", "Empirical linear degradation"])
 plt.xticks(range(11))
+plt.yticks([0.8,0.85,0.9,0.95,1.0])
+plt.savefig("sei_emp_10.pdf")
 plt.show()
