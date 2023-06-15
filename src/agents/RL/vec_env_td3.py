@@ -23,7 +23,20 @@ if not os.path.exists(logs_dir):
     os.makedirs(logs_dir)
 
 n_cpu = 4
-vec_env = make_vec_env('FleetEnv-v0', n_envs=n_cpu)
+vec_env = make_vec_env('FleetEnv-v0', n_envs=n_cpu, env_kwargs={
+                       "schedule_name": "lmd_sched_single.csv",
+                       "building_name": "load_lmd.csv",
+                       "include_building": False,
+                       "include_pv": False,
+                       "static_time_picker": False,
+                       "deg_emp": False,
+                       "include_price": False,
+                       "ignore_price_reward": True,
+                       "ignore_invalid_penalty": True,
+                       "ignore_overcharging_penalty": True,
+                       "ignore_overloading_penalty": False,
+                       "episode_length": 36
+                   })
 
 
 # n_actions = vec_env.action_space.shape[-1]

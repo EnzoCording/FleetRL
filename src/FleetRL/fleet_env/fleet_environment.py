@@ -198,15 +198,15 @@ class FleetEnv(gym.Env):
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif self.include_building_load and not self.include_pv:
-            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + self.time_conf.bl_pv_lookahead
+            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + self.time_conf.bl_pv_lookahead * self.time_conf.time_steps_per_hour
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif not self.include_building_load and self.include_pv:
-            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + self.time_conf.bl_pv_lookahead
+            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + self.time_conf.bl_pv_lookahead * self.time_conf.time_steps_per_hour
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif self.include_building_load and self.include_pv:
-            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + 2 * self.time_conf.bl_pv_lookahead
+            dim = 2 * self.num_cars + self.time_conf.price_lookahead * self.time_conf.time_steps_per_hour + 2 * self.time_conf.bl_pv_lookahead * self.time_conf.time_steps_per_hour
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         else:
