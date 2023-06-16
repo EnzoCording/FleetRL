@@ -39,29 +39,27 @@ from FleetRL.utils.new_battery_degradation.new_rainflow_sei_degradation import N
 from FleetRL.utils.data_logger.log_data import DataLogger
 from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType, ScheduleConfig
 
-class FleetEnv(gym.Env):
 
-    def __init__(self, schedule_name:str="lmd_sched_single.csv",
-                 building_name:str="load_lmd.csv",
-                 include_building:bool=False,
-                 include_pv:bool=False,
-                 include_price:bool=True,
-                 static_time_picker:bool=False,
-                 target_soc:float=0.85,
-                 init_soh:float=1.0,
-                 deg_emp:bool=False,
-                 ignore_price_reward = False,
-                 ignore_overloading_penalty = False,
-                 ignore_invalid_penalty = False,
-                 ignore_overcharging_penalty = False,
-                 episode_length:int = 24,
-                 log_to_csv:bool = False,
-                 calculate_degradation:bool = False,
-                 verbose:bool = 1,
+class AltEnv(gym.Env):
+
+    def __init__(self, schedule_name: str = "lmd_sched_single.csv",
+                 building_name: str = "load_lmd.csv",
+                 include_building: bool = False,
+                 include_pv: bool = False,
+                 include_price: bool = True,
+                 static_time_picker: bool = False,
+                 target_soc: float = 0.85,
+                 init_soh: float = 1.0,
+                 deg_emp: bool = False,
+                 ignore_price_reward=False,
+                 ignore_overloading_penalty=False,
+                 ignore_invalid_penalty=False,
+                 ignore_overcharging_penalty=False,
+                 episode_length: int = 24,
+                 log_to_csv: bool = False,
+                 calculate_degradation: bool = False,
+                 verbose: bool = 1,
                  normalize_in_env = True):
-
-        # call __init__() of parent class to ensure inheritance chain
-        super().__init__()
 
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs
@@ -85,7 +83,6 @@ class FleetEnv(gym.Env):
         self.pv_name = building_name
 
         if self.generate_schedule:
-
             self.schedule_gen = ScheduleGenerator(file_comment="one_year_15_min_delivery",
                                                   schedule_dir=self.path_name,
                                                   schedule_type=ScheduleType.Delivery,
@@ -95,7 +92,6 @@ class FleetEnv(gym.Env):
             # self.schedule_gen.generate_multiple_ev_schedule(num_evs=1)
 
             self.schedule_name = self.schedule_gen.get_file_name()
-
 
         # Setting flags for the type of environment to build
         # NOTE: they are appended to the db in the order specified here
@@ -191,7 +187,8 @@ class FleetEnv(gym.Env):
         if deg_emp:
             self.new_emp_batt: NewBatteryDegradation = NewEmpiricalDegradation(self.initial_soh, self.num_cars)
         else:
-            self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh, self.num_cars)
+            self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh,
+                                                                                            self.num_cars)
 
         # Load gym observation spaces, decided which normalization strategy to choose
         if self.normalize_in_env:
@@ -254,6 +251,7 @@ class FleetEnv(gym.Env):
 
         # set done to False, since the episode just started
         self.episode.done = False
+        self.episode.truncated = False
 
         # instantiate soh - depending on initial health settings
         self.episode.soh = np.ones(self.num_cars) * self.initial_soh
@@ -270,7 +268,8 @@ class FleetEnv(gym.Env):
         self.episode.time = self.episode.start_time
 
         # get observation from observer module
-        obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.time_conf.bl_pv_lookahead, self.episode.time)
+        obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.time_conf.bl_pv_lookahead,
+                                    self.episode.time)
 
         # get the first soc and hours_left observation
         self.episode.soc = obs[0] * self.episode.soh
@@ -361,8 +360,9 @@ class FleetEnv(gym.Env):
         if not overloaded_flag:
             reward += self.score_conf.penalty_overloading * (overload_amount ** 2)
             self.episode.penalty_record += self.score_conf.penalty_overloading * (overload_amount ** 2)
+            self.episode.done = True
             if self.print_updates:
-                print(f"Grid connection has been overloaded.")
+                print(f"Grid connection has been overloaded. Ending episode.")
 
         # set the soc to the next soc
         self.episode.soc = self.episode.next_soc.copy()
@@ -371,7 +371,8 @@ class FleetEnv(gym.Env):
         self.episode.time += np.timedelta64(self.time_conf.minutes, 'm')
 
         # get the next observation
-        next_obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.time_conf.bl_pv_lookahead, self.episode.time)
+        next_obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.time_conf.bl_pv_lookahead,
+                                         self.episode.time)
         next_obs_soc = next_obs[0]
         next_obs_time_left = next_obs[1]
 
@@ -386,16 +387,19 @@ class FleetEnv(gym.Env):
             if (self.episode.hours_left[car] != 0) and (next_obs_time_left[car] == 0):
                 if self.target_soc - self.episode.soc[car] > self.eps:
                     # penalty for not fulfilling charging requirement
-                    current_soc_pen = self.score_conf.penalty_soc_violation * (self.target_soc - self.episode.soc[car]) ** 2
+                    current_soc_pen = self.score_conf.penalty_soc_violation * (
+                            self.target_soc - self.episode.soc[car]) ** 2
                     reward += current_soc_pen
                     self.episode.penalty_record += current_soc_pen
+                    self.episode.done = True
                     if self.print_updates:
-                        print(f"A car left the station without reaching the target SoC. Penalty: {current_soc_pen}")
+                        print(
+                            f"A car left the station without reaching the target SoC. Penalty: {current_soc_pen}. Ending episode.")
 
             # same car in the next time step
             if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
                 self.episode.hours_left[car] -= self.time_conf.dt
-                #self.episode.soh -= self.battery_degradation.calculate_calendar_aging_while_parked(self.episode.old_soc[car], self.episode.soc[car], self.time_conf)
+                # self.episode.soh -= self.battery_degradation.calculate_calendar_aging_while_parked(self.episode.old_soc[car], self.episode.soc[car], self.time_conf)
 
             # no car in the next time step
             elif next_obs_time_left[car] == 0:
@@ -418,7 +422,7 @@ class FleetEnv(gym.Env):
         # if the finish time is reached, set done to True
         # The RL agent then resets the environment
         if self.episode.time == self.episode.finish_time:
-            self.episode.done = True
+            self.episode.truncated = True
             if self.logging:
                 self.data_logger.add_log_entry()
             if self.print_updates:
@@ -457,7 +461,11 @@ class FleetEnv(gym.Env):
         if self.logging:
             self.data_logger.log_soh(self.episode)
 
-        return self.normalizer.normalize_obs(next_obs), reward, self.episode.done, False, self.info
+        reward += 0
+
+        print(f"reward after +1: {reward}")
+
+        return self.normalizer.normalize_obs(next_obs), reward, self.episode.done, self.episode.truncated, self.info
 
     def close(self):
         return 0
@@ -478,22 +486,23 @@ class FleetEnv(gym.Env):
         # TODO: Maybe a bar graph, centered at 0, n bars for n vehicles and height changes with power
         pass
 
+
 if __name__ == "__main__":
-    env = FleetEnv(schedule_name="lmd_sched_single.csv",
-                   building_name="load_lmd.csv",
-                   include_building=False,
-                   include_pv=False,
-                   include_price=True,
-                   static_time_picker=False,
-                   target_soc=0.85,
-                   init_soh=1.0,
-                   deg_emp=False,
-                   ignore_price_reward=False,
-                   ignore_overloading_penalty=False,
-                   ignore_invalid_penalty=False,
-                   ignore_overcharging_penalty=False,
-                   episode_length=24,
-                   log_to_csv=False,
-                   calculate_degradation=False,
-                   verbose=1,
-                   normalize_in_env=True)
+    env = AltEnv(schedule_name="lmd_sched_single.csv",
+                 building_name="load_lmd.csv",
+                 include_building=False,
+                 include_pv=False,
+                 include_price=True,
+                 static_time_picker=False,
+                 target_soc=0.85,
+                 init_soh=1.0,
+                 deg_emp=False,
+                 ignore_price_reward=False,
+                 ignore_overloading_penalty=False,
+                 ignore_invalid_penalty=False,
+                 ignore_overcharging_penalty=False,
+                 episode_length=24,
+                 log_to_csv=False,
+                 calculate_degradation=False,
+                 verbose=1,
+                 normalize_in_env=True)

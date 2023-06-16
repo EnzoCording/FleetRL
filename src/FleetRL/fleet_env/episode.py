@@ -20,6 +20,7 @@ class Episode:
         self.hours_left: list[float] = None  # Hours left at the charger
         self.price: list[float] = None  # Price in €/kWh
         self.done: bool = None  # Episode done or not
+        self.truncated: bool = None  # Episode done due to time limit
 
         self.reward_history: list[tuple[pd.Timestamp, float]] = None  # History of reward development over the episode
         self.cumulative_reward: float = None  # Cumulative reward over an episode
