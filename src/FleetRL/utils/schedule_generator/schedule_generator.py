@@ -10,8 +10,8 @@ from FleetRL.utils.schedule_generator.schedule_config import ScheduleConfig, Sch
 
 class ScheduleGenerator:
 
-    def __init__(self, schedule_dir: str, starting_date: str = "01/01/2020",
-                 ending_date: str = "30/12/2020",
+    def __init__(self, schedule_dir: str, starting_date: str = "01/01/2020 00:00:00",
+                 ending_date: str = "30/12/2020 23:59:59",
                  freq: str = "15T",
                  save_schedule: bool = True,
                  file_comment: str = "",

@@ -1,10 +1,10 @@
 import FleetRL
 import gymnasium as gym
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecNormalize
+from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
 import numpy as np
 from stable_baselines3 import TD3
-
 
 
 def make_env(env_id: str, rank: int, seed: int = 0):
@@ -53,4 +53,19 @@ if __name__ == "__main__":
         print(rewards)
         vec_env.render()
 
-
+    make_vec_env(env_id="FleetEnv-v0", vec_env_cls=SubprocVecEnv, vec_env_kwargs={
+        "schedule_name": "lmd_sched_single.csv",
+        "building_name": "load_lmd.csv",
+        "include_building": False,
+        "include_pv": False,
+        "static_time_picker": False,
+        "deg_emp": False,
+        "include_price": False,
+        "ignore_price_reward": True,
+        "ignore_invalid_penalty": False,
+        "ignore_overcharging_penalty": False,
+        "ignore_overloading_penalty": True,
+        "episode_length": 36,
+        "verbose": 0,
+        "calculate_degradation": False
+    })
