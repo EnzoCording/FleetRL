@@ -71,7 +71,7 @@ class ScheduleGenerator:
         for step in ev_schedule["date"]:
 
             # if new day, specify new random values
-            if step.hour == 0:
+            if (step.hour == 0) and (step.minute == 0):
 
                 # weekdays
                 if step.weekday() < 5:
@@ -139,15 +139,6 @@ class ScheduleGenerator:
                         raise ValueError("Distance is negative")
 
                 # Assuming no operation on Sundays
-                elif step.weekday() == 6:
-                    ev_schedule.loc[ev_schedule["date"] == step, "Distance_km"] = 0.0
-                    ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = 0.0
-                    ev_schedule.loc[ev_schedule["date"] == step, "Location"] = "home"
-                    ev_schedule.loc[ev_schedule["date"] == step, "ChargingStation"] = "home"
-                    ev_schedule.loc[ev_schedule["date"] == step, "ID"] = str(self.vehicle_id)
-                    ev_schedule.loc[ev_schedule["date"] == step, "PowerRating_kW"] = self.sc.charging_power
-                    # jump to the next iteration as long as it is sunday
-                    continue
 
             # if trip is ongoing
             if (step >= dep_date) and (step < ret_date):
@@ -192,7 +183,7 @@ class ScheduleGenerator:
         for step in ev_schedule["date"]:
 
             # if new day, specify new random values
-            if step.hour == 0:
+            if (step.hour == 0) and (step.minute == 0):
 
                 # weekdays
                 if step.weekday() < 5:
@@ -383,7 +374,7 @@ class ScheduleGenerator:
         for step in ev_schedule["date"]:
 
             # if new day, specify new random values
-            if step.hour == 0:
+            if (step.hour == 0) and (step.minute == 0):
 
                 # weekdays
                 if step.weekday() < 5:
@@ -480,15 +471,6 @@ class ScheduleGenerator:
                         raise ValueError("Distance is negative")
 
                 # Assuming normally no operation on Sundays, apart from unlikely emergencies
-                else:
-                    ev_schedule.loc[ev_schedule["date"] == step, "Distance_km"] = 0.0
-                    ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = 0.0
-                    ev_schedule.loc[ev_schedule["date"] == step, "Location"] = "home"
-                    ev_schedule.loc[ev_schedule["date"] == step, "ChargingStation"] = "home"
-                    ev_schedule.loc[ev_schedule["date"] == step, "ID"] = str(self.vehicle_id)
-                    ev_schedule.loc[ev_schedule["date"] == step, "PowerRating_kW"] = self.sc.charging_power
-                    # jump to the next iteration as long as it is sunday
-                    continue
 
             # if trip is ongoing
             if (step >= dep_date) and (step < ret_date):
