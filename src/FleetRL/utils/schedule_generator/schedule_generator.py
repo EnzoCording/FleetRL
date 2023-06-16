@@ -109,7 +109,7 @@ class ScheduleGenerator:
                         raise ValueError("Distance is negative")
 
                 # weekend
-                elif step.weekday == 5:
+                elif step.weekday() == 5:
                     dep_time = np.random.normal(self.sc.dep_mean_we, self.sc.dep_dev_we)
                     dep_hour = int(math.modf(dep_time)[1])
                     minutes = np.asarray([0, 15, 30, 45])
@@ -139,7 +139,7 @@ class ScheduleGenerator:
                         raise ValueError("Distance is negative")
 
                 # Assuming no operation on Sundays
-                else:
+                elif step.weekday() == 6:
                     ev_schedule.loc[ev_schedule["date"] == step, "Distance_km"] = 0.0
                     ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = 0.0
                     ev_schedule.loc[ev_schedule["date"] == step, "Location"] = "home"
@@ -421,7 +421,7 @@ class ScheduleGenerator:
                         raise ValueError("Distance is negative")
 
                 # weekend
-                elif step.weekday == 5:
+                elif step.weekday() == 5:
                     dep_time = np.random.normal(self.sc.dep_mean_we, self.sc.dep_dev_we)
                     dep_hour = int(math.modf(dep_time)[1])
                     minutes = np.asarray([0, 15, 30, 45])
@@ -450,7 +450,7 @@ class ScheduleGenerator:
                     if total_distance < 0:
                         raise ValueError("Distance is negative")
 
-                elif (step.weekday == 6) and (np.random.random() > 0.95):
+                elif (step.weekday() == 6) and (np.random.random() > 0.95):
                     dep_time = np.random.normal(self.sc.dep_mean_we, self.sc.dep_dev_we)
                     dep_hour = int(math.modf(dep_time)[1])
                     minutes = np.asarray([0, 15, 30, 45])
