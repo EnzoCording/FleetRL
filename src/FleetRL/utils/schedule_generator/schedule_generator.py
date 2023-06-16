@@ -80,6 +80,8 @@ class ScheduleGenerator:
                     dep_time = np.random.normal(self.sc.dep_mean_wd, self.sc.dep_dev_wd)
                     # split number and decimals, use number and turn to int
                     dep_hour = int(math.modf(dep_time)[1])
+                    dep_hour = min([dep_hour, self.sc.max_dep])
+                    dep_hour = max([dep_hour, self.sc.min_dep])
                     minutes = np.asarray([0, 15, 30, 45])
                     # split number and decimals, use decimals and choose the closest minute
                     closest_index = np.abs(minutes - int(math.modf(dep_time)[0]*60)).argmin()
@@ -112,6 +114,8 @@ class ScheduleGenerator:
                 elif step.weekday() == 5:
                     dep_time = np.random.normal(self.sc.dep_mean_we, self.sc.dep_dev_we)
                     dep_hour = int(math.modf(dep_time)[1])
+                    dep_hour = min([dep_hour, self.sc.max_dep])
+                    dep_hour = max([dep_hour, self.sc.min_dep])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(dep_time)[0]*60)).argmin()
                     dep_min = minutes[closest_index]
@@ -191,6 +195,8 @@ class ScheduleGenerator:
                     # time mean and std dev in config
                     dep_time = np.random.normal(self.sc.dep_mean_wd, self.sc.dep_dev_wd)
                     dep_hour = int(math.modf(dep_time)[1])
+                    dep_hour = min([dep_hour, self.sc.max_dep])
+                    dep_hour = max([dep_hour, self.sc.min_dep])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(dep_time)[0]*60)).argmin()
                     dep_min = minutes[closest_index]
@@ -243,6 +249,8 @@ class ScheduleGenerator:
                 else:
                     dep_time = np.random.normal(self.sc.dep_mean_we, self.sc.dep_dev_we)
                     dep_hour = int(math.modf(dep_time)[1])
+                    dep_hour = min([dep_hour, self.sc.max_dep])
+                    dep_hour = max([dep_hour, self.sc.min_dep])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(dep_time)[0] * 60)).argmin()
                     dep_min = minutes[closest_index]
@@ -383,6 +391,8 @@ class ScheduleGenerator:
                     dep_time = np.random.normal(self.sc.dep_mean_wd, self.sc.dep_dev_wd)
                     # split number and decimals, use number and turn to int
                     dep_hour = int(math.modf(dep_time)[1])
+                    dep_hour = min([dep_hour, self.sc.max_dep])
+                    dep_hour = max([dep_hour, self.sc.min_dep])
                     minutes = np.asarray([0, 15, 30, 45])
                     # split number and decimals, use decimals and choose the closest minute
                     closest_index = np.abs(minutes - int(math.modf(dep_time)[0]*60)).argmin()
@@ -415,6 +425,8 @@ class ScheduleGenerator:
                 elif step.weekday() == 5:
                     dep_time = np.random.normal(self.sc.dep_mean_we, self.sc.dep_dev_we)
                     dep_hour = int(math.modf(dep_time)[1])
+                    dep_hour = min([dep_hour, self.sc.max_dep])
+                    dep_hour = max([dep_hour, self.sc.min_dep])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(dep_time)[0]*60)).argmin()
                     dep_min = minutes[closest_index]
@@ -444,6 +456,8 @@ class ScheduleGenerator:
                 elif (step.weekday() == 6) and (np.random.random() > 0.95):
                     dep_time = np.random.normal(self.sc.dep_mean_we, self.sc.dep_dev_we)
                     dep_hour = int(math.modf(dep_time)[1])
+                    dep_hour = min([dep_hour, self.sc.max_dep])
+                    dep_hour = max([dep_hour, self.sc.min_dep])
                     minutes = np.asarray([0, 15, 30, 45])
                     closest_index = np.abs(minutes - int(math.modf(dep_time)[0] * 60)).argmin()
                     dep_min = minutes[closest_index]

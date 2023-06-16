@@ -32,6 +32,8 @@ class ScheduleConfig:
             self.consumption_min = 0.0994  # Minimum value of consumption, used as a floor for consumption levels
             self.consumption_max = 0.453  # Maximum consumption, ceiling of consumption levels
 
+            self.min_dep = 3
+            self.max_dep = 11
             self.min_return = 12  # Return hour must be bigger or equal to this value
             self.max_return_hour = 23  # Return hour must be smaller or equal to this value
             self.charging_power = 11  # Charging power in kW #TODO connect with company type
@@ -40,6 +42,8 @@ class ScheduleConfig:
             # Smart EQ: https://www.smart.mercedes-benz.com/de/de/modelle/smart-eq-fortwo-coupe
             self.dep_mean_wd = 6  # mean departure time weekday
             self.dep_dev_wd = 1  # std deviation departure time weekday
+            self.min_dep = 3
+            self.max_dep = 10
             self.pause_beg_mean_wd = 12  # mean pause beginning weekday
             self.pause_beg_dev_wd = 0.25  # std dev pause beginning weekday
             self.pause_end_mean_wd = 13.5  # mean pause end weekday
@@ -89,6 +93,8 @@ class ScheduleConfig:
             self.dep_dev_we = 2
             self.ret_mean_we = 16
             self.ret_dev_we = 2
+            self.min_dep = 3
+            self.max_dep = 11
             self.max_return_hour = 23  # Return hour must be smaller or equal to this value
             self.min_return = 12  # Return hour must be bigger or equal to this value
 
