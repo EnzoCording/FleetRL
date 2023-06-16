@@ -54,7 +54,10 @@ class FleetEnv(gym.Env):
                  ignore_overloading_penalty = False,
                  ignore_invalid_penalty = False,
                  ignore_overcharging_penalty = False,
-                 episode_length:int = 24):
+                 episode_length:int = 24,
+                 log_to_csv:bool = False,
+                 calculate_degradation:bool = False,
+                 verbose:bool = 1):
 
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs
@@ -118,11 +121,14 @@ class FleetEnv(gym.Env):
             self.score_conf.penalty_overcharging = 0
 
         # Set printing and logging parameters, false can increase training fps
-        self.print_updates = True
-        self.print_reward = True
-        self.print_function = True
-        self.logging = True
-        self.log_to_csv = False
+        self.print_updates = verbose
+        self.print_reward = verbose
+        self.print_function = verbose
+        self.calc_deg = calculate_degradation
+        self.logging = calculate_degradation
+        self.log_to_csv = log_to_csv
+        if self.log_to_csv:
+            self.logging = True
 
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
@@ -324,8 +330,7 @@ class FleetEnv(gym.Env):
         # print(self.price[0])
         # print(self.hours_left)
 
-        # check if the current load exceeds the trafo rating and penalize accordingly
-
+        # check current load and pv for violation check
         if self.include_building_load:
             current_load = self.db.loc[self.db["date"] == self.episode.time, "load"].values[0]
         else:
@@ -336,9 +341,11 @@ class FleetEnv(gym.Env):
         else:
             current_pv = 0
 
-        if not self.load_calculation.check_violation(current_load, actions, current_pv):
-            reward += self.score_conf.penalty_overloading
-            self.episode.penalty_record += self.score_conf.penalty_overloading
+        # check if connection has been overloaded and penalize accordingly
+        overloaded_flag, overload_amount = self.load_calculation.check_violation(actions, current_load, current_pv)
+        if not overloaded_flag:
+            reward += self.score_conf.penalty_overloading * (overload_amount ** 2)
+            self.episode.penalty_record += self.score_conf.penalty_overloading * (overload_amount ** 2)
             if self.print_updates:
                 print(f"Grid connection has been overloaded.")
 
@@ -355,20 +362,15 @@ class FleetEnv(gym.Env):
 
         if self.include_price:
             next_obs_price = next_obs[2]
-
             self.episode.price = next_obs_price
 
         # go through the cars and check whether the same car is still there, no car, or a new car
         for car in range(self.num_cars):
 
-            #self.episode.soh -= self.battery_degradation.calculate_cycle_loss(self.episode.old_soc[car], self.episode.soc[car], 11)
-
             # check if a car just left and didn't fully charge
             if (self.episode.hours_left[car] != 0) and (next_obs_time_left[car] == 0):
                 if self.target_soc - self.episode.soc[car] > self.eps:
-                    # TODO could scale with difference to SoC
                     # penalty for not fulfilling charging requirement
-                    # TODO: this could be changed. No target SoC, but penalty if a car runs empty on a trip
                     current_soc_pen = self.score_conf.penalty_soc_violation * (self.target_soc - self.episode.soc[car]) ** 2
                     reward += current_soc_pen
                     self.episode.penalty_record += current_soc_pen
@@ -393,7 +395,6 @@ class FleetEnv(gym.Env):
                 self.episode.old_soc[car] = self.episode.soc[car]
                 self.episode.soc[car] = next_obs_soc[car]
                 trip_len = self.observer.get_trip_len(self.db, car, self.episode.time)
-                #self.episode.soh -= self.battery_degradation.calculate_calendar_aging_on_arrival(trip_len, self.episode.old_soc[car], self.episode.soc[car])
 
             # this shouldn't happen but if it does, an error is thrown
             else:
@@ -401,7 +402,6 @@ class FleetEnv(gym.Env):
 
         # if the finish time is reached, set done to True
         # The RL agent then resets the environment
-        # TODO: do I still experience the last timestep or do I finish when I reach it?
         if self.episode.time == self.episode.finish_time:
             self.episode.done = True
             if self.logging:
@@ -427,16 +427,21 @@ class FleetEnv(gym.Env):
         if self.include_price:
             next_obs[2] = self.episode.price
 
+        # Log soc, this is mainly for battery degradation, but can also save to csv
         if self.logging:
             self.data_logger.log_soc(self.episode)
 
-        self.episode.soh -= self.new_battery_degradation.calculate_degradation(self.data_logger.soc_log, self.load_calculation.evse_max_power, self.time_conf, self.ev_conf.temperature)
+        # Calculate state of health based on chosen method
+        if self.calc_deg:
+            self.episode.soh -= self.new_battery_degradation.calculate_degradation(self.data_logger.soc_log,
+                                                                                   self.load_calculation.evse_max_power,
+                                                                                   self.time_conf,
+                                                                                   self.ev_conf.temperature)
 
+        # Log SoH after calculating it
         if self.logging:
             self.data_logger.log_soh(self.episode)
 
-        # here, the reward is already in integer format
-        # Todo integer or float?
         return self.normalizer.normalize_obs(next_obs), reward, self.episode.done, False, self.info
 
     def close(self):
@@ -456,12 +461,4 @@ class FleetEnv(gym.Env):
     def render(self):
         # TODO: graph of rewards for example, or charging power or sth like that
         # TODO: Maybe a bar graph, centered at 0, n bars for n vehicles and height changes with power
-        pass
-
-    def construct_episode(self):
-        # make a dataframe for the episode and only use that
-        # date column, soc on arrival, time_left, building load, pv generation
-        # can add phase angle etc. after computation
-        # constraints: same month, same type of weekday, laxity >= 0
-
         pass
