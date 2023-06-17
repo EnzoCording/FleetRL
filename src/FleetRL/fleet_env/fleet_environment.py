@@ -1,7 +1,6 @@
 import os
 
 import gymnasium as gym
-import gymnasium.utils.seeding
 import numpy as np
 
 from FleetRL.fleet_env.config.ev_config import EvConfig
@@ -65,8 +64,6 @@ class FleetEnv(gym.Env):
 
         # call __init__() of parent class to ensure inheritance chain
         super().__init__()
-
-
 
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs

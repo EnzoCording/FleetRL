@@ -14,7 +14,7 @@ class EvalTimePicker(TimePicker):
         # possible start times: remove last X days based on end_cutoff
         # TODO: same day can be pulled multiple times - is this a problem?
         possible_start_times = pd.date_range(start=(db["date"].max() - np.timedelta64(end_cutoff, 'D')),
-                                             end=(db["date"].max() - np.timedelta64(2 * self.episode_length, 'H')),
+                                             end=(db["date"].max() - np.timedelta64(2 * self.episode_length, 'h')),
                                              freq=freq
                                              )
 

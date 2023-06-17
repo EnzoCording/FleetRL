@@ -4,6 +4,7 @@ from stable_baselines3.common.vec_env import SubprocVecEnv, VecNormalize
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.callbacks import EvalCallback
+from stable_baselines3.common.callbacks import ProgressBarCallback
 
 import numpy as np
 from stable_baselines3 import TD3
@@ -57,7 +58,7 @@ if __name__ == "__main__":
 
     training_env = make_vec_env(env_id="FleetEnv-v0",
                                 vec_env_cls=SubprocVecEnv,
-                                n_envs=4,
+                                n_envs=1,
                                 env_kwargs={
                                     "schedule_name": "lmd_sched_single.csv",
                                     "building_name": "load_lmd.csv",
@@ -99,8 +100,28 @@ if __name__ == "__main__":
 
     vec_eval_env = VecNormalize(venv=eval_env, training=True, norm_obs=True, norm_reward=True)
 
-    eval_callback = EvalCallback(vec_eval_env, best_model_save_path="./test_ev", log_path="./test_ev",
-                                 eval_freq=500, deterministic=True, render=False, verbose=1)
+    eval_callback = EvalCallback(eval_env, best_model_save_path="./test_ev", log_path="./test_ev",
+                                 eval_freq=500, deterministic=True, render=False, verbose=1, warn=True, n_eval_episodes=5)
 
-    model = TD3("MlpPolicy", vec_train_env, verbose=0, train_freq=4)
-    model.learn(total_timesteps=5000)
+    model = TD3("MlpPolicy", vec_train_env, verbose=0, train_freq=2)
+    model.learn(total_timesteps=5000, callback=eval_callback, progress_bar=True)
+
+    # # Don't forget to save the VecNormalize statistics when saving the agent
+    # log_dir = "/tmp/"
+    # model.save(log_dir + "ppo_halfcheetah")
+    # stats_path = os.path.join(log_dir, "vec_normalize.pkl")
+    # env.save(stats_path)
+    #
+    # # To demonstrate loading
+    # del model, vec_env
+    #
+    # # Load the saved statistics
+    # vec_env = DummyVecEnv([lambda: gym.make("HalfCheetahBulletEnv-v0")])
+    # vec_env = VecNormalize.load(stats_path, vec_env)
+    # #  do not update them at test time
+    # vec_env.training = False
+    # # reward normalization is not needed at test time
+    # vec_env.norm_reward = False
+    #
+    # # Load the agent
+    # model = PPO.load(log_dir + "ppo_halfcheetah", env=vec_env)
