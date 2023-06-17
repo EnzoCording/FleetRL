@@ -3,6 +3,8 @@ import gymnasium as gym
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecNormalize
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
+from stable_baselines3.common.callbacks import EvalCallback
+
 import numpy as np
 from stable_baselines3 import TD3
 
@@ -36,36 +38,69 @@ def make_env(env_id: str, rank: int, seed: int = 0):
 
 
 if __name__ == "__main__":
-    env_id = "FleetEnv-v0"
-    num_cpu = 4
-    vec_env = SubprocVecEnv([make_env(env_id, i) for i in range(num_cpu)])
+    # env_id = "FleetEnv-v0"
+    # num_cpu = 4
+    # vec_env = SubprocVecEnv([make_env(env_id, i) for i in range(num_cpu)])
+    #
+    # vec_env = VecNormalize(venv=vec_env, training=True, norm_obs=True, norm_reward=True)
+    #
+    # model = TD3("MlpPolicy", vec_env, verbose=1, train_freq=4)
+    # model.learn(total_timesteps=250)
+    #
+    # obs = vec_env.reset()
+    #
+    # for _ in range(1000):
+    #     action, _states = model.predict(obs)
+    #     obs, rewards, dones, info = vec_env.step(action)
+    #     print(rewards)
+    #     vec_env.render()
 
-    vec_env = VecNormalize(venv=vec_env, training=True, norm_obs=True, norm_reward=True)
+    training_env = make_vec_env(env_id="FleetEnv-v0",
+                                vec_env_cls=SubprocVecEnv,
+                                n_envs=4,
+                                env_kwargs={
+                                    "schedule_name": "lmd_sched_single.csv",
+                                    "building_name": "load_lmd.csv",
+                                    "include_building": False,
+                                    "include_pv": False,
+                                    "static_time_picker": False,
+                                    "deg_emp": False,
+                                    "include_price": False,
+                                    "ignore_price_reward": True,
+                                    "ignore_invalid_penalty": False,
+                                    "ignore_overcharging_penalty": False,
+                                    "ignore_overloading_penalty": True,
+                                    "episode_length": 36,
+                                    "verbose": 0,
+                                    "calculate_degradation": False
+                                })
 
-    model = TD3("MlpPolicy", vec_env, verbose=1, train_freq=4)
-    model.learn(total_timesteps=250)
+    vec_train_env = VecNormalize(venv=training_env, training=True, norm_obs=True, norm_reward=True)
 
-    obs = vec_env.reset()
+    eval_env = make_vec_env(env_id="FleetEnv-v0",
+                            vec_env_cls=SubprocVecEnv,
+                            n_envs=1,
+                            env_kwargs={
+                                "schedule_name": "lmd_sched_single.csv",
+                                "building_name": "load_lmd.csv",
+                                "include_building": False,
+                                "include_pv": False,
+                                "eval_time_picker": True,
+                                "deg_emp": False,
+                                "include_price": False,
+                                "ignore_price_reward": True,
+                                "ignore_invalid_penalty": False,
+                                "ignore_overcharging_penalty": False,
+                                "ignore_overloading_penalty": True,
+                                "episode_length": 36,
+                                "verbose": 0,
+                                "calculate_degradation": False
+                            })
 
-    for _ in range(1000):
-        action, _states = model.predict(obs)
-        obs, rewards, dones, info = vec_env.step(action)
-        print(rewards)
-        vec_env.render()
+    vec_eval_env = VecNormalize(venv=eval_env, training=True, norm_obs=True, norm_reward=True)
 
-    make_vec_env(env_id="FleetEnv-v0", vec_env_cls=SubprocVecEnv, vec_env_kwargs={
-        "schedule_name": "lmd_sched_single.csv",
-        "building_name": "load_lmd.csv",
-        "include_building": False,
-        "include_pv": False,
-        "static_time_picker": False,
-        "deg_emp": False,
-        "include_price": False,
-        "ignore_price_reward": True,
-        "ignore_invalid_penalty": False,
-        "ignore_overcharging_penalty": False,
-        "ignore_overloading_penalty": True,
-        "episode_length": 36,
-        "verbose": 0,
-        "calculate_degradation": False
-    })
+    eval_callback = EvalCallback(vec_eval_env, best_model_save_path="./test_ev", log_path="./test_ev",
+                                 eval_freq=500, deterministic=True, render=False, verbose=1)
+
+    model = TD3("MlpPolicy", vec_train_env, verbose=0, train_freq=4)
+    model.learn(total_timesteps=5000)

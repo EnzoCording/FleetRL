@@ -1,6 +1,7 @@
 import os
 
 import gymnasium as gym
+import gymnasium.utils.seeding
 import numpy as np
 
 from FleetRL.fleet_env.config.ev_config import EvConfig
@@ -26,6 +27,7 @@ from FleetRL.utils.observation.observer_soc_time_only import ObserverSocTimeOnly
 
 from FleetRL.utils.time_picker.random_time_picker import RandomTimePicker
 from FleetRL.utils.time_picker.static_time_picker import StaticTimePicker
+from FleetRL.utils.time_picker.eval_time_picker import EvalTimePicker
 from FleetRL.utils.time_picker.time_picker import TimePicker
 
 from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDegradation
@@ -47,6 +49,7 @@ class FleetEnv(gym.Env):
                  include_pv:bool=False,
                  include_price:bool=True,
                  static_time_picker:bool=False,
+                 eval_time_picker:bool=False,
                  target_soc:float=0.85,
                  init_soh:float=1.0,
                  deg_emp:bool=False,
@@ -62,6 +65,8 @@ class FleetEnv(gym.Env):
 
         # call __init__() of parent class to ensure inheritance chain
         super().__init__()
+
+
 
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs
@@ -136,12 +141,20 @@ class FleetEnv(gym.Env):
         if self.log_to_csv:
             self.logging = True
 
+        # overriding, if both parameters have been chosen, eval has precedent.
+        if eval_time_picker:
+            static_time_picker = False
+
         # Loading modules
         self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
         if static_time_picker:
             self.time_picker: TimePicker = StaticTimePicker()  # when an episode starts, this class picks the same starting time
+
+        elif eval_time_picker:
+            self.time_picker: TimePicker = EvalTimePicker(self.time_conf.episode_length)  # picks a random starting times from test set
+
         else:
-            self.time_picker: TimePicker = RandomTimePicker()  # picks random starting times
+            self.time_picker: TimePicker = RandomTimePicker()  # picks random starting times from training set
 
         # not even price: only soc and time left
         if not self.include_price:
