@@ -14,8 +14,11 @@ class Episode:
         self.finish_time: pd.Timestamp = None
 
         self.soc: list = None  # State of charge of the battery
+        self.soc_deg: list = None # State of charge for SoH calcs
         self.next_soc: list = None  # Next soc, information used in the step function
+        self.next_soc_deg: list = None # Next State of charge for SoH calcs
         self.old_soc: list = None  # Previous soc, used to compute battery degradation
+        self.old_soc_deg: list = None # Old State of charge for SoH calcs
         self.soh: list = None
         self.hours_left: list[float] = None  # Hours left at the charger
         self.price: list[float] = None  # Price in €/kWh

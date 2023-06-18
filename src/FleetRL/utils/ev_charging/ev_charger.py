@@ -60,8 +60,7 @@ class EvCharger:
 
                 # if the car is there
                 if db.loc[(db["ID"] == car) & (db["date"] == episode.time), "There"].values == 1:
-                    charging_energy = min(
-                        [ev_total_energy_demand, demanded_charge])  # no overcharging or power violation
+                    charging_energy = min(ev_total_energy_demand, demanded_charge)
 
                 # the car is not there
                 else:
@@ -80,7 +79,16 @@ class EvCharger:
                 # charging cost calculated based on spot price
                 # TODO: add german taxes and grid fees
                 # Divide by 1000 because we are in kWh
-                episode.charging_cost += (charging_energy *
+
+                # get pv and subtract from charging energy needed from the grid
+                # assuming pv is equally distributed to the connected cars
+                current_pv = db.loc[(db["ID"] == car) & (db["date"] == episode.time), "pv"].values[0]
+                connected_cars = db.loc[(db["date"] == episode.time), "There"].sum()
+                # for the case that no car is connected, to avoid division by 0
+                connected_cars = max(connected_cars, 1)
+                grid_demand = max(0, charging_energy - (current_pv / connected_cars))
+
+                episode.charging_cost += (grid_demand *
                                           db.loc[db["date"] == episode.time, "DELU"].values[0]
                                           ) / 1000.0
                 # print(f"charging cost: {charging_cost.values[0]}")

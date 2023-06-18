@@ -35,60 +35,60 @@ class UnitNormalization(Normalization):
             self.low_obs = np.concatenate(
                 (np.zeros(num_cars),
                  np.zeros(num_cars),
-                 np.full(shape=price_lookahead * timestep_per_hour, fill_value=self.min_spot)
+                 np.full(shape=price_lookahead, fill_value=self.min_spot)
                  ), dtype=np.float32)
 
             self.high_obs = np.concatenate(
                 (np.ones(num_cars),
                  np.full(shape=num_cars, fill_value=self.max_time_left),
-                 np.full(shape=price_lookahead * timestep_per_hour, fill_value=self.max_spot)
+                 np.full(shape=price_lookahead, fill_value=self.max_spot)
                  ), dtype=np.float32)
 
-        if (building_flag) and (not pv_flag):
+        elif (building_flag) and (not pv_flag):
             self.low_obs = np.concatenate(
                 (np.zeros(num_cars),
                  np.zeros(num_cars),
-                 np.full(shape=price_lookahead * timestep_per_hour, fill_value=self.min_spot),
-                 np.full(shape=bl_pv_lookahead * timestep_per_hour, fill_value=self.min_building_load)
+                 np.full(shape=price_lookahead, fill_value=self.min_spot),
+                 np.full(shape=bl_pv_lookahead, fill_value=self.min_building_load)
                  ), dtype=np.float32)
 
             self.high_obs = np.concatenate(
                 (np.ones(num_cars),
                  np.full(shape=num_cars, fill_value=self.max_time_left),
-                 np.full(shape=price_lookahead * timestep_per_hour, fill_value=self.max_spot),
-                 np.full(shape=bl_pv_lookahead * timestep_per_hour, fill_value=self.max_building_load)
+                 np.full(shape=price_lookahead, fill_value=self.max_spot),
+                 np.full(shape=bl_pv_lookahead, fill_value=self.max_building_load)
                  ), dtype=np.float32)
 
-        if (not building_flag) and (pv_flag):
+        elif (not building_flag) and (pv_flag):
             self.low_obs = np.concatenate(
                 (np.zeros(num_cars),
                  np.zeros(num_cars),
-                 np.full(shape=price_lookahead * timestep_per_hour, fill_value=self.min_spot),
-                 np.zeros(bl_pv_lookahead * timestep_per_hour)
+                 np.full(shape=price_lookahead, fill_value=self.min_spot),
+                 np.zeros(bl_pv_lookahead)
                  ), dtype=np.float32)
 
             self.high_obs = np.concatenate(
                 (np.ones(num_cars),
                  np.full(shape=num_cars, fill_value=self.max_time_left),
-                 np.full(shape=price_lookahead * timestep_per_hour, fill_value=self.max_spot),
-                 np.full(shape=bl_pv_lookahead * timestep_per_hour, fill_value=self.max_pv)
+                 np.full(shape=price_lookahead, fill_value=self.max_spot),
+                 np.full(shape=bl_pv_lookahead, fill_value=self.max_pv)
                  ), dtype=np.float32)
 
-        if building_flag and pv_flag:
+        elif building_flag and pv_flag:
             self.low_obs = np.concatenate(
                 (np.zeros(num_cars),
                  np.zeros(num_cars),
-                 np.full(shape=price_lookahead * timestep_per_hour, fill_value=self.min_spot),
-                 np.full(shape=bl_pv_lookahead * timestep_per_hour, fill_value=self.min_building_load),
-                 np.zeros(bl_pv_lookahead * timestep_per_hour)
+                 np.full(shape=price_lookahead, fill_value=self.min_spot),
+                 np.full(shape=bl_pv_lookahead, fill_value=self.min_building_load),
+                 np.zeros(bl_pv_lookahead)
                  ), dtype=np.float32)
 
             self.high_obs = np.concatenate(
                 (np.ones(num_cars),
                  np.full(shape=num_cars, fill_value=self.max_time_left),
-                 np.full(shape=price_lookahead * timestep_per_hour, fill_value=self.max_spot),
-                 np.full(shape=bl_pv_lookahead * timestep_per_hour, fill_value=self.max_building_load),
-                 np.full(shape=bl_pv_lookahead * timestep_per_hour, fill_value=self.max_pv)
+                 np.full(shape=price_lookahead, fill_value=self.max_spot),
+                 np.full(shape=bl_pv_lookahead, fill_value=self.max_building_load),
+                 np.full(shape=bl_pv_lookahead, fill_value=self.max_pv)
                  ), dtype=np.float32)
 
     def normalize_obs(self, obs: list) -> np.ndarray:

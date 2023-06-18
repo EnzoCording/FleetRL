@@ -9,7 +9,7 @@ class DataLogger:
         self.econ_log = []
 
     def log_soc(self, episode):
-        self.soc_log.append(episode.soc.copy())
+        self.soc_log.append(episode.soc_deg.copy())
 
     def log_soh(self, episode):
         self.soh_log.append(episode.soh.copy())
