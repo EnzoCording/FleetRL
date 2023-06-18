@@ -14,16 +14,18 @@ class ObserverWithPV(Observer):
         pv = pd.DataFrame()
 
         price_start = np.where(db["date"] == time)[0][0]
-        price_end = np.where(db["date"] == (time + np.timedelta64(price_lookahead, 'h')))[0][0]
+        price_end = np.where(db["date"] == (time + np.timedelta64(price_lookahead+2, 'h')))[0][0]
         price["DELU"] = db["DELU"][price_start: price_end]
         price["date"] = db["date"][price_start: price_end]
         price = price.resample("H", on="date").first()["DELU"].values
+        price = price[0:price_lookahead+1]
 
         pv_start = np.where(db["date"] == time)[0][0]
-        pv_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead, 'h')))[0][0]
+        pv_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead+2, 'h')))[0][0]
         pv["pv"] = db["pv"][pv_start: pv_end]
         pv["date"] = db["date"][pv_start: pv_end]
         pv = pv.resample("H", on="date").first()["pv"].values
+        pv = pv[0:bl_pv_lookahead+1]
 
         return [soc, hours_left, price, pv]
 

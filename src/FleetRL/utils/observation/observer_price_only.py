@@ -14,10 +14,11 @@ class ObserverPriceOnly(Observer):
         price = pd.DataFrame()
 
         price_start = np.where(db["date"] == time)[0][0]
-        price_end = np.where(db["date"] == (time + np.timedelta64(price_lookahead, 'h')))[0][0]
+        price_end = np.where(db["date"] == (time + np.timedelta64(price_lookahead+2, 'h')))[0][0]
         price["DELU"] = db["DELU"][price_start: price_end]
         price["date"] = db["date"][price_start: price_end]
         price = price.resample("H", on="date").first()["DELU"].values
+        price = price[0:price_lookahead+1]
 
         return [soc, hours_left, price]
 
