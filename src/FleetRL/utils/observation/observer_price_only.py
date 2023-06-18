@@ -11,9 +11,13 @@ class ObserverPriceOnly(Observer):
         soc = db.loc[(db['date'] == time), 'SOC_on_return'].values
         hours_left = db.loc[(db['date'] == time), 'time_left'].values
 
+        price = pd.DataFrame()
+
         price_start = np.where(db["date"] == time)[0][0]
         price_end = np.where(db["date"] == (time + np.timedelta64(price_lookahead, 'h')))[0][0]
-        price = db["DELU"][price_start: price_end].values
+        price["DELU"] = db["DELU"][price_start: price_end]
+        price["date"] = db["date"][price_start: price_end]
+        price = price.resample("H", on="date").first()["DELU"].values
 
         return [soc, hours_left, price]
 

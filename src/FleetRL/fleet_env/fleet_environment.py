@@ -112,7 +112,7 @@ class FleetEnv(gym.Env):
         self.time_conf = TimeConfig()
         self.ev_conf = EvConfig()
         self.score_conf = ScoreConfig()
-        self.load_calculation = LoadCalculation(CompanyType.Caretaker)
+        self.load_calculation = LoadCalculation(CompanyType.Delivery)
 
         # Changing TimeConfig, if specified
         if episode_length > 24:
@@ -367,10 +367,14 @@ class FleetEnv(gym.Env):
             current_pv = 0
 
         # check if connection has been overloaded and penalize accordingly
-        overloaded_flag, overload_amount = self.load_calculation.check_violation(actions, current_load, current_pv)
+        there = self.db["There"][self.db["date"]==self.episode.time].values
+        corrected_actions = actions * there
+        overloaded_flag, overload_amount = self.load_calculation.check_violation(corrected_actions, self.db, current_load, current_pv)
         if not overloaded_flag:
-            reward += self.score_conf.penalty_overloading * (overload_amount ** 2)
-            self.episode.penalty_record += self.score_conf.penalty_overloading * (overload_amount ** 2)
+            reward += (self.score_conf.penalty_overloading
+                       * ((overload_amount / self.load_calculation.grid_connection) ** 2))
+            self.episode.penalty_record += (self.score_conf.penalty_overloading
+                                            * ((overload_amount / self.load_calculation.grid_connection) ** 2))
             if self.print_updates:
                 print(f"Grid connection has been overloaded.")
 
@@ -470,7 +474,7 @@ class FleetEnv(gym.Env):
         return self.normalizer.normalize_obs(next_obs), reward, self.episode.done, False, self.info
 
     def close(self):
-        return 0
+        return None
 
     def print(self, action):
         print(f"Timestep: {self.episode.time}")

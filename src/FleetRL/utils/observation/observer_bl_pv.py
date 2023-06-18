@@ -9,17 +9,27 @@ class ObserverWithBoth(Observer):
         soc = db.loc[(db['date'] == time), 'SOC_on_return'].values
         hours_left = db.loc[(db['date'] == time), 'time_left'].values
 
+        price=pd.DataFrame()
+        building_load = pd.DataFrame()
+        pv = pd.DataFrame()
+
         price_start = np.where(db["date"] == time)[0][0]
         price_end = np.where(db["date"] == (time + np.timedelta64(price_lookahead, 'h')))[0][0]
-        price = db["DELU"][price_start: price_end].values
+        price["DELU"] = db["DELU"][price_start: price_end]
+        price["date"] = db["date"][price_start: price_end]
+        price = price.resample("H", on="date").first()["DELU"].values
 
         bl_start = np.where(db["date"] == time)[0][0]
         bl_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead, 'h')))[0][0]
-        building_load = db["load"][bl_start: bl_end].values
+        building_load["load"] = db["load"][bl_start: bl_end]
+        building_load["date"] = db["date"][bl_start: bl_end]
+        building_load = building_load.resample("H", on="date").first()["load"].values
 
         pv_start = np.where(db["date"] == time)[0][0]
         pv_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead, 'h')))[0][0]
-        pv = db["pv"][pv_start: pv_end].values
+        pv["pv"] = db["pv"][pv_start: pv_end]
+        pv["date"] = db["date"][pv_start: pv_end]
+        pv = pv.resample("H", on="date").first()["pv"].values
 
         return [soc, hours_left, price, building_load, pv]
 
