@@ -11,12 +11,14 @@ class UnitNormalization(Normalization):
         self.max_time_left = max(db["time_left"])
         self.max_spot = max(db["DELU"])
         self.min_spot = min(db["DELU"])
+
         if building_flag:
             self.min_building_load = min(db["load"])
             self.max_building_load = max(db["load"])
         if pv_flag:
             self.max_pv = max(db["pv"])
 
+        # if price flag is false, building and pv will not be included
         if not price_flag:
             self.low_obs = np.concatenate(
                 (np.zeros(num_cars),
@@ -30,6 +32,7 @@ class UnitNormalization(Normalization):
                  ),
                 dtype=np.float32)
 
+        # only price
         elif (not building_flag) and (not pv_flag):
 
             self.low_obs = np.concatenate(
@@ -44,6 +47,7 @@ class UnitNormalization(Normalization):
                  np.full(shape=price_lookahead+1, fill_value=self.max_spot)
                  ), dtype=np.float32)
 
+        # only price and building
         elif (building_flag) and (not pv_flag):
             self.low_obs = np.concatenate(
                 (np.zeros(num_cars),
@@ -59,6 +63,7 @@ class UnitNormalization(Normalization):
                  np.full(shape=bl_pv_lookahead+1, fill_value=self.max_building_load)
                  ), dtype=np.float32)
 
+        # only price and pv
         elif (not building_flag) and (pv_flag):
             self.low_obs = np.concatenate(
                 (np.zeros(num_cars),
@@ -74,6 +79,7 @@ class UnitNormalization(Normalization):
                  np.full(shape=bl_pv_lookahead+1, fill_value=self.max_pv)
                  ), dtype=np.float32)
 
+        # price, pv and building
         elif building_flag and pv_flag:
             self.low_obs = np.concatenate(
                 (np.zeros(num_cars),
