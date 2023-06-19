@@ -265,9 +265,6 @@ class FleetEnv(gym.Env):
                 dim += self.num_cars  # hours needed
                 dim += self.num_cars  # laxity
                 dim += 1  # evse power
-                dim += 1  # grid cap
-                dim += 1  # avail grid cap for charging
-                dim += 1  # possible avg action per car
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif not self.include_building_load and not self.include_pv:
@@ -279,9 +276,6 @@ class FleetEnv(gym.Env):
                 dim += self.num_cars  # hours needed
                 dim += self.num_cars  # laxity
                 dim += 1  # evse power
-                dim += 1  # grid cap
-                dim += 1  # avail grid cap for charging
-                dim += 1  # possible avg action per car
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif self.include_building_load and not self.include_pv:
@@ -313,9 +307,6 @@ class FleetEnv(gym.Env):
                 dim += self.num_cars  # hours needed
                 dim += self.num_cars  # laxity
                 dim += 1  # evse power
-                dim += 1  # grid cap
-                dim += 1  # avail grid cap for charging
-                dim += 1  # possible avg action per car
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif self.include_building_load and self.include_pv:

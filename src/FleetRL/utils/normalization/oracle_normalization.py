@@ -39,14 +39,76 @@ class OracleNormalization(Normalization):
                                     / (self.max_spot - self.min_spot))
         if not self.price_flag:
             output_obs = np.concatenate((input_obs[0], input_obs[1]), dtype=np.float32)
+
+            if self.aux:
+                input_obs[2] = np.array(input_obs[2] / 1)  # there
+                input_obs[3] = np.array(input_obs[3] / self.max_soc)  # target soc
+                input_obs[4] = np.array(input_obs[4] / self.max_soc)  # charging left
+                input_obs[5] = np.array(input_obs[5] / self.max_hours_needed)  # hours needed
+                input_obs[6] = np.array(input_obs[6] / self.max_laxity)  # laxity
+                input_obs[7] = np.array(input_obs[7] / self.max_evse)  # evse power
+
+                output_obs = np.concatenate(
+                    (input_obs[0], input_obs[1], input_obs[2], input_obs[3],
+                     input_obs[4], input_obs[5], input_obs[6], input_obs[7]
+                     ), dtype=np.float32)
+
         elif not self.building_flag and not self.pv_flag:
             output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2]), dtype=np.float32)
+
+            if self.aux:
+                input_obs[3] = np.array(input_obs[3] / 1)  # there
+                input_obs[4] = np.array(input_obs[4] / self.max_soc)  # target soc
+                input_obs[5] = np.array(input_obs[5] / self.max_soc)  # charging left
+                input_obs[6] = np.array(input_obs[6] / self.max_hours_needed)  # hours needed
+                input_obs[7] = np.array(input_obs[7] / self.max_laxity)  # laxity
+                input_obs[8] = np.array(input_obs[8] / self.max_evse)  # evse power
+
+                output_obs = np.concatenate(
+                    (input_obs[0], input_obs[1], input_obs[2],
+                     input_obs[3], input_obs[4], input_obs[5],
+                     input_obs[6], input_obs[7], input_obs[8]
+                     ), dtype=np.float32)
+
         elif self.building_flag and not self.pv_flag:
             input_obs[3] = np.array(input_obs[3] / self.max_building)
             output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2], input_obs[3]), dtype=np.float32)
+
+            if self.aux:
+                input_obs[4] = np.array(input_obs[4] / 1)  # there
+                input_obs[5] = np.array(input_obs[5] / self.max_soc)  # target soc
+                input_obs[6] = np.array(input_obs[6] / self.max_soc)  # charging left
+                input_obs[7] = np.array(input_obs[7] / self.max_hours_needed)  # hours needed
+                input_obs[8] = np.array(input_obs[8] / self.max_laxity)  # laxity
+                input_obs[9] = np.array(input_obs[9] / self.max_evse)  # evse power
+                input_obs[10] = np.array(input_obs[10] / self.max_grid)  # grid connection
+                input_obs[11] = np.array(input_obs[11] / self.max_grid)  # available grid
+                input_obs[12] = np.array(input_obs[12] / 1)  # possible avg action per car
+
+                output_obs = np.concatenate(
+                    (input_obs[0], input_obs[1], input_obs[2], input_obs[3], input_obs[4],
+                     input_obs[5], input_obs[6], input_obs[7], input_obs[8],
+                     input_obs[9], input_obs[10], input_obs[11], input_obs[12]
+                     ), dtype=np.float32)
+
         elif not self.building_flag and self.pv_flag:
             input_obs[3] = np.array(input_obs[3] / self.max_pv)
             output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2], input_obs[3]), dtype=np.float32)
+
+            if self.aux:
+                input_obs[4] = np.array(input_obs[4] / 1)  # there
+                input_obs[5] = np.array(input_obs[5] / self.max_soc)  # target soc
+                input_obs[6] = np.array(input_obs[6] / self.max_soc)  # charging left
+                input_obs[7] = np.array(input_obs[7] / self.max_hours_needed)  # hours needed
+                input_obs[8] = np.array(input_obs[8] / self.max_laxity)  # laxity
+                input_obs[9] = np.array(input_obs[9] / self.max_evse)  # evse power
+
+                output_obs = np.concatenate(
+                    (input_obs[0], input_obs[1], input_obs[2], input_obs[3],
+                     input_obs[4], input_obs[5], input_obs[6],
+                     input_obs[7], input_obs[8], input_obs[9]
+                     ), dtype=np.float32)
+
         elif self.building_flag and self.pv_flag:
             input_obs[3] = np.array(input_obs[3] / self.max_building)
             input_obs[4] = np.array(input_obs[4] / self.max_pv)
