@@ -1,8 +1,6 @@
 import os
-
 import gymnasium as gym
 import numpy as np
-
 from typing import Literal
 
 from FleetRL.fleet_env.config.ev_config import EvConfig
@@ -31,18 +29,27 @@ from FleetRL.utils.time_picker.static_time_picker import StaticTimePicker
 from FleetRL.utils.time_picker.eval_time_picker import EvalTimePicker
 from FleetRL.utils.time_picker.time_picker import TimePicker
 
-from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDegradation
-from FleetRL.utils.battery_degradation.battery_degradation import BatteryDegradation
-from FleetRL.utils.battery_degradation.rainflow_sei_degradation import RainFlowSei
-
 from FleetRL.utils.new_battery_degradation.new_batt_deg import NewBatteryDegradation
 from FleetRL.utils.new_battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
 from FleetRL.utils.new_battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
 
 from FleetRL.utils.data_logger.log_data import DataLogger
-from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType, ScheduleConfig
+from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType
 
 class FleetEnv(gym.Env):
+
+    """
+    FleetRL: Reinforcement Learning environment for commercial vehicle fleets.
+    Author: Enzo Alexander Cording - https://github.com/EnzoCording
+    Master's thesis project, MSc Sustainable Energy Engineering @ KTH
+
+    This framework is built on the gymnasium core API and inherits from it.
+    __init__, reset, and step are implemented, calling other modules and functions where needed.
+    Base-derived class architecture is implemented wherever needed, and the code is structured in
+    a modular manner to enable improvements, or changes in the model.
+
+    Only publicly available data has been used to implement this model.
+    """
 
     def __init__(self, schedule_name:str="lmd_sched_single.csv",
                  building_name:str="load_lmd.csv",
@@ -66,6 +73,30 @@ class FleetEnv(gym.Env):
                  use_case: Literal["ct", "ut", "lmd"] = "lmd",
                  aux = False
                  ):
+
+        """
+        :param schedule_name: String to specify file name of schedule
+        :param building_name:
+        :param include_building:
+        :param include_pv:
+        :param include_price:
+        :param static_time_picker:
+        :param eval_time_picker:
+        :param target_soc:
+        :param init_soh:
+        :param deg_emp:
+        :param ignore_price_reward:
+        :param ignore_overloading_penalty:
+        :param ignore_invalid_penalty:
+        :param ignore_overcharging_penalty:
+        :param episode_length:
+        :param log_to_csv:
+        :param calculate_degradation:
+        :param verbose:
+        :param normalize_in_env:
+        :param use_case:
+        :param aux:
+        """
 
         # call __init__() of parent class to ensure inheritance chain
         super().__init__()
@@ -215,19 +246,27 @@ class FleetEnv(gym.Env):
         # first ID is 0
         self.num_cars = self.db["ID"].max() + 1
 
-        if not include_building:
-            max_load = 0
-        else:
+        '''
+        # Max building load is required to determine grid connection if value is not known.
+        # Grid connection 1.5 times the maximum building load, or such that the charging
+        # of 50% of EVs at full capacity causes a grid overloading.
+        # This logic can be changed in the load calculation module, e.g. replacing it with a fixed value.
+        '''
+
+        if include_building:
             max_load = max(self.db["load"])
+        else:
+            max_load = 0  # building load not considered in that case
 
         # Instantiate load calculation with the necessary information
         self.load_calculation = LoadCalculation(self.company, num_cars=self.num_cars, max_load=max_load)
+
         # Overwrite battery capacity in ev config with use-case-specific value
         if self.load_calculation.batt_cap > 0:
             self.ev_conf.battery_cap = self.load_calculation.batt_cap
 
-        # state of health
-        self.episode.soh = np.ones(self.num_cars) * self.initial_soh  # initialize soh for each battery
+        # state of health initialized for each battery
+        self.episode.soh = np.ones(self.num_cars) * self.initial_soh
 
         # choosing degradation methodology
         if deg_emp:
@@ -235,7 +274,14 @@ class FleetEnv(gym.Env):
         else:
             self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh, self.num_cars)
 
+        '''
         # Normalizing observations (Oracle) or just concatenating (Unit)
+        # Oracle is normalizing with the maximum values, that are assumed to be known
+        # Unit doesn't normalize, but just concatenates, and parses data in the right format
+        # Auxiliary flag is parsed, to include additional information or not
+        # NB: If auxiliary data is changed, the observers, normalizers and dimensions have to be updated
+        '''
+
         if self.normalize_in_env:
             self.normalizer: Normalization = OracleNormalization(self.db,
                                                                  self.include_building_load,
@@ -256,7 +302,13 @@ class FleetEnv(gym.Env):
                                                                ev_conf=self.ev_conf,
                                                                load_calc=self.load_calculation)
 
-        # set boundaries of the observation space, detects if normalized or not
+        '''
+        # set boundaries of the observation space, detects if normalized or not.
+        # If aux flag is true, additional information enlarges the observation space.
+        # The following code goes through all possible environment setups.
+        # Depending on the setup, the dimensions differ and every case is handled differently.
+        '''
+
         if not self.include_price:
             dim = 2 * self.num_cars
             if self.aux_flag:
