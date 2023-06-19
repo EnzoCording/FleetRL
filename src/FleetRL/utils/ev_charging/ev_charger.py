@@ -82,7 +82,11 @@ class EvCharger:
 
                 # get pv and subtract from charging energy needed from the grid
                 # assuming pv is equally distributed to the connected cars
-                current_pv = db.loc[(db["ID"] == car) & (db["date"] == episode.time), "pv"].values[0]
+                # try except because pv is sometimes deactivated
+                try:
+                    current_pv = db.loc[(db["ID"] == car) & (db["date"] == episode.time), "pv"].values[0]
+                except KeyError:
+                    current_pv = 0
                 connected_cars = db.loc[(db["date"] == episode.time), "There"].sum()
                 # for the case that no car is connected, to avoid division by 0
                 connected_cars = max(connected_cars, 1)
