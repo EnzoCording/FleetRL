@@ -7,7 +7,7 @@ from FleetRL.utils.battery_degradation.battery_degradation import BatteryDegrada
 from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDegradation
 # from FleetRL.utils.prices import load_prices
 
-env = FleetEnv(include_pv=True, include_building=True, include_price=True, normalize_in_env=False)
+env = FleetEnv(include_pv=True, include_building=True, include_price=True, normalize_in_env=False, aux=True, schedule_name="full_test.csv")
 env.reset()
 steps = 5
 for i in range(steps):
@@ -17,6 +17,8 @@ for i in range(steps):
     for j in range(env.num_cars):
         action.append(0)
     print(env.step(action))
+
+print(env.observation_space)
 
 # print(env.episode.reward_history)
 

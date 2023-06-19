@@ -3,6 +3,8 @@ import os
 import gymnasium as gym
 import numpy as np
 
+from typing import Literal
+
 from FleetRL.fleet_env.config.ev_config import EvConfig
 from FleetRL.fleet_env.config.score_config import ScoreConfig
 from FleetRL.fleet_env.config.time_config import TimeConfig
@@ -60,7 +62,9 @@ class FleetEnv(gym.Env):
                  log_to_csv:bool = False,
                  calculate_degradation:bool = False,
                  verbose:bool = 1,
-                 normalize_in_env = True):
+                 normalize_in_env = True,
+                 use_case: Literal["ct", "ut", "lmd"] = "lmd",
+                 aux = False):
 
         # call __init__() of parent class to ensure inheritance chain
         super().__init__()
@@ -83,11 +87,24 @@ class FleetEnv(gym.Env):
         # PV database is the same in this case
         self.pv_name = building_name
 
+        # Specify company type
+        if use_case == "ct":
+            self.company = CompanyType.Caretaker
+            self.schedule_type = ScheduleType.Caretaker
+        elif use_case == "ut":
+            self.company = CompanyType.Utility
+            self.schedule_type = ScheduleType.Utility
+        elif use_case == "lmd":
+            self.company = CompanyType.Delivery
+            self.schedule_type = ScheduleType.Delivery
+        else:
+            raise TypeError("Company not recognised.")
+
         if self.generate_schedule:
 
             self.schedule_gen = ScheduleGenerator(file_comment="one_year_15_min_delivery",
                                                   schedule_dir=self.path_name,
-                                                  schedule_type=ScheduleType.Delivery,
+                                                  schedule_type=self.schedule_type,
                                                   ending_date="30/12/2023")
 
             self.schedule_gen.generate_schedule()
@@ -102,6 +119,7 @@ class FleetEnv(gym.Env):
         self.include_building_load = include_building
         self.include_pv = include_pv
         self.include_price = include_price
+        self.aux_flag = aux  # include auxiliary information
 
         # conduct normalization of observations
         self.normalize_in_env = normalize_in_env
@@ -110,11 +128,10 @@ class FleetEnv(gym.Env):
         self.time_conf = TimeConfig()
         self.ev_conf = EvConfig()
         self.score_conf = ScoreConfig()
-        self.load_calculation = LoadCalculation(CompanyType.Delivery)
 
-        # Changing TimeConfig, if specified
-        if episode_length != 24:
-            self.time_conf.episode_length = episode_length
+        # Changing parameters, if specified
+        self.time_conf.episode_length = episode_length
+        self.ev_conf.target_soc = target_soc
 
         # Changing ScoreConfig, if specified
         if ignore_price_reward:
@@ -173,15 +190,13 @@ class FleetEnv(gym.Env):
         self.episode: Episode = Episode(self.time_conf)  # Episode object contains all episode-specific information
 
         # Setting EV parameters
-        self.target_soc = target_soc  # Target SoC - Vehicles should always leave with this SoC
+        self.target_soc = self.ev_conf.target_soc  # Target SoC - Vehicles should always leave with this SoC
         self.eps = 0.005  # allowed SOC deviation from target: 0.5%
         self.initial_soh = init_soh  # initial degree of battery degradation, assumed equal for all cars
-        self.laxity: float = 0.5  # How much excess time the car should have to charge
+        self.min_laxity: float = self.ev_conf.min_laxity  # How much excess time the car should at least have to charge
 
         # initiating variables inside __init__() that are needed for gym.Env
         self.info: dict = {}  # Necessary for gym env (Double check because new implementation doesn't need it)
-        self.max_time_left: float = None  # The maximum value of time left in the db dataframe
-        self.max_spot: float = None  # The maximum spot market price in the db dataframe
 
         # Loading the data logger
         self.data_logger: DataLogger = DataLogger(self.episode)
@@ -199,6 +214,17 @@ class FleetEnv(gym.Env):
         # first ID is 0
         self.num_cars = self.db["ID"].max() + 1
 
+        if not include_building:
+            max_load = 1000
+        else:
+            max_load = max(self.db["load"])
+
+        # Instantiate load calculation with the necessary information
+        self.load_calculation = LoadCalculation(self.company, num_cars=self.num_cars, max_load=max_load)
+        # Overwrite battery capacity in ev config with use-case-specific value
+        if self.load_calculation.batt_cap > 0:
+            self.ev_conf.battery_cap = self.load_calculation.batt_cap
+
         # state of health
         self.episode.soh = np.ones(self.num_cars) * self.initial_soh  # initialize soh for each battery
 
@@ -213,24 +239,49 @@ class FleetEnv(gym.Env):
             self.normalizer: Normalization = OracleNormalization(self.db,
                                                                  self.include_building_load,
                                                                  self.include_pv,
-                                                                 self.include_price)
+                                                                 self.include_price,
+                                                                 aux=self.aux_flag,
+                                                                 ev_conf=self.ev_conf,
+                                                                 load_calc=self.load_calculation)
         else:
             self.normalizer: Normalization = UnitNormalization(self.db,
                                                                self.num_cars,
                                                                self.time_conf.price_lookahead,
                                                                self.time_conf.bl_pv_lookahead,
-                                                               self.time_conf.time_steps_per_hour,
                                                                self.include_building_load,
                                                                self.include_pv,
-                                                               self.include_price)
+                                                               self.include_price,
+                                                               aux=self.aux_flag,
+                                                               ev_conf=self.ev_conf,
+                                                               load_calc=self.load_calculation)
 
         # set boundaries of the observation space, detects if normalized or not
         if not self.include_price:
             dim = 2 * self.num_cars
+            if self.aux_flag:
+                dim += self.num_cars  # there
+                dim += self.num_cars  # target soc
+                dim += self.num_cars  # charging left
+                dim += self.num_cars  # hours needed
+                dim += self.num_cars  # laxity
+                dim += 1  # evse power
+                dim += 1  # grid cap
+                dim += 1  # avail grid cap for charging
+                dim += 1  # possible avg action per car
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif not self.include_building_load and not self.include_pv:
             dim = 2 * self.num_cars + self.time_conf.price_lookahead + 1
+            if self.aux_flag:
+                dim += self.num_cars  # there
+                dim += self.num_cars  # target soc
+                dim += self.num_cars  # charging left
+                dim += self.num_cars  # hours needed
+                dim += self.num_cars  # laxity
+                dim += 1  # evse power
+                dim += 1  # grid cap
+                dim += 1  # avail grid cap for charging
+                dim += 1  # possible avg action per car
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif self.include_building_load and not self.include_pv:
@@ -238,6 +289,16 @@ class FleetEnv(gym.Env):
                    + self.time_conf.price_lookahead + 1
                    + self.time_conf.bl_pv_lookahead + 1
                    )
+            if self.aux_flag:
+                dim += self.num_cars  # there
+                dim += self.num_cars  # target soc
+                dim += self.num_cars  # charging left
+                dim += self.num_cars  # hours needed
+                dim += self.num_cars  # laxity
+                dim += 1  # evse power
+                dim += 1  # grid cap
+                dim += 1  # avail grid cap for charging
+                dim += 1  # possible avg action per car
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif not self.include_building_load and self.include_pv:
@@ -245,6 +306,16 @@ class FleetEnv(gym.Env):
                    + self.time_conf.price_lookahead + 1
                    + self.time_conf.bl_pv_lookahead + 1
                    )
+            if self.aux_flag:
+                dim += self.num_cars  # there
+                dim += self.num_cars  # target soc
+                dim += self.num_cars  # charging left
+                dim += self.num_cars  # hours needed
+                dim += self.num_cars  # laxity
+                dim += 1  # evse power
+                dim += 1  # grid cap
+                dim += 1  # avail grid cap for charging
+                dim += 1  # possible avg action per car
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif self.include_building_load and self.include_pv:
@@ -252,6 +323,16 @@ class FleetEnv(gym.Env):
                    + self.time_conf.price_lookahead + 1
                    + 2 * (self.time_conf.bl_pv_lookahead + 1)
                    )
+            if self.aux_flag:
+                dim += self.num_cars  # there
+                dim += self.num_cars  # target soc
+                dim += self.num_cars  # charging left
+                dim += self.num_cars  # hours needed
+                dim += self.num_cars  # laxity
+                dim += 1  # evse power
+                dim += 1  # grid cap
+                dim += 1  # avail grid cap for charging
+                dim += 1  # possible avg action per car
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         else:
@@ -294,7 +375,13 @@ class FleetEnv(gym.Env):
         self.episode.time = self.episode.start_time
 
         # get observation from observer module
-        obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead, self.time_conf.bl_pv_lookahead, self.episode.time)
+        obs = self.observer.get_obs(self.db,
+                                    self.time_conf.price_lookahead,
+                                    self.time_conf.bl_pv_lookahead,
+                                    self.episode.time,
+                                    ev_conf=self.ev_conf,
+                                    load_calc=self.load_calculation,
+                                    aux=self.aux_flag)
 
         # get the first soc and hours_left observation
         self.episode.soc = obs[0] * self.episode.soh
@@ -320,7 +407,7 @@ class FleetEnv(gym.Env):
                 self.episode.soc[car] = (self.target_soc
                                          - self.episode.hours_left[car]
                                          * min([self.ev_conf.obc_max_power, self.load_calculation.evse_max_power])
-                                         * self.laxity / self.ev_conf.battery_cap
+                                         * self.min_laxity / self.ev_conf.battery_cap
                                          )
                 if self.print_updates:
                     print("Initial SOC modified due to unfavourable starting condition.")
@@ -406,7 +493,8 @@ class FleetEnv(gym.Env):
 
         # get the next observation from the dataset
         next_obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead,
-                                         self.time_conf.bl_pv_lookahead, self.episode.time)
+                                         self.time_conf.bl_pv_lookahead, self.episode.time,
+                                         ev_conf=self.ev_conf, load_calc=self.load_calculation, aux=self.aux_flag)
         next_obs_soc = next_obs[0]
         next_obs_time_left = next_obs[1]
 

@@ -20,7 +20,7 @@ class TimeConfig:
         # self.minutes = '60'
         # self.time_steps_per_hour = 1
 
-        # when using hourly frequency, some info can get lost, causing minor inaccuracies
+        # NB: when using hourly frequency, some info can get lost, causing inaccuracies
 
         self.freq: str = '15T'  # Frequency string needed to down-sample in pandas
         self.minutes: int = 15  # Amount of minutes per time step

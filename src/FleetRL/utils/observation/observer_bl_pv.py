@@ -2,9 +2,17 @@ import numpy as np
 import pandas as pd
 
 from FleetRL.utils.observation.observer import Observer
+from FleetRL.utils.load_calculation.load_calculation import LoadCalculation
+from FleetRL.fleet_env.config.ev_config import EvConfig
 
 class ObserverWithBoth(Observer):
-    def get_obs(self, db: pd.DataFrame, price_lookahead: int, bl_pv_lookahead:int, time: pd.Timestamp) -> list:
+    def get_obs(self, db: pd.DataFrame,
+                price_lookahead: int,
+                bl_pv_lookahead:int,
+                time: pd.Timestamp,
+                ev_conf: EvConfig,
+                load_calc: LoadCalculation,
+                aux: bool) -> list:
 
         soc = db.loc[(db['date'] == time), 'SOC_on_return'].values
         hours_left = db.loc[(db['date'] == time), 'time_left'].values
@@ -34,7 +42,34 @@ class ObserverWithBoth(Observer):
         pv = pv.resample("H", on="date").first()["pv"].values
         pv = pv[0:bl_pv_lookahead+1]
 
-        return [soc, hours_left, price, building_load, pv]
+        ###
+        # Auxiliary observations that might make it easier for the agent
+        # target soc
+        there = db.loc[db["date"]==time, "There"].values
+        target_soc = ev_conf.target_soc * there
+        # maybe need to typecast to list
+        charging_left = np.subtract(target_soc, soc)
+        hours_needed = charging_left * load_calc.batt_cap / (load_calc.evse_max_power * ev_conf.charging_eff)
+        laxity = np.subtract(hours_left / (np.add(hours_needed, 0.001)), 1) * there
+        laxity = np.clip(laxity, 0, 5)
+        # could also be a vector
+        evse_power = load_calc.evse_max_power * np.ones(1)
+
+        grid_cap = load_calc.grid_connection * np.ones(1)
+        avail_grid_cap = (grid_cap - building_load[0] + pv[0]) * np.ones(1)
+        num_cars = db["ID"].max() + 1
+        possible_avg_action_per_car = min(avail_grid_cap / (num_cars * evse_power), 1) * np.ones(1)
+
+        #previous action
+        # [a1, ..., aN], sum, resulting power, building, pv, grid, total, penalty, total energy, price, reward
+        ###
+
+        if aux:
+            return [soc, hours_left, price, building_load, pv,
+                    there, target_soc, charging_left, hours_needed, laxity,
+                    evse_power, grid_cap, avail_grid_cap, possible_avg_action_per_car]
+        else:
+            return [soc, hours_left, price, building_load, pv]
 
     @staticmethod
     def get_trip_len(db: pd.DataFrame, car: int, time: pd.Timestamp) -> float:

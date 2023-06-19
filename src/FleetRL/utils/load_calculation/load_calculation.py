@@ -11,41 +11,47 @@ class CompanyType(Enum):
 class LoadCalculation:
 
     @staticmethod
-    def _import_company(company_type: CompanyType):
+    def _import_company(company_type: CompanyType, max_load: float, num_cars: int):
         grid_connection: float  # max grid connection in kW
         evse_power: float  # charger capacity in kW
 
         if company_type == CompanyType.Delivery:
-            grid_connection = 100
             evse_power = 11
+            grid_connection = max(max_load*1.5, max_load + 0.5*num_cars*evse_power)
+            batt_cap = 60
 
         elif company_type == CompanyType.Utility:
-            grid_connection = 100  # max grid connection in kW
             evse_power = 22  # charger cap in kW
+            grid_connection = max(max_load*1.5, max_load + 0.5*num_cars*evse_power)
+            if num_cars > 1:
+                grid_connection = 1000
+            batt_cap = 50
 
         elif company_type == CompanyType.Caretaker:
-            grid_connection = 120  # max grid in kW
-            evse_power = 7.4  # charger cap in kW
+            evse_power = 4.6  # charger cap in kW
+            grid_connection = max(max_load*1.5, max_load + 0.5*num_cars*evse_power)
+            batt_cap = 16.7
 
         else:
-            grid_connection = 20
+            grid_connection = 200
             evse_power = 3.7
-            print("WARN: Company name not found. Default values loaded: grid: 20 kW, evse: 3.7 kW.")
+            batt_cap = 35
+            print("WARN: Company name not found. Default values loaded.")
 
-        return grid_connection, evse_power
+        return grid_connection, evse_power, batt_cap
 
-    def __init__(self, company_type: CompanyType):
+    def __init__(self, company_type: CompanyType, max_load: float, num_cars: int):
         # setting parameters of the company site
         self.company_type = company_type
+        self.max_load = max_load
+        self.num_cars = num_cars
 
         # TODO: max power could change, I even have that info in the schedule
         # Grid connection: grid connection point max capacity in kW
         # EVSE (ev supply equipment aka charger) max power in kW
-        self.grid_connection, self.evse_max_power = LoadCalculation._import_company(self.company_type)
-
-    def build_grid(self):
-        # TODO building the grid, figure out later
-        pass
+        self.grid_connection, self.evse_max_power, self.batt_cap = LoadCalculation._import_company(self.company_type,
+                                                                                                   self.max_load,
+                                                                                                   self.num_cars)
 
     def check_violation(self, actions: list[float], there: list[int], building_load: float, pv: float) -> (bool, float):
         # grid connection - building load - total ev + pv >= 0
