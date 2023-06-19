@@ -14,6 +14,17 @@ class ObserverSocTimeOnly(Observer):
                 load_calc: LoadCalculation,
                 aux: bool) -> list:
 
+        """
+        :param db: Database from env
+        :param price_lookahead: Lookahead in hours for price
+        :param bl_pv_lookahead: Lookahead in hours for PV and building
+        :param time: Current time
+        :param ev_conf: EV config data, used for battery capacity, etc.
+        :param load_calc: Load calc module, used for grid connection, etc.
+        :param aux: Flag to include extra information on the problem or not. Can help with training
+        :return: List of numpy arrays with different parts of the observation
+        """
+
         soc = db.loc[(db['date'] == time), 'SOC_on_return'].values
         hours_left = db.loc[(db['date'] == time), 'time_left'].values
 

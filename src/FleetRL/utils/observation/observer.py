@@ -6,6 +6,7 @@ from FleetRL.fleet_env.config.ev_config import EvConfig
 class Observer:
     def get_obs(self, db: pd.DataFrame, price_lookahead: int, bl_pv_lookahead:int,
                 time: pd.Timestamp, ev_conf: EvConfig, load_calc: LoadCalculation, aux: bool) -> list:
+
         """
         :param db: database from the env
         :param price_lookahead: lookahead window for spot price
@@ -16,6 +17,7 @@ class Observer:
         :param aux: Include auxiliary information that might help the agent to learn the problem
         :return: Returns a list of np arrays that make up different parts of the observation.
         """
+
         raise NotImplementedError("This is an abstract class")
 
     # Always the same, so can be defined in base class

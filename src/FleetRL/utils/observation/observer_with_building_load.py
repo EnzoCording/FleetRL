@@ -9,6 +9,23 @@ class ObserverWithBuildingLoad(Observer):
     def get_obs(self, db: pd.DataFrame, price_lookahead: int, bl_pv_lookahead:int, time: pd.Timestamp,
                 ev_conf: EvConfig, load_calc: LoadCalculation, aux: bool) -> list:
 
+        """
+        :param db: Database from env
+        :param price_lookahead: Lookahead in hours for price
+        :param bl_pv_lookahead: Lookahead in hours for PV and building
+        :param time: Current time
+        :param ev_conf: EV config data, used for battery capacity, etc.
+        :param load_calc: Load calc module, used for grid connection, etc.
+        :param aux: Flag to include extra information on the problem or not. Can help with training
+        :return: List of numpy arrays with different parts of the observation
+
+        # define the starting and ending time via lookahead, np.where returns the index in the dataframe
+        # add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)
+        # get data of price and date from the specific indices
+        # resample data to only include one value per hour (the others are duplicates)
+        # only take into account the current value, and the specified hours of lookahead
+        """
+
         soc = db.loc[(db['date'] == time), 'SOC_on_return'].values
         hours_left = db.loc[(db['date'] == time), 'time_left'].values
 

@@ -1,7 +1,7 @@
 import random
 import matplotlib.pyplot as plt
 import rainflow as rf
-
+import numpy as np
 from FleetRL.fleet_env.fleet_environment import FleetEnv
 from FleetRL.utils.battery_degradation.battery_degradation import BatteryDegradation
 from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDegradation
@@ -12,16 +12,20 @@ env = FleetEnv(include_pv=True,
                include_price=True,
                normalize_in_env=False,
                aux=True,
+               calculate_degradation=True,
                schedule_name="full_test.csv")
 
 env.reset()
-steps = 5
+steps = 48*4*5
 for i in range(steps):
     action = []
     # print(env.step([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
     # print(env.step([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
     for j in range(env.num_cars):
-        action.append(0)
+        if env.episode.done:
+            env.reset()
+        action.append(1)
+
     print(env.step(action))
 
 print(env.observation_space)

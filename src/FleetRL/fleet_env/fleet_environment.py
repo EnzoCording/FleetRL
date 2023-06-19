@@ -49,9 +49,35 @@ class FleetEnv(gym.Env):
     a modular manner to enable improvements, or changes in the model.
 
     Only publicly available data has been used to implement this model.
+
+    Parameters for __init__():
+    :param schedule_name: String to specify file name of schedule
+    :param building_name: String to specify building load data, includes pv as well
+    :param pv_name: String to optionally specify own pv dataset
+    :param include_building: Flag to include building or not
+    :param include_pv: Flag to include pv or not
+    :param include_price: Flag to include price or not
+    :param static_time_picker: Always picks a pre-selected date
+    :param eval_time_picker: Picks a random date from oct - dec (test set)
+    # if both time picker flags are false, a random date from jan-oct will be picked (training set)
+    :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
+    :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
+    :param deg_emp: Flag to use empirical degradation. Default False
+    :param ignore_price_reward: Flag to ignore price reward
+    :param ignore_overloading_penalty: Flag to ignore overloading penalty
+    :param ignore_invalid_penalty: Flag to ignore invalid action penalty
+    :param ignore_overcharging_penalty: Flag to ignore overcharging the battery penalty
+    :param episode_length: Length of episode in hours
+    :param log_to_csv: Log SOC and SOH to csv files
+    :param calculate_degradation: Calculate degradation flag
+    :param verbose: Print statements
+    :param normalize_in_env: Conduct normalization in environment
+    :param use_case: String to specify the use-case
+    :param aux: Flag to include auxiliary information in the model
     """
 
-    def __init__(self, schedule_name:str="lmd_sched_single.csv",
+    def __init__(self, pv_name: str = None,
+                 schedule_name:str="lmd_sched_single.csv",
                  building_name:str="load_lmd.csv",
                  include_building:bool=False,
                  include_pv:bool=False,
@@ -76,26 +102,28 @@ class FleetEnv(gym.Env):
 
         """
         :param schedule_name: String to specify file name of schedule
-        :param building_name:
-        :param include_building:
-        :param include_pv:
-        :param include_price:
-        :param static_time_picker:
-        :param eval_time_picker:
-        :param target_soc:
-        :param init_soh:
-        :param deg_emp:
-        :param ignore_price_reward:
-        :param ignore_overloading_penalty:
-        :param ignore_invalid_penalty:
-        :param ignore_overcharging_penalty:
-        :param episode_length:
-        :param log_to_csv:
-        :param calculate_degradation:
-        :param verbose:
-        :param normalize_in_env:
-        :param use_case:
-        :param aux:
+        :param building_name: String to specify building load data, includes pv as well
+        :param pv_name: String to optionally specify own pv dataset
+        :param include_building: Flag to include building or not
+        :param include_pv: Flag to include pv or not
+        :param include_price: Flag to include price or not
+        :param static_time_picker: Always picks a pre-selected date
+        :param eval_time_picker: Picks a random date from oct - dec (test set)
+        # if both time picker flags are false, a random date from jan-oct will be picked (training set)
+        :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
+        :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
+        :param deg_emp: Flag to use empirical degradation. Default False
+        :param ignore_price_reward: Flag to ignore price reward
+        :param ignore_overloading_penalty: Flag to ignore overloading penalty
+        :param ignore_invalid_penalty: Flag to ignore invalid action penalty
+        :param ignore_overcharging_penalty: Flag to ignore overcharging the battery penalty
+        :param episode_length: Length of episode in hours
+        :param log_to_csv: Log SOC and SOH to csv files
+        :param calculate_degradation: Calculate degradation flag
+        :param verbose: Print statements
+        :param normalize_in_env: Conduct normalization in environment
+        :param use_case: String to specify the use-case
+        :param aux: Flag to include auxiliary information in the model
         """
 
         # call __init__() of parent class to ensure inheritance chain
@@ -117,7 +145,10 @@ class FleetEnv(gym.Env):
         self.building_name = building_name
 
         # PV database is the same in this case
-        self.pv_name = building_name
+        if pv_name is not None:
+            self.pv_name = pv_name
+        else:
+            self.pv_name = building_name
 
         # Specify company type
         if use_case == "ct":
@@ -133,24 +164,20 @@ class FleetEnv(gym.Env):
             raise TypeError("Company not recognised.")
 
         if self.generate_schedule:
-
             self.schedule_gen = ScheduleGenerator(file_comment="one_year_15_min_delivery",
                                                   schedule_dir=self.path_name,
                                                   schedule_type=self.schedule_type,
                                                   ending_date="30/12/2023")
-
             self.schedule_gen.generate_schedule()
-            # self.schedule_gen.generate_multiple_ev_schedule(num_evs=1)
-
             self.schedule_name = self.schedule_gen.get_file_name()
 
 
         # Setting flags for the type of environment to build
-        # NOTE: they are appended to the db in the order specified here
+        # NOTE: observations are appended to the db in the order specified here
         # NOTE: import the right observer!
+        self.include_price = include_price
         self.include_building_load = include_building
         self.include_pv = include_pv
-        self.include_price = include_price
         self.aux_flag = aux  # include auxiliary information
 
         # conduct normalization of observations
@@ -189,16 +216,21 @@ class FleetEnv(gym.Env):
         if eval_time_picker:
             static_time_picker = False
 
-        # Loading modules
-        self.ev_charger: EvCharger = EvCharger()  # class simulating EV charging
+        # Class simulating EV charging
+        self.ev_charger: EvCharger = EvCharger()
+
+        # Load time picker module
         if static_time_picker:
-            self.time_picker: TimePicker = StaticTimePicker()  # when an episode starts, this class picks the same starting time
+            # when an episode starts, this class picks the same starting time
+            self.time_picker: TimePicker = StaticTimePicker()
 
         elif eval_time_picker:
-            self.time_picker: TimePicker = EvalTimePicker(self.time_conf.episode_length)  # picks a random starting times from test set
+            # picks a random starting times from test set (nov - dez)
+            self.time_picker: TimePicker = EvalTimePicker(self.time_conf.episode_length)
 
         else:
-            self.time_picker: TimePicker = RandomTimePicker()  # picks random starting times from training set
+            # picks random starting times from training set (jan - oct)
+            self.time_picker: TimePicker = RandomTimePicker()
 
         # Choose the right observer module based on the environment settings
         # All observations are made in the observer class
@@ -219,7 +251,8 @@ class FleetEnv(gym.Env):
             self.observer: Observer = ObserverWithBoth()
 
         # Instantiating episode object
-        self.episode: Episode = Episode(self.time_conf)  # Episode object contains all episode-specific information
+        # Episode object contains all episode-specific information
+        self.episode: Episode = Episode(self.time_conf)
 
         # Setting EV parameters
         self.target_soc = self.ev_conf.target_soc  # Target SoC - Vehicles should always leave with this SoC
@@ -396,6 +429,11 @@ class FleetEnv(gym.Env):
 
     def reset(self, **kwargs) -> tuple[np.array, dict]:
 
+        """
+        :param kwargs: Necessary for gym inheritance
+        :return: First observation (either normalized or not) and an info dict
+        """
+
         # reset logs for new episode
         self.data_logger.log = []
         self.data_logger.soc_log = []
@@ -477,6 +515,10 @@ class FleetEnv(gym.Env):
         return self.normalizer.normalize_obs(obs), self.info
 
     def step(self, actions: np.array) -> tuple[np.array, float, bool, bool, dict]:
+        """
+        :param actions: Actions parsed by the agent
+        :return: Tuple containing next observation, reward, done, truncated and info dictionary
+        """
 
         # parse the action to the charging function and receive the soc, next soc, reward and cashflow
         self.episode.soc, self.episode.next_soc, reward, cashflow = self.ev_charger.charge(
@@ -525,7 +567,8 @@ class FleetEnv(gym.Env):
             reward += overload_penalty
             self.episode.penalty_record += overload_penalty
             if self.print_updates:
-                print(f"Grid connection has been overloaded: {abs(overload_amount)} kW.")
+                print(f"Grid connection of {self.load_calculation.grid_connection} kW has been overloaded:"
+                      f" {abs(overload_amount)} kW. Penalty: {overload_penalty}")
 
         # set the soc to the next soc
         self.episode.soc = self.episode.next_soc.copy()
