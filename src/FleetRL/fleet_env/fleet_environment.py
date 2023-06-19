@@ -64,7 +64,8 @@ class FleetEnv(gym.Env):
                  verbose:bool = 1,
                  normalize_in_env = True,
                  use_case: Literal["ct", "ut", "lmd"] = "lmd",
-                 aux = False):
+                 aux = False
+                 ):
 
         # call __init__() of parent class to ensure inheritance chain
         super().__init__()
@@ -215,7 +216,7 @@ class FleetEnv(gym.Env):
         self.num_cars = self.db["ID"].max() + 1
 
         if not include_building:
-            max_load = 1000
+            max_load = 0
         else:
             max_load = max(self.db["load"])
 
