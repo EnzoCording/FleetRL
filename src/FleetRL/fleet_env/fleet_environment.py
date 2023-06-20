@@ -429,6 +429,9 @@ class FleetEnv(gym.Env):
 
     def reset(self, **kwargs) -> tuple[np.array, dict]:
 
+        self.load_calculation.grid_connection = 50
+
+
         """
         :param kwargs: Necessary for gym inheritance
         :return: First observation (either normalized or not) and an info dict
@@ -568,7 +571,7 @@ class FleetEnv(gym.Env):
             self.episode.penalty_record += overload_penalty
             if self.print_updates:
                 print(f"Grid connection of {self.load_calculation.grid_connection} kW has been overloaded:"
-                      f" {abs(overload_amount)} kW. Penalty: {overload_penalty}")
+                      f" {abs(overload_amount)} kW. Penalty: {round(overload_penalty, 3)}")
 
         # set the soc to the next soc
         self.episode.soc = self.episode.next_soc.copy()
@@ -602,7 +605,7 @@ class FleetEnv(gym.Env):
                     reward += current_soc_pen
                     self.episode.penalty_record += current_soc_pen
                     if self.print_updates:
-                        print(f"A car left the station without reaching the target SoC. Penalty: {current_soc_pen}")
+                        print(f"A car left the station without reaching the target SoC. Penalty: {round(current_soc_pen,3)}")
 
             # same car in the next time step
             if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
@@ -649,7 +652,7 @@ class FleetEnv(gym.Env):
         # TODO: Here could be a saving function that saves the results of the episode
 
         if self.print_reward:
-            print(f"Reward signal: {reward}")
+            print(f"Reward signal: {round(reward,3)}")
             print("---------")
             print("\n")
 
@@ -682,11 +685,11 @@ class FleetEnv(gym.Env):
         print(f"Timestep: {self.episode.time}")
         if self.include_price:
             print(f"Price: {self.episode.price[0] / 1000} €/kWh")
-        print(f"SOC: {self.episode.soc}, Time left: {self.episode.hours_left} hours")
-        print(f"Action taken: {action}")
-        print(f"Actual charging energy: {self.episode.total_charging_energy} kWh")
-        print(f"Charging cost/revenue: {self.episode.current_charging_expense} €")
-        print(f"SoH: {self.episode.soh}")
+        print(f"SOC: {np.round(self.episode.soc, 3)}, Time left: {self.episode.hours_left} hours")
+        print(f"Action taken: {np.round(action,3)}")
+        print(f"Actual charging energy: {round(self.episode.total_charging_energy,3)} kWh")
+        print(f"Charging cost/revenue: {round(self.episode.current_charging_expense,3)} €")
+        print(f"SoH: {np.round(self.episode.soh, 3)}")
         print("--------------------------")
 
     def render(self):
@@ -712,4 +715,5 @@ if __name__ == "__main__":
                    log_to_csv=False,
                    calculate_degradation=False,
                    verbose=1,
-                   normalize_in_env=True)
+                   normalize_in_env=True,
+                   aux=False)

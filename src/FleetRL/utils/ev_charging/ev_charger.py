@@ -66,9 +66,10 @@ class EvCharger:
                 else:
                     charging_energy = 0
                     if actions[car] > 0:
-                        invalid_action_penalty += score_conf.penalty_invalid_action * (actions[car] ** 2)
+                        current_inv_pen = score_conf.penalty_invalid_action * (actions[car] ** 2)
+                        invalid_action_penalty += current_inv_pen
                         if print_updates:
-                            print(f"Invalid action, penalty given.")
+                            print(f"Invalid action, penalty given: {round(current_inv_pen, 3)}.")
 
                 # next soc is calculated based on charging energy
                 # TODO: not all cars must have the same battery cap
@@ -110,7 +111,7 @@ class EvCharger:
                     current_oc_pen = score_conf.penalty_overcharging * (ev_total_energy_left - demanded_discharge) ** 2
                     overcharging_penalty += current_oc_pen
                     if print_updates:
-                        print(f"Overcharged, penalty of: {current_oc_pen}")
+                        print(f"Overcharged, penalty of: {round(current_oc_pen,3)}")
 
                 # if the car is there
                 if db.loc[(db["ID"] == car) & (db["date"] == episode.time), "There"].values == 1:
@@ -119,9 +120,10 @@ class EvCharger:
                 # car is not there
                 else:
                     episode.discharging_energy = 0
-                    invalid_action_penalty += score_conf.penalty_invalid_action * (actions[car] ** 2)
+                    current_inv_pen = score_conf.penalty_invalid_action * (actions[car] ** 2)
+                    invalid_action_penalty += current_inv_pen
                     if print_updates:
-                        print(f"Invalid action, penalty given.")
+                        print(f"Invalid action, penalty given: {round(current_inv_pen, 3)}.")
 
                 # calculate next soc, which will get smaller
                 episode.next_soc.append(
