@@ -429,9 +429,6 @@ class FleetEnv(gym.Env):
 
     def reset(self, **kwargs) -> tuple[np.array, dict]:
 
-        self.load_calculation.grid_connection = 50
-
-
         """
         :param kwargs: Necessary for gym inheritance
         :return: First observation (either normalized or not) and an info dict
