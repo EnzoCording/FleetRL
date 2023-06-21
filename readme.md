@@ -5,14 +5,12 @@ fleets.
 It includes the following features:
 - Variable time resolution
 - Variable episode length, overnight charging
-- ENTSO-E price data implemented
-- Emobpy EV schedules implemented
-- PandaPower integration to assess generator load and phase angle. Grid implemented for each company use-case.
-- Different use-cases of EV fleets included
+- ENTSO-E price data
+- PV data from MERRA-2 dataset
+- Schedule generator
+- 3 different use-cases of EV fleets included
 
-![Thesis - MDP graphical](https://github.com/EnzoCording/FleetRL/assets/26363007/8e36c7bb-6b83-43b6-8687-05e41d7eef81)
-
-<img width="10" src="https://github.com/EnzoCording/FleetRL/assets/26363007/8e36c7bb-6b83-43b6-8687-05e41d7eef81.jpg">
+<img width="600" src="https://github.com/EnzoCording/FleetRL/blob/master/Thesis%20-%20MDP%20graphical.jpg">
 
 Right now the following is working:
 - Step function charges EVs
