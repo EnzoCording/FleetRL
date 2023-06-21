@@ -12,11 +12,10 @@ env = FleetEnv(include_pv=True,
                include_price=True,
                normalize_in_env=False,
                aux=True,
-               calculate_degradation=True,
-               schedule_name="full_test.csv")
+               calculate_degradation=True)
 
 env.reset()
-steps = 48*4*5
+steps = 48*4
 for i in range(steps):
     action = []
     # print(env.step([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))

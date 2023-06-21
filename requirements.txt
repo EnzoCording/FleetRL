@@ -133,7 +133,7 @@ openpyxl==3.1.2
     # via -r requirements.in
 packaging==23.1
     # via matplotlib
-pandas==2.0.2
+pandas~=2.0.1
     # via
     #   -r requirements.in
     #   stable-baselines3
@@ -221,3 +221,7 @@ wheel==0.40.0
     #   nvidia-cusparse-cu11
     #   nvidia-nvtx-cu11
     #   tensorboard
+
+FleetRL~=0.0.1
+optuna~=3.2.0
+setuptools~=67.8.0
