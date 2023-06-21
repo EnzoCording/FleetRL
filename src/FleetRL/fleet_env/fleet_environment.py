@@ -32,8 +32,8 @@ from FleetRL.utils.time_picker.time_picker import TimePicker
 from FleetRL.utils.new_battery_degradation.new_batt_deg import NewBatteryDegradation
 from FleetRL.utils.new_battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
 from FleetRL.utils.new_battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
+from FleetRL.utils.new_battery_degradation.log_data import DataLogger
 
-from FleetRL.utils.data_logger.log_data import DataLogger
 from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType
 
 class FleetEnv(gym.Env):
@@ -68,7 +68,7 @@ class FleetEnv(gym.Env):
     :param ignore_invalid_penalty: Flag to ignore invalid action penalty
     :param ignore_overcharging_penalty: Flag to ignore overcharging the battery penalty
     :param episode_length: Length of episode in hours
-    :param log_to_csv: Log SOC and SOH to csv files
+    :param log_data: Log SOC and SOH to csv files
     :param calculate_degradation: Calculate degradation flag
     :param verbose: Print statements
     :param normalize_in_env: Conduct normalization in environment
@@ -92,7 +92,7 @@ class FleetEnv(gym.Env):
                  ignore_invalid_penalty = False,
                  ignore_overcharging_penalty = False,
                  episode_length:int = 24,
-                 log_to_csv:bool = False,
+                 log_data:bool = False,
                  calculate_degradation:bool = False,
                  verbose:bool = 1,
                  normalize_in_env = True,
@@ -118,7 +118,7 @@ class FleetEnv(gym.Env):
         :param ignore_invalid_penalty: Flag to ignore invalid action penalty
         :param ignore_overcharging_penalty: Flag to ignore overcharging the battery penalty
         :param episode_length: Length of episode in hours
-        :param log_to_csv: Log SOC and SOH to csv files
+        :param log_data: Log SOC and SOH to csv files
         :param calculate_degradation: Calculate degradation flag
         :param verbose: Print statements
         :param normalize_in_env: Conduct normalization in environment
@@ -207,10 +207,7 @@ class FleetEnv(gym.Env):
         self.print_reward = verbose
         self.print_function = verbose
         self.calc_deg = calculate_degradation
-        self.logging = calculate_degradation
-        self.log_to_csv = log_to_csv
-        if self.log_to_csv:
-            self.logging = True
+        self.log_data = log_data
 
         # overriding, if both parameters have been chosen, eval has precedent.
         if eval_time_picker:
@@ -264,7 +261,7 @@ class FleetEnv(gym.Env):
         self.info: dict = {}  # Necessary for gym env (Double check because new implementation doesn't need it)
 
         # Loading the data logger
-        self.data_logger: DataLogger = DataLogger(self.episode)
+        self.deg_data_logger: DataLogger = DataLogger(self.episode)
 
         # Loading the inputs
         self.data_loader: DataLoader = DataLoader(self.path_name, self.schedule_name,
@@ -435,9 +432,10 @@ class FleetEnv(gym.Env):
         """
 
         # reset logs for new episode
-        self.data_logger.log = []
-        self.data_logger.soc_log = []
-        self.data_logger.soh_log = []
+        self.deg_data_logger.log = []
+        self.deg_data_logger.soc_log = []
+        self.deg_data_logger.soh_log = []
+        self.deg_data_logger.econ_log = []
 
         # set done to False, since the episode just started
         self.episode.done = False
@@ -508,9 +506,8 @@ class FleetEnv(gym.Env):
         if self.include_price:
             obs[2] = self.episode.price
 
-        if self.logging:
-            self.data_logger.log_soc(self.episode)
-            self.data_logger.log_soh(self.episode)
+        if self.calc_deg:
+            self.deg_data_logger.log_soc(self.episode.soc_deg)
 
         return self.normalizer.normalize_obs(obs), self.info
 
@@ -635,12 +632,10 @@ class FleetEnv(gym.Env):
         # The RL agent then resets the environment
         if self.episode.time == self.episode.finish_time:
             self.episode.done = True
-            if self.logging:
-                self.data_logger.add_log_entry()
+            if self.calc_deg:
+                self.deg_data_logger.add_log_entry()
             if self.print_updates:
                 print(f"Episode done: {self.episode.done}")
-            if self.log_to_csv:
-                self.data_logger.permanent_log()
 
         # append to the reward history
         self.episode.cumulative_reward += reward
@@ -659,19 +654,16 @@ class FleetEnv(gym.Env):
             next_obs[2] = self.episode.price
 
         # Log soc, this is mainly for battery degradation, but can also save to csv
-        if self.logging:
-            self.data_logger.log_soc(self.episode)
+        if self.calc_deg:
+            self.deg_data_logger.log_soc(self.episode.soc_deg)
 
         # Calculate state of health based on chosen method
         if self.calc_deg:
-            self.episode.soh -= self.new_battery_degradation.calculate_degradation(self.data_logger.soc_log,
+            self.episode.soh -= self.new_battery_degradation.calculate_degradation(self.deg_data_logger.soc_log,
                                                                                    self.load_calculation.evse_max_power,
                                                                                    self.time_conf,
                                                                                    self.ev_conf.temperature)
 
-        # Log SoH after calculating it
-        if self.logging:
-            self.data_logger.log_soh(self.episode)
 
         return self.normalizer.normalize_obs(next_obs), reward, self.episode.done, False, self.info
 
@@ -709,7 +701,7 @@ if __name__ == "__main__":
                    ignore_invalid_penalty=False,
                    ignore_overcharging_penalty=False,
                    episode_length=24,
-                   log_to_csv=False,
+                   log_data=False,
                    calculate_degradation=False,
                    verbose=1,
                    normalize_in_env=True,

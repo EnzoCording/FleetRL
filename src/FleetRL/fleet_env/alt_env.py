@@ -28,16 +28,12 @@ from FleetRL.utils.time_picker.random_time_picker import RandomTimePicker
 from FleetRL.utils.time_picker.static_time_picker import StaticTimePicker
 from FleetRL.utils.time_picker.time_picker import TimePicker
 
-from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDegradation
-from FleetRL.utils.battery_degradation.battery_degradation import BatteryDegradation
-from FleetRL.utils.battery_degradation.rainflow_sei_degradation import RainFlowSei
-
 from FleetRL.utils.new_battery_degradation.new_batt_deg import NewBatteryDegradation
 from FleetRL.utils.new_battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
 from FleetRL.utils.new_battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
 
-from FleetRL.utils.data_logger.log_data import DataLogger
-from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType, ScheduleConfig
+from FleetRL.utils.new_battery_degradation.log_data import DataLogger
+from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType
 
 
 class AltEnv(gym.Env):

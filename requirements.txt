@@ -1,4 +1,4 @@
-FleetRL~=0.0.1
+-e file:.
 stable-baselines3[extra]~=2.0.0a13
 gymnasium~=0.28.1
 pandas~=2.0.2
