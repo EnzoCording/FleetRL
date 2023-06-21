@@ -163,3 +163,6 @@ src/agents/RL/FleetRl_tensorboard/*
 src/agents/RL/FleetRl_tensorboard_1/*
 src/agents/RL/FleetRl_tensorboard_single/*
 src/agents/RL/tb_log/*
+./trained/*
+src/agents/RL/hyperparameter_tuning/tb_log/*
+src/agents/RL/hyperparameter_tuning/tb_log_hp/*
