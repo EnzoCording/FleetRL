@@ -10,6 +10,10 @@ It includes the following features:
 - PandaPower integration to assess generator load and phase angle. Grid implemented for each company use-case.
 - Different use-cases of EV fleets included
 
+![Thesis - MDP graphical](https://github.com/EnzoCording/FleetRL/assets/26363007/8e36c7bb-6b83-43b6-8687-05e41d7eef81)
+
+<img width="10" src="https://github.com/EnzoCording/FleetRL/assets/26363007/8e36c7bb-6b83-43b6-8687-05e41d7eef81.jpg">
+
 Right now the following is working:
 - Step function charges EVs
 - Calculates cost based on spot market
