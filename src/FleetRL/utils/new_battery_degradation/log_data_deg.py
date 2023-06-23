@@ -1,7 +1,7 @@
 import pandas as pd
 import time
 
-class DataLogger:
+class LogDataDeg:
     def __init__(self, episode):
         self.log: list = []
         self.soc_log = []

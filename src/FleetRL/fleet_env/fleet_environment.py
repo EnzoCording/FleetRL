@@ -32,7 +32,9 @@ from FleetRL.utils.time_picker.time_picker import TimePicker
 from FleetRL.utils.new_battery_degradation.new_batt_deg import NewBatteryDegradation
 from FleetRL.utils.new_battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
 from FleetRL.utils.new_battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
-from FleetRL.utils.new_battery_degradation.log_data import DataLogger
+from FleetRL.utils.new_battery_degradation.log_data_deg import LogDataDeg
+
+from FleetRL.utils.data_logger.data_logger import DataLogger
 
 from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType
 
@@ -260,8 +262,11 @@ class FleetEnv(gym.Env):
         # initiating variables inside __init__() that are needed for gym.Env
         self.info: dict = {}  # Necessary for gym env (Double check because new implementation doesn't need it)
 
-        # Loading the data logger
-        self.deg_data_logger: DataLogger = DataLogger(self.episode)
+        # Loading the data logger for battery degradation
+        self.deg_data_logger: LogDataDeg = LogDataDeg(self.episode)
+
+        # Loading data logger for analysing results and everything else
+        self.data_logger: DataLogger = DataLogger(self.time_conf.episode_length * self.time_conf.time_steps_per_hour)
 
         # Loading the inputs
         self.data_loader: DataLoader = DataLoader(self.path_name, self.schedule_name,
@@ -506,10 +511,25 @@ class FleetEnv(gym.Env):
         if self.include_price:
             obs[2] = self.episode.price
 
+        # Parse observation to normalization module
+        norm_obs = self.normalizer.normalize_obs(obs)
+
+        # Log first soc for battery degradation
         if self.calc_deg:
             self.deg_data_logger.log_soc(self.episode.soc_deg)
 
-        return self.normalizer.normalize_obs(obs), self.info
+        if self.log_data and not self.episode.done:
+            # obs action reward cashflow
+            self.data_logger.log_data(self.episode.time,
+                                      norm_obs,  # normalized observation
+                                      np.zeros(self.num_cars),  # action
+                                      0.0,  # reward
+                                      0.0,  # cashflow
+                                      0.0,  # penalties
+                                      0.0,  # grid overloading
+                                      0.0)  # soc missing on departure
+
+        return norm_obs, self.info
 
     def step(self, actions: np.array) -> tuple[np.array, float, bool, bool, dict]:
         """
@@ -586,6 +606,9 @@ class FleetEnv(gym.Env):
             next_obs_price = next_obs[2]
             self.episode.price = next_obs_price
 
+        # cumulative soc missing for each step
+        cum_soc_missing = 0
+
         # go through the cars and check whether the same car is still there, no car, or a new car
         for car in range(self.num_cars):
 
@@ -594,7 +617,9 @@ class FleetEnv(gym.Env):
                 # if charging requirement wasn't met (with some tolerance eps)
                 if self.target_soc - self.episode.soc[car] > self.eps:
                     # penalty for not fulfilling charging requirement, square difference, scale and clip
-                    current_soc_pen = self.score_conf.penalty_soc_violation * (self.target_soc - self.episode.soc[car]) ** 2
+                    soc_missing = self.target_soc - self.episode.soc[car]
+                    cum_soc_missing += soc_missing
+                    current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
                     current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
                     reward += current_soc_pen
                     self.episode.penalty_record += current_soc_pen
@@ -618,7 +643,6 @@ class FleetEnv(gym.Env):
                 self.episode.hours_left[car] = next_obs_time_left[car]
                 self.episode.old_soc[car] = self.episode.soc[car]
                 self.episode.soc[car] = next_obs_soc[car]
-                trip_len = self.observer.get_trip_len(self.db, car, self.episode.time)
 
                 # repeat for deg instances to calculate degradation
                 self.episode.old_soc_deg[car] = self.episode.soc_deg[car]
@@ -636,6 +660,7 @@ class FleetEnv(gym.Env):
                 self.deg_data_logger.add_log_entry()
             if self.print_updates:
                 print(f"Episode done: {self.episode.done}")
+                self.logged_data = self.data_logger.log
 
         # append to the reward history
         self.episode.cumulative_reward += reward
@@ -653,9 +678,25 @@ class FleetEnv(gym.Env):
         if self.include_price:
             next_obs[2] = self.episode.price
 
+        norm_next_obs = self.normalizer.normalize_obs(next_obs)
+
         # Log soc, this is mainly for battery degradation, but can also save to csv
         if self.calc_deg:
             self.deg_data_logger.log_soc(self.episode.soc_deg)
+
+        penalty = reward - (cashflow * self.score_conf.price_multiplier)
+        grid = abs(overload_amount)
+        soc_v = abs(cum_soc_missing)
+
+        if self.log_data and not self.episode.done:
+            self.data_logger.log_data(self.episode.time,
+                                      norm_next_obs,
+                                      actions,
+                                      reward,
+                                      cashflow,
+                                      penalty,
+                                      grid,
+                                      soc_v)
 
         # Calculate state of health based on chosen method
         if self.calc_deg:
@@ -664,8 +705,7 @@ class FleetEnv(gym.Env):
                                                                                    self.time_conf,
                                                                                    self.ev_conf.temperature)
 
-
-        return self.normalizer.normalize_obs(next_obs), reward, self.episode.done, False, self.info
+        return norm_next_obs, reward, self.episode.done, False, self.info
 
     def close(self):
         return None

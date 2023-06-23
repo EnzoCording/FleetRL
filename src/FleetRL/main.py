@@ -12,10 +12,12 @@ env = FleetEnv(include_pv=True,
                include_price=True,
                normalize_in_env=False,
                aux=True,
-               calculate_degradation=True)
+               calculate_degradation=True,
+               log_data=True,
+               episode_length=48)
 
 env.reset()
-steps = 48*4
+steps = 48*4*3
 for i in range(steps):
     action = []
     # print(env.step([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
@@ -23,12 +25,12 @@ for i in range(steps):
     for j in range(env.num_cars):
         if env.episode.done:
             env.reset()
-        action.append(1)
+        action.append(0)
 
     print(env.step(action))
 
-print(env.observation_space)
-
+print(env.data_logger.log.head())
+print(env.data_logger.log.tail())
 # print(env.episode.reward_history)
 
 '''

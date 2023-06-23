@@ -101,7 +101,7 @@ class EvCharger:
                 # save the total charging energy in a self variable
                 episode.total_charging_energy += charging_energy
 
-            # car is discharging
+            # car is discharging - v2g is currently modelled as energy arbitrage on the day ahead spot market
             elif actions[car] < 0:
                 # check how much energy is left in the battery and how much discharge is desired
                 ev_total_energy_left = -1 * episode.soc[car] * episode.soh[car] * ev_conf.battery_cap  # amount of energy left in the battery in kWh

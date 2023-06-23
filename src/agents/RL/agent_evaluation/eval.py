@@ -1,7 +1,7 @@
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3 import PPO, TD3
 from stable_baselines3.common.vec_env import VecNormalize, SubprocVecEnv
-from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.env_util import make_vec_env, unwrap_wrapper
 from FleetRL.fleet_env.fleet_environment import FleetEnv
 
 if __name__ == "__main__":
@@ -23,9 +23,10 @@ if __name__ == "__main__":
                                     "ignore_overloading_penalty": False,
                                     "episode_length": 48,
                                     "normalize_in_env": False,
-                                    "verbose": 1,
+                                    "verbose": 0,
                                     "aux": True,
-                                    "use_case": "lmd"
+                                    "use_case": "lmd",
+                                    "log_data": True
                                 })
 
     eval_norm_vec_env = VecNormalize(venv=eval_vec_env,
@@ -39,5 +40,5 @@ if __name__ == "__main__":
     model = TD3.load("./../trained/td3_aux_lr001_2cars_run3_harsher_3rew/980000", env = eval_norm_vec_env)
     # model = TD3.load("./../trained/vec_TD3-1687291761-td3_2_cars_run2/260000", env = eval_norm_vec_env)
 
-    mean_reward, _ = evaluate_policy(model, eval_norm_vec_env, n_eval_episodes=5, deterministic=True)
+    mean_reward, _ = evaluate_policy(model, eval_norm_vec_env, n_eval_episodes=1, deterministic=True)
     print(mean_reward)

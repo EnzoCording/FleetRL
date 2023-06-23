@@ -32,7 +32,7 @@ from FleetRL.utils.new_battery_degradation.new_batt_deg import NewBatteryDegrada
 from FleetRL.utils.new_battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
 from FleetRL.utils.new_battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
 
-from FleetRL.utils.new_battery_degradation.log_data import DataLogger
+from FleetRL.utils.new_battery_degradation.log_data_deg import LogDataDeg
 from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType
 
 
@@ -163,7 +163,7 @@ class AltEnv(gym.Env):
         self.max_spot: float = None  # The maximum spot market price in the db dataframe
 
         # Loading the data logger
-        self.data_logger: DataLogger = DataLogger(self.episode)
+        self.data_logger: LogDataDeg = LogDataDeg(self.episode)
 
         # Loading the inputs
         self.data_loader: DataLoader = DataLoader(self.path_name, self.schedule_name,
