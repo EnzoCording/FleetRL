@@ -78,14 +78,15 @@ class FleetEnv(gym.Env):
     :param aux: Flag to include auxiliary information in the model
     """
 
-    def __init__(self, pv_name: str = None,
+    def __init__(self,
+                 pv_name: str = None,
                  schedule_name:str="lmd_sched_single.csv",
                  building_name:str="load_lmd.csv",
                  include_building:bool=False,
                  include_pv:bool=False,
                  include_price:bool=True,
                  static_time_picker:bool=False,
-                 eval_time_picker:bool=False,
+                 eval_time_picker:bool=False,  # method assertion todo
                  target_soc:float=0.85,
                  init_soh:float=1.0,
                  deg_emp:bool=False,
@@ -436,11 +437,9 @@ class FleetEnv(gym.Env):
         :return: First observation (either normalized or not) and an info dict
         """
 
-        # reset logs for new episode
+        # reset degradation logs for new episode
         self.deg_data_logger.log = []
         self.deg_data_logger.soc_log = []
-        self.deg_data_logger.soh_log = []
-        self.deg_data_logger.econ_log = []
 
         # set done to False, since the episode just started
         self.episode.done = False
@@ -527,7 +526,8 @@ class FleetEnv(gym.Env):
                                       0.0,  # cashflow
                                       0.0,  # penalties
                                       0.0,  # grid overloading
-                                      0.0)  # soc missing on departure
+                                      0.0  # soc missing on departure
+                                      )  # state of health
 
         return norm_obs, self.info
 
@@ -725,6 +725,21 @@ class FleetEnv(gym.Env):
         # TODO: graph of rewards for example, or charging power or sth like that
         # TODO: Maybe a bar graph, centered at 0, n bars for n vehicles and height changes with power
         pass
+
+    def get_log(self):
+        # return log dataframe
+        return self.data_logger.log
+
+    def is_done(self):
+        # return if episode is done
+        return self.episode.done
+
+    def get_start_time(self):
+        return self.episode.start_time
+
+    def set_start_time(self, start_time:str):
+        self.episode.start_time = start_time
+        return None
 
 if __name__ == "__main__":
     env = FleetEnv(schedule_name="lmd_sched_single.csv",

@@ -5,8 +5,11 @@ from FleetRL.utils.time_picker.time_picker import TimePicker
 
 
 class StaticTimePicker(TimePicker):
-    def choose_time(self, db: pd.Series, freq: str, end_cutoff: int) -> Timestamp:
-        chosen_start_time = pd.to_datetime("01/01/2020 15:00")
 
+    def __init__(self, start_time: str = "01/01/2020 15:00"):
+        self.start_time = start_time
+
+    def choose_time(self, db: pd.Series, freq: str, end_cutoff: int) -> Timestamp:
+        chosen_start_time = pd.to_datetime(self.start_time)
         # return start time
         return chosen_start_time
