@@ -17,11 +17,13 @@ class DataLogger:
                  cashflow: float,
                  penalty: float,
                  grid: float,
-                 soc_v: float):
+                 soc_v: float,
+                 degradation: float):
 
         self.episode_count = len(self.log) // self.episode_length + 1
 
         self.entry = []
+
         self.entry.append({"Episode": self.episode_count,
                            "Time": time,
                            "Observation": obs,
@@ -30,5 +32,7 @@ class DataLogger:
                            "Cashflow": cashflow,
                            "Penalties": penalty,
                            "Grid overloading": grid,
-                           "SOC violation": soc_v})
+                           "SOC violation": soc_v,
+                           "Degradation": degradation})
+
         self.log = pd.concat((self.log, pd.DataFrame(self.entry)), axis=0)
