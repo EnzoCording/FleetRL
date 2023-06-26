@@ -283,10 +283,10 @@ class FleetEnv(gym.Env):
         self.num_cars = self.db["ID"].max() + 1
 
         '''
-        # Max building load is required to determine grid connection if value is not known.
-        # Grid connection 1.5 times the maximum building load, or such that the charging
+        # Maximum building load is required to determine grid connection if value is not known.
+        # Grid connection is sized at 1.1 times the maximum building load, or such that the charging
         # of 50% of EVs at full capacity causes a grid overloading.
-        # This logic can be changed in the load calculation module, e.g. replacing it with a fixed value.
+        # This can be changed in the load calculation module, e.g. replacing it with a fixed value.
         '''
 
         if include_building:
@@ -478,8 +478,7 @@ class FleetEnv(gym.Env):
         self.episode.soc_deg = self.episode.soc.copy()
 
         ''' if time is insufficient due to unfavourable start date (for example loading an empty car with 15 min
-        time left), soc is set in such a way that the agent always has a chance to fulfil the objective
-        '''
+        time left), soc is set in such a way that the agent always has a chance to fulfil the objective'''
         for car in range(self.num_cars):
             time_needed = ((self.target_soc - self.episode.soc[car])
                            * self.ev_conf.battery_cap
@@ -526,8 +525,8 @@ class FleetEnv(gym.Env):
                                       0.0,  # cashflow
                                       0.0,  # penalties
                                       0.0,  # grid overloading
-                                      0.0  # soc missing on departure
-                                      )  # state of health
+                                      0.0,  # soc missing on departure
+                                      0.0)  # degradation of cycle
 
         return norm_obs, self.info
 
@@ -577,7 +576,7 @@ class FleetEnv(gym.Env):
                                                                                  current_load, current_pv)
 
         # check if an overloading took place
-        if not overloaded_flag:
+        if overloaded_flag:
             # % of trafo overloading is squared and multiplied by a scaling factor, clipped to max value
             overload_penalty = (self.score_conf.penalty_overloading * ((overload_amount / self.load_calculation.grid_connection) ** 2))
             overload_penalty = max(overload_penalty, self.score_conf.clip_overloading)
@@ -688,6 +687,17 @@ class FleetEnv(gym.Env):
         grid = abs(overload_amount)
         soc_v = abs(cum_soc_missing)
 
+        # Calculate state of health based on chosen method
+        if self.calc_deg:
+            degradation = self.new_battery_degradation.calculate_degradation(self.deg_data_logger.soc_log,
+                                                                                   self.load_calculation.evse_max_power,
+                                                                                   self.time_conf,
+                                                                                   self.ev_conf.temperature)
+            self.episode.soh -= degradation
+
+        else:
+            degradation = 0.0
+
         if self.log_data and not self.episode.done:
             self.data_logger.log_data(self.episode.time,
                                       norm_next_obs,
@@ -696,14 +706,8 @@ class FleetEnv(gym.Env):
                                       cashflow,
                                       penalty,
                                       grid,
-                                      soc_v)
-
-        # Calculate state of health based on chosen method
-        if self.calc_deg:
-            self.episode.soh -= self.new_battery_degradation.calculate_degradation(self.deg_data_logger.soc_log,
-                                                                                   self.load_calculation.evse_max_power,
-                                                                                   self.time_conf,
-                                                                                   self.ev_conf.temperature)
+                                      soc_v,
+                                      degradation)
 
         return norm_next_obs, reward, self.episode.done, False, self.info
 
