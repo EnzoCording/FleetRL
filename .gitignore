@@ -170,7 +170,8 @@ src/agents/RL/agent_evaluation/reward_tuning.py
 src/agents/RL/agent_training/alt_env_test.py
 src/FleetRL/fleet_env/alt_env.py
 src/FleetRL/utils/battery_degradation/
-
+extensive_requirements.in
+extensive_requirements.txt
 
 
 
