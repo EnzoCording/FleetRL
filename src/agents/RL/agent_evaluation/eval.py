@@ -25,7 +25,7 @@ if __name__ == "__main__":
                                     "ignore_invalid_penalty": False,
                                     "ignore_overcharging_penalty": False,
                                     "ignore_overloading_penalty": False,
-                                    "episode_length": 48,
+                                    "episode_length": 480,
                                     "normalize_in_env": False,
                                     "verbose": 1,
                                     "aux": True,
@@ -69,9 +69,9 @@ if __name__ == "__main__":
                                     "ignore_invalid_penalty": False,
                                     "ignore_overcharging_penalty": False,
                                     "ignore_overloading_penalty": False,
-                                    "episode_length": 48,
+                                    "episode_length": 480,
                                     "normalize_in_env": False,
-                                    "verbose": 0,
+                                    "verbose": 1,
                                     "aux": True,
                                     "log_data": True,
                                     "calculate_degradation": True
@@ -85,7 +85,11 @@ if __name__ == "__main__":
 
     dumb_norm_vec_env.env_method("set_start_time", rl_start_time)
 
-    episode_length = 48
+
+    print("################################################################")
+
+
+    episode_length = 480
     timesteps_per_hour = 4
     n_episodes = 1
     dumb_norm_vec_env.reset()
@@ -98,13 +102,13 @@ if __name__ == "__main__":
 
     rl_cashflow = log_RL["Cashflow"].sum()
     rl_reward = log_RL["Reward"].sum()
-    rl_deg = log_RL["Degradation"].sum()
+    rl_deg = log_RL["Degradation"].sum()[0]
     rl_overloading = log_RL["Grid overloading"].sum()
     rl_soc_violation = log_RL["SOC violation"].sum()
 
     dumb_cashflow = dumb_log["Cashflow"].sum()
     dumb_reward = dumb_log["Reward"].sum()
-    dumb_deg = dumb_log["Degradation"].sum()
+    dumb_deg = dumb_log["Degradation"].sum()[0]
     dumb_overloading = dumb_log["Grid overloading"].sum()
     dumb_soc_violation = dumb_log["SOC violation"].sum()
 
