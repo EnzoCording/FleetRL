@@ -14,7 +14,8 @@ env = FleetEnv(include_pv=True,
                aux=True,
                calculate_degradation=True,
                log_data=True,
-               episode_length=48)
+               episode_length=48,
+               static_time_picker=True)
 
 env.reset()
 steps = 48*4*3
@@ -25,7 +26,7 @@ for i in range(steps):
     for j in range(env.num_cars):
         if env.episode.done:
             env.reset()
-        action.append(0)
+        action.append(1)
 
     print(env.step(action))
 

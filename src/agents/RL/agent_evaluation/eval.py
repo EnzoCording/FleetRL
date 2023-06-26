@@ -18,14 +18,14 @@ if __name__ == "__main__":
                                     "use_case": "lmd",
                                     "include_building": True,
                                     "include_pv": True,
-                                    "eval_time_picker": True,
+                                    "static_time_picker": True,
                                     "deg_emp": False,
                                     "include_price": True,
                                     "ignore_price_reward": False,
                                     "ignore_invalid_penalty": False,
                                     "ignore_overcharging_penalty": False,
                                     "ignore_overloading_penalty": False,
-                                    "episode_length": 480,
+                                    "episode_length": 90,
                                     "normalize_in_env": False,
                                     "verbose": 1,
                                     "aux": True,
@@ -62,14 +62,14 @@ if __name__ == "__main__":
                                     "use_case": "lmd",
                                     "include_building": True,
                                     "include_pv": True,
-                                    "eval_time_picker": True,
+                                    "static_time_picker": True,
                                     "deg_emp": False,
                                     "include_price": True,
                                     "ignore_price_reward": False,
                                     "ignore_invalid_penalty": False,
                                     "ignore_overcharging_penalty": False,
                                     "ignore_overloading_penalty": False,
-                                    "episode_length": 480,
+                                    "episode_length": 90,
                                     "normalize_in_env": False,
                                     "verbose": 1,
                                     "aux": True,
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     print("################################################################")
 
 
-    episode_length = 480
+    episode_length = 90
     timesteps_per_hour = 4
     n_episodes = 1
     dumb_norm_vec_env.reset()

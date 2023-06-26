@@ -52,7 +52,7 @@ class EvCharger:
                 ev_total_energy_demand = (target_soc - episode.soc[car] * episode.soh[car]) * ev_conf.battery_cap  # total energy demand in kWh
                 demanded_charge = possible_power * actions[car] * time_conf.dt  # demanded energy in kWh
 
-                if demanded_charge > ev_total_energy_demand:
+                if demanded_charge * ev_conf.charging_eff > ev_total_energy_demand:
                     current_oc_pen = score_conf.penalty_overcharging * (demanded_charge - ev_total_energy_demand) ** 2
                     overcharging_penalty += current_oc_pen
                     if print_updates:
@@ -60,7 +60,7 @@ class EvCharger:
 
                 # if the car is there
                 if db.loc[(db["ID"] == car) & (db["date"] == episode.time), "There"].values == 1:
-                    charging_energy = min(ev_total_energy_demand, demanded_charge)
+                    charging_energy = min(ev_total_energy_demand / ev_conf.charging_eff, demanded_charge)
 
                 # the car is not there
                 else:
@@ -107,7 +107,7 @@ class EvCharger:
                 ev_total_energy_left = -1 * episode.soc[car] * episode.soh[car] * ev_conf.battery_cap  # amount of energy left in the battery in kWh
                 demanded_discharge = possible_power * actions[car] * time_conf.dt  # demanded discharge in kWh
 
-                if demanded_discharge < ev_total_energy_left:
+                if demanded_discharge * ev_conf.discharging_eff < ev_total_energy_left:
                     current_oc_pen = score_conf.penalty_overcharging * (ev_total_energy_left - demanded_discharge) ** 2
                     overcharging_penalty += current_oc_pen
                     if print_updates:
@@ -115,7 +115,7 @@ class EvCharger:
 
                 # if the car is there
                 if db.loc[(db["ID"] == car) & (db["date"] == episode.time), "There"].values == 1:
-                    episode.discharging_energy = max(ev_total_energy_left, demanded_discharge)  # max because values are negative
+                    episode.discharging_energy = max(ev_total_energy_left / ev_conf.discharging_eff, demanded_discharge)  # max because values are negative
 
                 # car is not there
                 else:
@@ -131,8 +131,6 @@ class EvCharger:
                     + episode.discharging_energy * ev_conf.discharging_eff / ev_conf.battery_cap
                 )
 
-                # TODO: variable prices, V2G?
-                # TODO: FCR could be modelled by deciding to commit to not charging and then random soc flux
                 # Divide by 1000 because we are calculating in kWh
                 episode.discharging_revenue += (-1 * episode.discharging_energy *
                                                 db.loc[db["date"] == episode.time, "DELU"].values[0]
