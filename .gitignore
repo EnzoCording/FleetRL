@@ -172,6 +172,8 @@ src/FleetRL/fleet_env/alt_env.py
 src/FleetRL/utils/battery_degradation/
 extensive_requirements.in
 extensive_requirements.txt
+/extensive_requirements.txt
+/extensive_requirements.in
 
 
 
