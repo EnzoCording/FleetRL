@@ -45,7 +45,11 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
         # rainflow list counter to check when to calculate next degradation
         self.rainflow_length = np.ones(self.num_cars)
 
+        # Accumulated function value for fd
         self.fd: np.array = np.zeros(self.num_cars)
+
+        # Absolute capacity reduction of the last cycle
+        self.degradation = np.zeros(self.num_cars)
 
     def stress_dod(self, dod): return (self.kd1 * (dod ** self.kd2) + self.kd3) ** -1
 
@@ -86,7 +90,7 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
             sorted_soc_list.append([soc_log[i][j] for i in range(len(soc_log))])
 
         # this is 0 in the beginning and then gets updated with the new degradation due to the current time step
-        degradation = np.zeros(len(sorted_soc_list))
+        self.degradation = np.zeros(len(sorted_soc_list))
 
         # calculate rainflow list and store it somewhere
         # check its length and see if it increased by one
@@ -151,7 +155,7 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
                     new_l = self.l_without_sei(self.l[i], i)
 
                 # calculate degradation based on the change of l
-                degradation[i] = new_l - self.l[i]
+                self.degradation[i] = new_l - self.l[i]
 
                 # update lifetime variable
                 self.l[i] = new_l
@@ -160,12 +164,12 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
                 self.rainflow_length[i] = len(rainflow_result)
 
             else:
-                degradation[i] = 0
+                self.degradation[i] = 0
 
-            if degradation[i] < 0:
+            if self.degradation[i] < 0:
                 raise TypeError("Degradation negative, might have to do with DoD > 1.")
 
-        self.soh[i] -= degradation[i]
+        self.soh[i] -= self.degradation[i]
 
         # check that the adding up of degradation is equivalent to the newest lifetime value calculated
         if abs(self.soh[i] - (1 - self.l[i])) > 0.0001:
@@ -173,4 +177,4 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
 
         # print(f"sei soh: {self.soh}")
 
-        return np.array(degradation)
+        return np.array(self.degradation)
