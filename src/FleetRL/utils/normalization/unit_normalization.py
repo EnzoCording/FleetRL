@@ -236,4 +236,4 @@ class UnitNormalization(Normalization):
         return np.concatenate(obs, dtype=np.float32)
 
     def make_boundaries(self, dim: tuple[int]) -> tuple[float, float] | tuple[np.ndarray, np.ndarray]:
-        return self.low_obs, self.high_obs
+        return np.full(shape=dim, fill_value=-np.inf), np.full(shape=dim, fill_value=np.inf)
