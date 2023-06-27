@@ -16,10 +16,11 @@ class ScheduleGenerator:
                  save_schedule: bool = True,
                  file_comment: str = "",
                  schedule_type: ScheduleType = ScheduleType.Delivery,
-                 vehicle_id: str = "0"):
+                 vehicle_id: str = "0",
+                 seed: int = None):
 
         # Set seed for reproducibility
-        np.random.seed(42)
+        np.random.seed(seed)
 
         # define schedule type
         self.schedule_type = schedule_type
