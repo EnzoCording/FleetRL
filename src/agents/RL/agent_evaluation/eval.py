@@ -7,7 +7,11 @@ from stable_baselines3.common.vec_env import VecNormalize, SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
 from FleetRL.fleet_env.fleet_environment import FleetEnv
 
+
 if __name__ == "__main__":
+
+    n_steps = 1500
+    n_episodes = 1
 
     eval_vec_env = make_vec_env(FleetEnv,
                                 n_envs=1,
@@ -25,7 +29,7 @@ if __name__ == "__main__":
                                     "ignore_invalid_penalty": False,
                                     "ignore_overcharging_penalty": False,
                                     "ignore_overloading_penalty": False,
-                                    "episode_length": 90,
+                                    "episode_length": n_steps,
                                     "normalize_in_env": False,
                                     "verbose": 1,
                                     "aux": True,
@@ -41,13 +45,13 @@ if __name__ == "__main__":
 
     # model = TD3.load("./../trained/", env=eval_norm_vec_env)
     # model = TD3.load("./../trained/td3_aux_reworder_260000/td3_aux_reworder_260000", env=eval_norm_vec_env)
-    model = PPO.load("./../trained/vec_ppo-1687255378-ppo_full_vecnorm_clip5_aux_rewardshape_order_2006_12/820000.zip", env=eval_norm_vec_env)
+    # model = PPO.load("./../trained/vec_ppo-1687255378-ppo_full_vecnorm_clip5_aux_rewardshape_order_2006_12/820000.zip", env=eval_norm_vec_env)
     # model = TD3.load("./../trained/td3_aux_lr001_2cars_run3_harsher_3rew/980000", env = eval_norm_vec_env)
     # model = TD3.load("./../trained/vec_TD3-1687291761-td3_2_cars_run2/260000", env = eval_norm_vec_env)
 
     # model = TD3.load("./../../../FleetRL/Output_Files/Models/TD3_aux/5cars_td3_ct/840000", env=eval_norm_vec_env)
 
-    mean_reward, _ = evaluate_policy(model, eval_norm_vec_env, n_eval_episodes=1, deterministic=True)
+    mean_reward, _ = evaluate_policy(model, eval_norm_vec_env, n_eval_episodes=n_episodes, deterministic=True)
     print(mean_reward)
     log_RL = model.env.env_method("get_log")[0]
 
@@ -69,7 +73,7 @@ if __name__ == "__main__":
                                     "ignore_invalid_penalty": False,
                                     "ignore_overcharging_penalty": False,
                                     "ignore_overloading_penalty": False,
-                                    "episode_length": 90,
+                                    "episode_length": n_steps,
                                     "normalize_in_env": False,
                                     "verbose": 1,
                                     "aux": True,
@@ -89,9 +93,9 @@ if __name__ == "__main__":
     print("################################################################")
 
 
-    episode_length = 90
+    episode_length = n_steps
     timesteps_per_hour = 4
-    n_episodes = 1
+    n_episodes = n_episodes
     dumb_norm_vec_env.reset()
     for i in range(episode_length*timesteps_per_hour*n_episodes):
         if dumb_norm_vec_env.env_method("is_done")[0]:
@@ -105,12 +109,15 @@ if __name__ == "__main__":
     rl_deg = log_RL["Degradation"].sum()[0]
     rl_overloading = log_RL["Grid overloading"].sum()
     rl_soc_violation = log_RL["SOC violation"].sum()
+    rl_n_violations = log_RL[log_RL["SOC violation"] > 0]["SOC violation"].size
 
     dumb_cashflow = dumb_log["Cashflow"].sum()
     dumb_reward = dumb_log["Reward"].sum()
     dumb_deg = dumb_log["Degradation"].sum()[0]
     dumb_overloading = dumb_log["Grid overloading"].sum()
     dumb_soc_violation = dumb_log["SOC violation"].sum()
+    dumb_n_violations = dumb_log[dumb_log["SOC violation"] > 0]["SOC violation"].size
+
 
     print(f"RL reward: {rl_reward}")
     print(f"DC reward: {dumb_reward}")
@@ -118,8 +125,8 @@ if __name__ == "__main__":
     print(f"DC cashflow: {dumb_cashflow}")
 
     total_results = pd.DataFrame()
-    total_results["Category"] = ["Reward", "Cashflow", "Degradation", "Overloading", "SOC violation"]
-    total_results["RL-based charging"] = [rl_reward, rl_cashflow, np.round(rl_deg, 5), rl_overloading, rl_soc_violation]
-    total_results["Dumb charging"] = [dumb_reward, dumb_cashflow, np.round(dumb_deg, 5), dumb_overloading, dumb_soc_violation]
+    total_results["Category"] = ["Reward", "Cashflow", "Degradation", "Overloading", "SOC violation", "# Violations"]
+    total_results["RL-based charging"] = [rl_reward, rl_cashflow, np.round(rl_deg, 5), rl_overloading, rl_soc_violation, rl_n_violations]
+    total_results["Dumb charging"] = [dumb_reward, dumb_cashflow, np.round(dumb_deg, 5), dumb_overloading, dumb_soc_violation, dumb_n_violations]
 
     print(total_results)
