@@ -18,7 +18,8 @@ class DataLogger:
                  penalty: float,
                  grid: float,
                  soc_v: float,
-                 degradation: float):
+                 degradation: float,
+                 charge_log: np.ndarray):
 
         self.episode_count = len(self.log) // self.episode_length + 1
 
@@ -33,6 +34,7 @@ class DataLogger:
                            "Penalties": penalty,
                            "Grid overloading": grid,
                            "SOC violation": soc_v,
-                           "Degradation": degradation})
+                           "Degradation": degradation,
+                           "Charging energy": charge_log})
 
         self.log = pd.concat((self.log, pd.DataFrame(self.entry)), axis=0)

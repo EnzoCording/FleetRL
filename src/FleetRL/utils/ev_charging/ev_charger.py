@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from FleetRL.fleet_env.config.ev_config import EvConfig
@@ -37,6 +38,10 @@ class EvCharger:
 
         invalid_action_penalty = 0
         overcharging_penalty = 0
+
+        charge_log = np.ndarray(0)
+        charging_energy = 0.0
+        discharging_energy = 0.0
 
         # go through the cars and calculate the actual deliverable power based on action and constraints
         for car in range(num_cars):
@@ -115,11 +120,11 @@ class EvCharger:
 
                 # if the car is there
                 if db.loc[(db["ID"] == car) & (db["date"] == episode.time), "There"].values == 1:
-                    episode.discharging_energy = max(ev_total_energy_left / ev_conf.discharging_eff, demanded_discharge)  # max because values are negative
+                    discharging_energy = max(ev_total_energy_left / ev_conf.discharging_eff, demanded_discharge)  # max because values are negative
 
                 # car is not there
                 else:
-                    episode.discharging_energy = 0
+                    discharging_energy = 0
                     current_inv_pen = score_conf.penalty_invalid_action * (actions[car] ** 2)
                     invalid_action_penalty += current_inv_pen
                     if print_updates:
@@ -128,21 +133,23 @@ class EvCharger:
                 # calculate next soc, which will get smaller
                 episode.next_soc.append(
                     episode.soc[car] * episode.soh[car]
-                    + episode.discharging_energy * ev_conf.discharging_eff / ev_conf.battery_cap
+                    + discharging_energy * ev_conf.discharging_eff / ev_conf.battery_cap
                 )
 
                 # Divide by 1000 because we are calculating in kWh
-                episode.discharging_revenue += (-1 * episode.discharging_energy *
+                episode.discharging_revenue += (-1 * discharging_energy *
                                                 db.loc[db["date"] == episode.time, "DELU"].values[0]
                                                 ) / 1000.0
 
                 # print(f"discharging revenue: {discharging_revenue.values[0]}")
 
                 # save the total charging energy in a self variable
-                episode.total_charging_energy += episode.discharging_energy
+                episode.total_charging_energy += discharging_energy
 
             else:
                 raise TypeError("The parsed action value was not recognised")
+
+            charge_log = np.append(charge_log, charging_energy + discharging_energy)
 
         # add reward based on cost and revenue
         cashflow = -1 * episode.charging_cost + episode.discharging_revenue
@@ -150,4 +157,4 @@ class EvCharger:
         reward = (score_conf.price_multiplier * cashflow) + invalid_action_penalty + overcharging_penalty
 
         # return soc, next soc and the value of reward (remove the index)
-        return episode.soc, episode.next_soc, float(reward), float(cashflow)
+        return episode.soc, episode.next_soc, float(reward), float(cashflow), charge_log

@@ -526,7 +526,8 @@ class FleetEnv(gym.Env):
                                       0.0,  # penalties
                                       0.0,  # grid overloading
                                       0.0,  # soc missing on departure
-                                      0.0)  # degradation of cycle
+                                      0.0,
+                                      np.zeros(self.num_cars))  # degradation of cycle
 
         return norm_obs, self.info
 
@@ -537,7 +538,7 @@ class FleetEnv(gym.Env):
         """
 
         # parse the action to the charging function and receive the soc, next soc, reward and cashflow
-        self.episode.soc, self.episode.next_soc, reward, cashflow = self.ev_charger.charge(
+        self.episode.soc, self.episode.next_soc, reward, cashflow, charge_log = self.ev_charger.charge(
             self.db, self.num_cars, actions, self.episode, self.load_calculation,
             self.ev_conf, self.time_conf, self.score_conf, self.print_updates, self.target_soc)
 
@@ -707,7 +708,8 @@ class FleetEnv(gym.Env):
                                       penalty,
                                       grid,
                                       soc_v,
-                                      degradation)
+                                      degradation,
+                                      charge_log)
 
         return norm_next_obs, reward, self.episode.done, False, self.info
 
