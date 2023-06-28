@@ -15,10 +15,11 @@ env = FleetEnv(include_pv=True,
                calculate_degradation=True,
                log_data=True,
                episode_length=48,
-               static_time_picker=True)
+               static_time_picker=True,
+               )
 
 env.reset()
-steps = 48*4*3
+steps = 48*4
 for i in range(steps):
     action = []
     # print(env.step([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))

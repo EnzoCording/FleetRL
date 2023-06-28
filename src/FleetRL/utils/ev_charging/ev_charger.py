@@ -10,6 +10,22 @@ from FleetRL.utils.load_calculation.load_calculation import LoadCalculation
 
 class EvCharger:
 
+    def __init__(self):
+        # Price analysis: https://www.bdew.de/media/documents/230215_BDEW-Strompreisanalyse_Februar_2023_15.02.2023.pdf
+        # Average spot price for 2020 was ~3.2 ct/kWh and ~4 ct/kWh if looking at peak times only
+        # Industry electricity prices for 2020 were 16.23 ct/kWh (constant tariffs, not time of use)
+        # 8.48 ct/kWh on average - just for procurement and margings
+        # --> 50% are fees --> spot price is multiplied by factor of 1.5 and offset by +1
+        # this accounts for fees even when prices are negative or zero, but also scales with price levels
+        self.spot_multiplier = 1.5  # no unit
+        self.spot_offset = 0.01  # €/kWh
+
+        # If energy is injected to the grid, it can be treated like solar feed-in from households
+        # https://echtsolar.de/einspeiseverguetung/#t-1677761733663
+        # Fees for handling of 30% are assumed
+        self.grid_injection_tariff = 0.065  # €/kWh for Jan 2023, average from 10kW, 40kW and 100 kW
+        self.handling_fees = 0.30  # 30%
+
     def charge(self, db: pd.DataFrame, num_cars: int, actions, episode: Episode,
                load_calculation: LoadCalculation,
                ev_conf: EvConfig, time_conf: TimeConfig, score_conf: ScoreConfig, print_updates: bool, target_soc: float):
@@ -57,7 +73,7 @@ class EvCharger:
                 ev_total_energy_demand = (target_soc - episode.soc[car] * episode.soh[car]) * ev_conf.battery_cap  # total energy demand in kWh
                 demanded_charge = possible_power * actions[car] * time_conf.dt  # demanded energy in kWh
 
-                if demanded_charge * ev_conf.charging_eff > ev_total_energy_demand:
+                if (demanded_charge * ev_conf.charging_eff > ev_total_energy_demand) and (episode.soc[car] != 0):
                     current_oc_pen = score_conf.penalty_overcharging * (demanded_charge - ev_total_energy_demand) ** 2
                     overcharging_penalty += current_oc_pen
                     if print_updates:
@@ -86,21 +102,22 @@ class EvCharger:
                 # TODO: add german taxes and grid fees
                 # Divide by 1000 because we are in kWh
 
-                # get pv and subtract from charging energy needed from the grid
+                # get pv energy and subtract from charging energy needed from the grid
                 # assuming pv is equally distributed to the connected cars
                 # try except because pv is sometimes deactivated
                 try:
-                    current_pv = db.loc[(db["ID"] == car) & (db["date"] == episode.time), "pv"].values[0]
+                    current_pv_energy = (db.loc[db["date"] == episode.time, "pv"].values[0]) * time_conf.dt
                 except KeyError:
-                    current_pv = 0
+                    current_pv_energy = 0.0
                 connected_cars = db.loc[(db["date"] == episode.time), "There"].sum()
                 # for the case that no car is connected, to avoid division by 0
                 connected_cars = max(connected_cars, 1)
-                grid_demand = max(0, charging_energy - (current_pv / connected_cars))
+                grid_energy_demand = max(0, charging_energy - (current_pv_energy / connected_cars))
 
-                episode.charging_cost += (grid_demand *
-                                          db.loc[db["date"] == episode.time, "DELU"].values[0]
-                                          ) / 1000.0
+                current_spot = (db.loc[db["date"] == episode.time, "DELU"].values[0]) / 1000.0
+
+                episode.charging_cost += (grid_energy_demand * (current_spot + self.spot_offset) * self.spot_multiplier)
+
                 # print(f"charging cost: {charging_cost.values[0]}")
 
                 # save the total charging energy in a self variable
@@ -112,7 +129,7 @@ class EvCharger:
                 ev_total_energy_left = -1 * episode.soc[car] * episode.soh[car] * ev_conf.battery_cap  # amount of energy left in the battery in kWh
                 demanded_discharge = possible_power * actions[car] * time_conf.dt  # demanded discharge in kWh
 
-                if demanded_discharge * ev_conf.discharging_eff < ev_total_energy_left:
+                if (demanded_discharge * ev_conf.discharging_eff < ev_total_energy_left) and (ev_total_energy_left < 0):
                     current_oc_pen = score_conf.penalty_overcharging * (ev_total_energy_left - demanded_discharge) ** 2
                     overcharging_penalty += current_oc_pen
                     if print_updates:
@@ -137,9 +154,8 @@ class EvCharger:
                 )
 
                 # Divide by 1000 because we are calculating in kWh
-                episode.discharging_revenue += (-1 * discharging_energy *
-                                                db.loc[db["date"] == episode.time, "DELU"].values[0]
-                                                ) / 1000.0
+                episode.discharging_revenue += (-1 * discharging_energy * self.grid_injection_tariff * (1-self.handling_fees))
+
 
                 # print(f"discharging revenue: {discharging_revenue.values[0]}")
 

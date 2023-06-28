@@ -38,8 +38,8 @@ from FleetRL.utils.data_logger.data_logger import DataLogger
 
 from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType
 
-class FleetEnv(gym.Env):
 
+class FleetEnv(gym.Env):
     """
     FleetRL: Reinforcement Learning environment for commercial vehicle fleets.
     Author: Enzo Alexander Cording - https://github.com/EnzoCording
@@ -80,27 +80,27 @@ class FleetEnv(gym.Env):
 
     def __init__(self,
                  pv_name: str = None,
-                 schedule_name:str="lmd_sched_single.csv",
-                 building_name:str="load_lmd.csv",
-                 include_building:bool=False,
-                 include_pv:bool=False,
-                 include_price:bool=True,
-                 static_time_picker:bool=False,
-                 eval_time_picker:bool=False,  # method assertion todo
-                 target_soc:float=0.85,
-                 init_soh:float=1.0,
-                 deg_emp:bool=False,
-                 ignore_price_reward = False,
-                 ignore_overloading_penalty = False,
-                 ignore_invalid_penalty = False,
-                 ignore_overcharging_penalty = False,
-                 episode_length:int = 24,
-                 log_data:bool = False,
-                 calculate_degradation:bool = False,
-                 verbose:bool = 1,
-                 normalize_in_env = True,
+                 schedule_name: str = "lmd_sched_single.csv",
+                 building_name: str = "load_lmd.csv",
+                 include_building: bool = False,
+                 include_pv: bool = False,
+                 include_price: bool = True,
+                 static_time_picker: bool = False,
+                 eval_time_picker: bool = False,  # method assertion todo
+                 target_soc: float = 0.85,
+                 init_soh: float = 1.0,
+                 deg_emp: bool = False,
+                 ignore_price_reward=False,
+                 ignore_overloading_penalty=False,
+                 ignore_invalid_penalty=False,
+                 ignore_overcharging_penalty=False,
+                 episode_length: int = 24,
+                 log_data: bool = False,
+                 calculate_degradation: bool = False,
+                 verbose: bool = 1,
+                 normalize_in_env=True,
                  use_case: Literal["ct", "ut", "lmd"] = "lmd",
-                 aux = False
+                 aux=False
                  ):
 
         """
@@ -142,7 +142,7 @@ class FleetEnv(gym.Env):
         self.schedule_name = schedule_name
 
         # Spot price database
-        self.spot_name = 'spot_2020.csv'
+        self.spot_name = 'spot_2020_new.csv'
 
         # Building load database
         self.building_name = building_name
@@ -173,7 +173,6 @@ class FleetEnv(gym.Env):
                                                   ending_date="30/12/2023")
             self.schedule_gen.generate_schedule()
             self.schedule_name = self.schedule_gen.get_file_name()
-
 
         # Setting flags for the type of environment to build
         # NOTE: observations are appended to the db in the order specified here
@@ -308,7 +307,8 @@ class FleetEnv(gym.Env):
         if deg_emp:
             self.new_emp_batt: NewBatteryDegradation = NewEmpiricalDegradation(self.initial_soh, self.num_cars)
         else:
-            self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh, self.num_cars)
+            self.new_battery_degradation: NewBatteryDegradation = NewRainflowSeiDegradation(self.initial_soh,
+                                                                                            self.num_cars)
 
         '''
         # Normalizing observations (Oracle) or just concatenating (Unit)
@@ -527,7 +527,8 @@ class FleetEnv(gym.Env):
                                       0.0,  # grid overloading
                                       0.0,  # soc missing on departure
                                       0.0,
-                                      np.zeros(self.num_cars))  # degradation of cycle
+                                      np.zeros(self.num_cars),  # degradation of cycle
+                                      np.ones(self.num_cars) * self.initial_soh)  # soh
 
         return norm_obs, self.info
 
@@ -570,7 +571,7 @@ class FleetEnv(gym.Env):
             current_pv = 0
 
         # check if connection has been overloaded and penalize accordingly
-        there = self.db["There"][self.db["date"]==self.episode.time].values
+        there = self.db["There"][self.db["date"] == self.episode.time].values
         # correct actions for spots where no car is plugged in
         corrected_actions = actions * there
         overloaded_flag, overload_amount = self.load_calculation.check_violation(corrected_actions, self.db,
@@ -579,7 +580,8 @@ class FleetEnv(gym.Env):
         # check if an overloading took place
         if overloaded_flag:
             # % of trafo overloading is squared and multiplied by a scaling factor, clipped to max value
-            overload_penalty = (self.score_conf.penalty_overloading * ((overload_amount / self.load_calculation.grid_connection) ** 2))
+            overload_penalty = (self.score_conf.penalty_overloading * (
+                        (overload_amount / self.load_calculation.grid_connection) ** 2))
             overload_penalty = max(overload_penalty, self.score_conf.clip_overloading)
             reward += overload_penalty
             self.episode.penalty_record += overload_penalty
@@ -624,7 +626,8 @@ class FleetEnv(gym.Env):
                     reward += current_soc_pen
                     self.episode.penalty_record += current_soc_pen
                     if self.print_updates:
-                        print(f"A car left the station without reaching the target SoC. Penalty: {round(current_soc_pen,3)}")
+                        print(
+                            f"A car left the station without reaching the target SoC. Penalty: {round(current_soc_pen, 3)}")
 
             # same car in the next time step
             if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
@@ -669,7 +672,7 @@ class FleetEnv(gym.Env):
         # TODO: Here could be a saving function that saves the results of the episode
 
         if self.print_reward:
-            print(f"Reward signal: {round(reward,3)}")
+            print(f"Reward signal: {round(reward, 3)}")
             print("---------")
             print("\n")
 
@@ -691,9 +694,9 @@ class FleetEnv(gym.Env):
         # Calculate state of health based on chosen method
         if self.calc_deg:
             degradation = self.new_battery_degradation.calculate_degradation(self.deg_data_logger.soc_log,
-                                                                                   self.load_calculation.evse_max_power,
-                                                                                   self.time_conf,
-                                                                                   self.ev_conf.temperature)
+                                                                             self.load_calculation.evse_max_power,
+                                                                             self.time_conf,
+                                                                             self.ev_conf.temperature)
             self.episode.soh -= degradation
 
         else:
@@ -709,7 +712,8 @@ class FleetEnv(gym.Env):
                                       grid,
                                       soc_v,
                                       degradation,
-                                      charge_log)
+                                      charge_log,
+                                      self.episode.soh)
 
         return norm_next_obs, reward, self.episode.done, False, self.info
 
@@ -721,9 +725,9 @@ class FleetEnv(gym.Env):
         if self.include_price:
             print(f"Price: {self.episode.price[0] / 1000} €/kWh")
         print(f"SOC: {np.round(self.episode.soc, 3)}, Time left: {self.episode.hours_left} hours")
-        print(f"Action taken: {np.round(action,3)}")
-        print(f"Actual charging energy: {round(self.episode.total_charging_energy,3)} kWh")
-        print(f"Charging cost/revenue: {round(self.episode.current_charging_expense,3)} €")
+        print(f"Action taken: {np.round(action, 3)}")
+        print(f"Actual charging energy: {round(self.episode.total_charging_energy, 3)} kWh")
+        print(f"Charging cost/revenue: {round(self.episode.current_charging_expense, 3)} €")
         print(f"SoH: {np.round(self.episode.soh, 3)}")
         print("--------------------------")
 
@@ -743,27 +747,6 @@ class FleetEnv(gym.Env):
     def get_start_time(self):
         return self.episode.start_time
 
-    def set_start_time(self, start_time:str):
+    def set_start_time(self, start_time: str):
         self.episode.start_time = start_time
         return None
-
-if __name__ == "__main__":
-    env = FleetEnv(schedule_name="lmd_sched_single.csv",
-                   building_name="load_lmd.csv",
-                   include_building=False,
-                   include_pv=False,
-                   include_price=True,
-                   static_time_picker=False,
-                   target_soc=0.85,
-                   init_soh=1.0,
-                   deg_emp=False,
-                   ignore_price_reward=False,
-                   ignore_overloading_penalty=False,
-                   ignore_invalid_penalty=False,
-                   ignore_overcharging_penalty=False,
-                   episode_length=24,
-                   log_data=False,
-                   calculate_degradation=False,
-                   verbose=1,
-                   normalize_in_env=True,
-                   aux=False)

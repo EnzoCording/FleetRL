@@ -14,7 +14,7 @@ from FleetRL.fleet_env.fleet_environment import FleetEnv
 if __name__ == "__main__":
 
     # define parameters here for easier change
-    n_steps = 2000
+    n_steps = 48
     n_episodes = 1
     n_evs = 5
     n_envs = 1
@@ -113,14 +113,14 @@ if __name__ == "__main__":
 
     rl_cashflow = log_RL["Cashflow"].sum()
     rl_reward = log_RL["Reward"].sum()
-    rl_deg = log_RL["Degradation"].sum()[0]
+    rl_deg = log_RL["Degradation"].mean()
     rl_overloading = log_RL["Grid overloading"].sum()
     rl_soc_violation = log_RL["SOC violation"].sum()
     rl_n_violations = log_RL[log_RL["SOC violation"] > 0]["SOC violation"].size
 
     dumb_cashflow = dumb_log["Cashflow"].sum()
     dumb_reward = dumb_log["Reward"].sum()
-    dumb_deg = dumb_log["Degradation"].sum()[0]
+    dumb_deg = dumb_log["Degradation"].mean()
     dumb_overloading = dumb_log["Grid overloading"].sum()
     dumb_soc_violation = dumb_log["SOC violation"].sum()
     dumb_n_violations = dumb_log[dumb_log["SOC violation"] > 0]["SOC violation"].size
@@ -131,18 +131,18 @@ if __name__ == "__main__":
     print(f"DC cashflow: {dumb_cashflow}")
 
     total_results = pd.DataFrame()
-    total_results["Category"] = ["Reward", "Cashflow", "Degradation", "Overloading", "SOC violation", "# Violations"]
+    total_results["Category"] = ["Reward", "Cashflow", "Average degradation per EV", "Overloading", "SOC violation", "# Violations"]
 
     total_results["RL-based charging"] = [rl_reward,
                                           rl_cashflow,
-                                          np.round(rl_deg, 5),
+                                          np.round(rl_deg, 3),
                                           rl_overloading,
                                           rl_soc_violation,
                                           rl_n_violations]
 
     total_results["Dumb charging"] = [dumb_reward,
                                       dumb_cashflow,
-                                      np.round(dumb_deg, 5),
+                                      np.round(dumb_deg, 3),
                                       dumb_overloading,
                                       dumb_soc_violation,
                                       dumb_n_violations]
@@ -191,8 +191,6 @@ if __name__ == "__main__":
     plt.xticks([0,8,16,24,32,40,48,56,64,72,80,88]
                ,["00:00","02:00","04:00","06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"],
                rotation=45)
-
-
 
     plt.legend()
     plt.grid(alpha=0.2)

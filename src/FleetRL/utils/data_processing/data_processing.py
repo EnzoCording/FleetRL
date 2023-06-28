@@ -177,7 +177,7 @@ class DataLoader:
         self.schedule.loc[self.schedule["There"] == 0, "SOC_on_return"] = 0
 
     @staticmethod
-    def load_prices(path_name, spot_name, date_range):
+    def load_prices_original(path_name, spot_name, date_range):
         # load csv
         spot = pd.read_csv(path_name + spot_name, delimiter=";", decimal=",")
 
@@ -203,9 +203,33 @@ class DataLoader:
         return spot_price
 
     @staticmethod
+    def load_prices(path_name, spot_name, date_range):
+        # load csv
+        spot = pd.read_csv(path_name + spot_name, delimiter=";", decimal=",", parse_dates=["date"])
+
+        # drop price information of other countries
+        spot = spot.drop(columns=spot.columns[4:20])
+
+        # put the date in the same format as the schedule
+        # spot["date"] = pd.to_datetime(spot["date"], format="mixed")
+
+        # rename column for accessibility
+        spot = spot.rename(columns={"Deutschland/Luxemburg [€/MWh] Original resolutions": "DELU"})
+
+        # TODO test if this also works for down-sampling. Right now this up-samples from hourly to quarter-hourly
+        spot_price = pd.merge_asof(date_range,
+                                   spot.sort_values("date"),
+                                   on="date",
+                                   direction="backward"
+                                   )
+
+        # return the spot price at the right granularity
+        return spot_price
+
+    @staticmethod
     def load_building_load(path_name, file_name, date_range):
-        b_load = pd.read_csv(path_name + file_name, delimiter=",")
-        b_load["date"] = pd.to_datetime(b_load["date"], format="mixed")
+        b_load = pd.read_csv(path_name + file_name, delimiter=",", parse_dates=["date"])
+        # b_load["date"] = pd.to_datetime(b_load["date"], format="mixed")
 
         # TODO test if this also works for down-sampling. Right now this up-samples from hourly to quarter-hourly
         building_load = pd.merge_asof(date_range,
@@ -219,8 +243,8 @@ class DataLoader:
 
     @staticmethod
     def load_pv(path_name, pv_name, date_range):
-        pv = pd.read_csv(path_name + pv_name, delimiter=",", decimal=",")
-        pv["date"] = pd.to_datetime(pv["date"], format="mixed")
+        pv = pd.read_csv(path_name + pv_name, delimiter=",", decimal=",", parse_dates=["date"])
+        # pv["date"] = pd.to_datetime(pv["date"], format="mixed")
 
         pv["pv"] = pv["pv"].astype(float)
 
