@@ -169,6 +169,7 @@ src/agents/RL/hyperparameter_tuning/tb_log/*
 src/agents/RL/hyperparameter_tuning/tb_log_hp/*
 src/agents/RL/agent_evaluation/reward_tuning.py
 src/agents/RL/agent_training/alt_env_test.py
+src/agents/RL/agent_training/trained/*
 src/FleetRL/fleet_env/alt_env.py
 src/FleetRL/utils/battery_degradation/
 extensive_requirements.in
