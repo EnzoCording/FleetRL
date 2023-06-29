@@ -623,7 +623,7 @@ class FleetEnv(gym.Env):
                     if (self.episode.time.hour > 11) and (self.episode.time.hour < 15):
                         if self.target_soc_lunch - self.episode.soc[car] > self.eps:
                             # penalty for not fulfilling charging requirement, square difference, scale and clip
-                            soc_missing = self.target_soc - self.episode.soc[car]
+                            soc_missing = self.target_soc_lunch - self.episode.soc[car]
                             cum_soc_missing += soc_missing
                             current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
                             current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
