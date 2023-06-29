@@ -8,4 +8,5 @@ class EvConfig:
         self.def_soc: float = 0.5  # default soc that is assumed in the beginning
         self.temperature: float = 25.0  # °C needed for battery degradation
         self.target_soc: float = 0.85  # Target soc when vehicle leaves
+        self.target_soc_lunch = 0.65  # target soc after lunch break
         self.min_laxity: float = 0.5  # How much extra time the car should have at least: time_needed / time_left - 1

@@ -14,7 +14,7 @@ from FleetRL.fleet_env.fleet_environment import FleetEnv
 if __name__ == "__main__":
 
     # define parameters here for easier change
-    n_steps = 48
+    n_steps = 1000
     n_episodes = 1
     n_evs = 5
     n_envs = 1
@@ -111,19 +111,26 @@ if __name__ == "__main__":
 
     dumb_log = dumb_norm_vec_env.env_method("get_log")[0]
 
+    log_RL.reset_index(drop=True, inplace=True)
+    log_RL = log_RL.iloc[0:-2]
+    dumb_log.reset_index(drop=True, inplace=True)
+    dumb_log = dumb_log.iloc[0:-2]
+
     rl_cashflow = log_RL["Cashflow"].sum()
     rl_reward = log_RL["Reward"].sum()
-    rl_deg = log_RL["Degradation"].mean()
+    rl_deg = log_RL["Degradation"].sum()
     rl_overloading = log_RL["Grid overloading"].sum()
     rl_soc_violation = log_RL["SOC violation"].sum()
     rl_n_violations = log_RL[log_RL["SOC violation"] > 0]["SOC violation"].size
+    rl_soh = log_RL["SOH"].iloc[-1]
 
     dumb_cashflow = dumb_log["Cashflow"].sum()
     dumb_reward = dumb_log["Reward"].sum()
-    dumb_deg = dumb_log["Degradation"].mean()
+    dumb_deg = dumb_log["Degradation"].sum()
     dumb_overloading = dumb_log["Grid overloading"].sum()
     dumb_soc_violation = dumb_log["SOC violation"].sum()
     dumb_n_violations = dumb_log[dumb_log["SOC violation"] > 0]["SOC violation"].size
+    dumb_soh = dumb_log["SOH"].iloc[-1]
 
     print(f"RL reward: {rl_reward}")
     print(f"DC reward: {dumb_reward}")
@@ -131,26 +138,26 @@ if __name__ == "__main__":
     print(f"DC cashflow: {dumb_cashflow}")
 
     total_results = pd.DataFrame()
-    total_results["Category"] = ["Reward", "Cashflow", "Average degradation per EV", "Overloading", "SOC violation", "# Violations"]
+    total_results["Category"] = ["Reward", "Cashflow", "Average degradation per EV", "Overloading", "SOC violation", "# Violations", "SOH"]
 
     total_results["RL-based charging"] = [rl_reward,
                                           rl_cashflow,
-                                          np.round(rl_deg, 3),
+                                          np.round(rl_deg.mean(), 3),
                                           rl_overloading,
                                           rl_soc_violation,
-                                          rl_n_violations]
+                                          rl_n_violations,
+                                          np.round(rl_soh.mean(), 3)]
 
     total_results["Dumb charging"] = [dumb_reward,
                                       dumb_cashflow,
-                                      np.round(dumb_deg, 3),
+                                      np.round(dumb_deg.mean(), 3),
                                       dumb_overloading,
                                       dumb_soc_violation,
-                                      dumb_n_violations]
+                                      dumb_n_violations,
+                                      np.round(dumb_soh.mean(), 3)]
 
     print(total_results)
 
-    log_RL.reset_index(drop=True, inplace=True)
-    dumb_log.reset_index(drop=True, inplace=True)
 
     # real charging power sent
     real_power_rl = []

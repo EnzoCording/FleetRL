@@ -255,6 +255,7 @@ class FleetEnv(gym.Env):
 
         # Setting EV parameters
         self.target_soc = self.ev_conf.target_soc  # Target SoC - Vehicles should always leave with this SoC
+        self.target_soc_lunch = self.ev_conf.target_soc_lunch  # After lunch battery doesnt have to be full
         self.eps = 0.005  # allowed SOC deviation from target: 0.5%
         self.initial_soh = init_soh  # initial degree of battery degradation, assumed equal for all cars
         self.min_laxity: float = self.ev_conf.min_laxity  # How much excess time the car should at least have to charge
@@ -616,8 +617,24 @@ class FleetEnv(gym.Env):
 
             # check if a car just left and didn't fully charge
             if (self.episode.hours_left[car] != 0) and (next_obs_time_left[car] == 0):
+
+                # check the case that its a lunch break and care taker
+                if self.company == CompanyType.Caretaker:
+                    if (self.episode.time.hour > 11) and (self.episode.time.hour < 15):
+                        if self.target_soc_lunch - self.episode.soc[car] > self.eps:
+                            # penalty for not fulfilling charging requirement, square difference, scale and clip
+                            soc_missing = self.target_soc - self.episode.soc[car]
+                            cum_soc_missing += soc_missing
+                            current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
+                            current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
+                            reward += current_soc_pen
+                            self.episode.penalty_record += current_soc_pen
+                            if self.print_updates:
+                                print(f"A car left the station without reaching the target SoC."
+                                      f" Penalty: {round(current_soc_pen, 3)}")
+
                 # if charging requirement wasn't met (with some tolerance eps)
-                if self.target_soc - self.episode.soc[car] > self.eps:
+                elif self.target_soc - self.episode.soc[car] > self.eps:
                     # penalty for not fulfilling charging requirement, square difference, scale and clip
                     soc_missing = self.target_soc - self.episode.soc[car]
                     cum_soc_missing += soc_missing
@@ -627,7 +644,8 @@ class FleetEnv(gym.Env):
                     self.episode.penalty_record += current_soc_pen
                     if self.print_updates:
                         print(
-                            f"A car left the station without reaching the target SoC. Penalty: {round(current_soc_pen, 3)}")
+                            f"A car left the station without reaching the target SoC."
+                            f" Penalty: {round(current_soc_pen, 3)}")
 
             # same car in the next time step
             if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
