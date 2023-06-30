@@ -620,7 +620,9 @@ class FleetEnv(gym.Env):
 
                 # check the case that its a lunch break and care taker
                 if self.company == CompanyType.Caretaker:
+                    # lunch break case
                     if (self.episode.time.hour > 11) and (self.episode.time.hour < 15):
+                        # check for soc violation
                         if self.target_soc_lunch - self.episode.soc[car] > self.eps:
                             # penalty for not fulfilling charging requirement, square difference, scale and clip
                             soc_missing = self.target_soc_lunch - self.episode.soc[car]
@@ -632,6 +634,20 @@ class FleetEnv(gym.Env):
                             if self.print_updates:
                                 print(f"A car left the station without reaching the target SoC."
                                       f" Penalty: {round(current_soc_pen, 3)}")
+
+                    # other operation times, check for violation
+                    elif self.target_soc - self.episode.soc[car] > self.eps:
+                        # penalty for not fulfilling charging requirement, square difference, scale and clip
+                        soc_missing = self.target_soc_lunch - self.episode.soc[car]
+                        cum_soc_missing += soc_missing
+                        current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
+                        current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
+                        reward += current_soc_pen
+                        self.episode.penalty_record += current_soc_pen
+                        if self.print_updates:
+                            print(f"A car left the station without reaching the target SoC."
+                                  f" Penalty: {round(current_soc_pen, 3)}")
+                
 
                 # if charging requirement wasn't met (with some tolerance eps)
                 elif self.target_soc - self.episode.soc[car] > self.eps:
