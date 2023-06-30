@@ -26,7 +26,7 @@ class EvCharger:
 
     def charge(self, db: pd.DataFrame, num_cars: int, actions, episode: Episode,
                load_calculation: LoadCalculation,
-               ev_conf: EvConfig, time_conf: TimeConfig, score_conf: ScoreConfig, print_updates: bool, target_soc: float):
+               ev_conf: EvConfig, time_conf: TimeConfig, score_conf: ScoreConfig, print_updates: bool, target_soc: list):
 
         """
         :param db: The schedule database of the EVs
@@ -35,7 +35,6 @@ class EvCharger:
         :param actions: Actions taken by the agent
         :param episode: Episode object with its parameters and functions
         :param load_calculation: Load calc object with its parameters and functions
-        :param soh: list that specifies the battery degradation of each vehicle
         :param ev_conf: Config of the EVs
         :param time_conf: Time configuration
         :param score_conf: Score and penalty configuration
@@ -60,13 +59,15 @@ class EvCharger:
         # go through the cars and calculate the actual deliverable power based on action and constraints
         for car in range(num_cars):
 
+            # variable to check if car is plugged in
+            there = db.loc[(db["ID"] == car) & (db["date"] == episode.time), "There"].values[0]
+
             # max possible power in kW depends on the onboard charger equipment and the charging station
             possible_power = min([ev_conf.obc_max_power, load_calculation.evse_max_power])
             # car is charging
             if actions[car] >= 0:
                 # the charging energy depends on the maximum chargeable energy and the desired charging amount
-                # SoH is accounted for in this equation as well
-                ev_total_energy_demand = (target_soc - episode.soc[car] * episode.soh[car]) * ev_conf.battery_cap  # total energy demand in kWh
+                ev_total_energy_demand = (target_soc[car] - episode.soc[car]) * episode.battery_cap[car]  # total energy demand in kWh
                 demanded_charge = possible_power * actions[car] * time_conf.dt  # demanded energy in kWh by the agent
 
                 # if the agent wants to charge more than the battery can hold
@@ -77,7 +78,7 @@ class EvCharger:
                         print(f"Overcharged, penalty of: {current_oc_pen}")
 
                 # if the car is there, allocate charging energy to the battery in kWh
-                if db.loc[(db["ID"] == car) & (db["date"] == episode.time), "There"].values == 1:
+                if there == 1:
                     charging_energy = min(ev_total_energy_demand / ev_conf.charging_eff, demanded_charge)
 
                 # the car is not there, no charging
@@ -91,9 +92,7 @@ class EvCharger:
                             print(f"Invalid action, penalty given: {round(current_inv_pen, 3)}.")
 
                 # next soc is calculated based on charging energy
-                # TODO: not all cars must have the same battery cap
-                episode.next_soc.append(episode.soc[car] * episode.soh[car]
-                                        + charging_energy * ev_conf.charging_eff / ev_conf.battery_cap)
+                episode.next_soc.append(episode.soc[car] + charging_energy * ev_conf.charging_eff / episode.battery_cap[car])
 
                 # get pv energy and subtract from charging energy needed from the grid
                 # assuming pv is equally distributed to the connected cars
@@ -120,11 +119,8 @@ class EvCharger:
             # car is discharging - v2g is currently modelled as energy arbitrage on the day ahead spot market
             elif actions[car] < 0:
                 # check how much energy is left in the battery and how much discharge is desired
-                ev_total_energy_left = -1 * episode.soc[car] * episode.soh[car] * ev_conf.battery_cap  # amount of energy left in the battery in kWh
+                ev_total_energy_left = -1 * episode.soc[car] * episode.battery_cap[car]  # amount of energy left in the battery in kWh
                 demanded_discharge = possible_power * actions[car] * time_conf.dt  # demanded discharge in kWh by agent
-
-                # variable to check if car is plugged in
-                there = db.loc[(db["ID"]==car) & (db["date"]==episode.time), "There"].values[0]
 
                 # energy drawdown from battery bigger than what is left in the battery
                 if (demanded_discharge * ev_conf.discharging_eff < ev_total_energy_left) and (there != 0):
@@ -148,8 +144,7 @@ class EvCharger:
                             print(f"Invalid action, penalty given: {round(current_inv_pen, 3)}.")
 
                 # calculate next soc, which will decrease, efficiency is taken into account below
-                episode.next_soc.append(episode.soc[car] * episode.soh[car]
-                                        + discharging_energy / ev_conf.battery_cap)
+                episode.next_soc.append(episode.soc[car] + discharging_energy / episode.battery_cap[car])
 
                 # Discharged energy renumerated at PV feed-in minus 30%
                 episode.discharging_revenue += (-1 * discharging_energy

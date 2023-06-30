@@ -254,8 +254,6 @@ class FleetEnv(gym.Env):
         self.episode: Episode = Episode(self.time_conf)
 
         # Setting EV parameters
-        self.target_soc = self.ev_conf.target_soc  # Target SoC - Vehicles should always leave with this SoC
-        self.target_soc_lunch = self.ev_conf.target_soc_lunch  # After lunch battery doesnt have to be full
         self.eps = 0.005  # allowed SOC deviation from target: 0.5%
         self.initial_soh = init_soh  # initial degree of battery degradation, assumed equal for all cars
         self.min_laxity: float = self.ev_conf.min_laxity  # How much excess time the car should at least have to charge
@@ -272,7 +270,7 @@ class FleetEnv(gym.Env):
         # Loading the inputs
         self.data_loader: DataLoader = DataLoader(self.path_name, self.schedule_name,
                                                   self.spot_name, self.building_name, self.pv_name,
-                                                  self.time_conf, self.ev_conf, self.target_soc,
+                                                  self.time_conf, self.ev_conf, self.ev_conf.target_soc,
                                                   self.include_building_load, self.include_pv
                                                   )
 
@@ -289,6 +287,9 @@ class FleetEnv(gym.Env):
         # This can be changed in the load calculation module, e.g. replacing it with a fixed value.
         '''
 
+        # Target SoC - Vehicles should always leave with this SoC
+        self.target_soc = np.ones(self.num_cars) * self.ev_conf.target_soc
+
         if include_building:
             max_load = max(self.db["load"])
         else:
@@ -299,10 +300,7 @@ class FleetEnv(gym.Env):
 
         # Overwrite battery capacity in ev config with use-case-specific value
         if self.load_calculation.batt_cap > 0:
-            self.ev_conf.battery_cap = self.load_calculation.batt_cap
-
-        # state of health initialized for each battery
-        self.episode.soh = np.ones(self.num_cars) * self.initial_soh
+            self.ev_conf.init_battery_cap = self.load_calculation.batt_cap
 
         # choosing degradation methodology
         if deg_emp:
@@ -446,7 +444,10 @@ class FleetEnv(gym.Env):
         self.episode.done = False
 
         # instantiate soh - depending on initial health settings
-        self.episode.soh = np.ones(self.num_cars) * self.initial_soh
+        self.episode.soh = np.multiply(np.ones(self.num_cars), self.initial_soh)
+
+        # based on soh, instantiate battery capacity
+        self.episode.battery_cap = np.multiply(self.episode.soh, self.ev_conf.init_battery_cap)
 
         # choose a start time based on the type of choice: same, random, deterministic
         self.episode.start_time = self.time_picker.choose_time(self.db, self.time_conf.freq,
@@ -466,10 +467,11 @@ class FleetEnv(gym.Env):
                                     self.episode.time,
                                     ev_conf=self.ev_conf,
                                     load_calc=self.load_calculation,
-                                    aux=self.aux_flag)
+                                    aux=self.aux_flag,
+                                    target_soc=self.target_soc)
 
         # get the first soc and hours_left observation
-        self.episode.soc = obs[0] * self.episode.soh
+        self.episode.soc = obs[0]
         self.episode.soc_deg = self.episode.soc.copy()
         self.episode.hours_left = obs[1]
         if self.include_price:
@@ -481,17 +483,17 @@ class FleetEnv(gym.Env):
         ''' if time is insufficient due to unfavourable start date (for example loading an empty car with 15 min
         time left), soc is set in such a way that the agent always has a chance to fulfil the objective'''
         for car in range(self.num_cars):
-            time_needed = ((self.target_soc - self.episode.soc[car])
-                           * self.ev_conf.battery_cap
+            time_needed = ((self.target_soc[car] - self.episode.soc[car])
+                           * self.episode.battery_cap[car]
                            / min([self.ev_conf.obc_max_power, self.load_calculation.evse_max_power]))
 
             # Gives some tolerance, check if hours_left > 0 because car has to be plugged in
             # Makes sure that enough laxity is present, in this case 50% is default
             if (self.episode.hours_left[car] > 0) and (1.5 * time_needed > self.episode.hours_left[car]):
-                self.episode.soc[car] = (self.target_soc
+                self.episode.soc[car] = (self.target_soc[car]
                                          - self.episode.hours_left[car]
                                          * min([self.ev_conf.obc_max_power, self.load_calculation.evse_max_power])
-                                         * self.min_laxity / self.ev_conf.battery_cap
+                                         * self.min_laxity / self.episode.battery_cap[car]
                                          )
                 if self.print_updates:
                     print("Initial SOC modified due to unfavourable starting condition.")
@@ -527,9 +529,9 @@ class FleetEnv(gym.Env):
                                       0.0,  # penalties
                                       0.0,  # grid overloading
                                       0.0,  # soc missing on departure
-                                      0.0,
-                                      np.zeros(self.num_cars),  # degradation of cycle
-                                      np.ones(self.num_cars) * self.initial_soh)  # soh
+                                      0.0,  # degradation
+                                      np.zeros(self.num_cars),  # log of charged energy in kWh
+                                      self.episode.soh)  # soh
 
         return norm_obs, self.info
 
@@ -599,9 +601,14 @@ class FleetEnv(gym.Env):
         self.episode.time += np.timedelta64(self.time_conf.minutes, 'm')
 
         # get the next observation from the dataset
-        next_obs = self.observer.get_obs(self.db, self.time_conf.price_lookahead,
-                                         self.time_conf.bl_pv_lookahead, self.episode.time,
-                                         ev_conf=self.ev_conf, load_calc=self.load_calculation, aux=self.aux_flag)
+        next_obs = self.observer.get_obs(self.db,
+                                         self.time_conf.price_lookahead,
+                                         self.time_conf.bl_pv_lookahead,
+                                         self.episode.time,
+                                         ev_conf=self.ev_conf,
+                                         load_calc=self.load_calculation,
+                                         aux=self.aux_flag,
+                                         target_soc=self.target_soc)
         next_obs_soc = next_obs[0]
         next_obs_time_left = next_obs[1]
 
@@ -618,14 +625,14 @@ class FleetEnv(gym.Env):
             # check if a car just left and didn't fully charge
             if (self.episode.hours_left[car] != 0) and (next_obs_time_left[car] == 0):
 
-                # check the case that its a lunch break and care taker
+                # check the case that it's a lunch break and care taker
                 if self.company == CompanyType.Caretaker:
                     # lunch break case
                     if (self.episode.time.hour > 11) and (self.episode.time.hour < 15):
                         # check for soc violation
-                        if self.target_soc_lunch - self.episode.soc[car] > self.eps:
+                        if self.ev_conf.target_soc_lunch - self.episode.soc[car] > self.eps:
                             # penalty for not fulfilling charging requirement, square difference, scale and clip
-                            soc_missing = self.target_soc_lunch - self.episode.soc[car]
+                            soc_missing = self.ev_conf.target_soc_lunch - self.episode.soc[car]
                             cum_soc_missing += soc_missing
                             current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
                             current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
@@ -636,9 +643,9 @@ class FleetEnv(gym.Env):
                                       f" Penalty: {round(current_soc_pen, 3)}")
 
                     # other operation times, check for violation
-                    elif self.target_soc - self.episode.soc[car] > self.eps:
+                    elif self.target_soc[car] - self.episode.soc[car] > self.eps:
                         # penalty for not fulfilling charging requirement, square difference, scale and clip
-                        soc_missing = self.target_soc_lunch - self.episode.soc[car]
+                        soc_missing = self.target_soc[car] - self.episode.soc[car]
                         cum_soc_missing += soc_missing
                         current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
                         current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
@@ -649,10 +656,10 @@ class FleetEnv(gym.Env):
                                   f" Penalty: {round(current_soc_pen, 3)}")
                 
 
-                # if charging requirement wasn't met (with some tolerance eps)
+                # other companies: if charging requirement wasn't met (with some tolerance eps)
                 elif self.target_soc - self.episode.soc[car] > self.eps:
                     # penalty for not fulfilling charging requirement, square difference, scale and clip
-                    soc_missing = self.target_soc - self.episode.soc[car]
+                    soc_missing = self.target_soc[car] - self.episode.soc[car]
                     cum_soc_missing += soc_missing
                     current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
                     current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
@@ -688,6 +695,12 @@ class FleetEnv(gym.Env):
             # this shouldn't happen but if it does, an error is thrown
             else:
                 raise TypeError("Observation format not recognized")
+
+            if self.episode.soh[car] <= 0.9:
+                self.target_soc[car] = 0.9
+                if self.print_updates and self.target_soc[car] != 0.9:
+                    print(f"Target SOC of Car {car} has been adjusted to 0.9 due to high battery degradation."
+                          f"Current SOH: {self.episode.soh[car]}")
 
         # if the finish time is reached, set done to True
         # The RL agent then resets the environment
@@ -731,7 +744,10 @@ class FleetEnv(gym.Env):
                                                                              self.load_calculation.evse_max_power,
                                                                              self.time_conf,
                                                                              self.ev_conf.temperature)
+            # calculate SOH from current degradation
             self.episode.soh -= degradation
+            # calculate new resulting battery capacity after degradation
+            self.episode.battery_cap = np.multiply(self.episode.soh, self.ev_conf.init_battery_cap)
 
         else:
             degradation = 0.0

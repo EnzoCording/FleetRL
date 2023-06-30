@@ -172,7 +172,7 @@ class DataLoader:
         # calculate SOC on return, assuming the previous trip charged to the target soc
         # TODO this could be changed in the future to make it more complex
         self.schedule["SOC_on_return"] = target_soc - self.schedule["last_trip_total_consumption"].div(
-            ev_conf.battery_cap)
+            ev_conf.init_battery_cap)
         # TODO could be set to -1
         self.schedule.loc[self.schedule["There"] == 0, "SOC_on_return"] = 0
 

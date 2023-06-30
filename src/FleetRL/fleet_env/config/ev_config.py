@@ -1,7 +1,7 @@
 class EvConfig:
 
     def __init__(self):
-        self.battery_cap: float = 60.0  # battery capacity in kWh
+        self.init_battery_cap: float = 60.0  # battery capacity in kWh
         self.obc_max_power: float = 100.0  # onboard charger max power in kW
         self.charging_eff: float = 0.91  # charging efficiency
         self.discharging_eff: float = 0.91  # discharging efficiency

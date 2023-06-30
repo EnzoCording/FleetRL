@@ -4,8 +4,15 @@ from FleetRL.utils.load_calculation.load_calculation import LoadCalculation
 from FleetRL.fleet_env.config.ev_config import EvConfig
 
 class Observer:
-    def get_obs(self, db: pd.DataFrame, price_lookahead: int, bl_pv_lookahead:int,
-                time: pd.Timestamp, ev_conf: EvConfig, load_calc: LoadCalculation, aux: bool) -> list:
+    def get_obs(self,
+                db: pd.DataFrame,
+                price_lookahead: int,
+                bl_pv_lookahead:int,
+                time: pd.Timestamp,
+                ev_conf: EvConfig,
+                load_calc: LoadCalculation,
+                aux: bool,
+                target_soc: list) -> list:
 
         """
         :param db: database from the env

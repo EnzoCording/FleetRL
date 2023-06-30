@@ -53,7 +53,7 @@ class UnitNormalization(Normalization):
                      np.full(shape=num_cars, fill_value=ev_conf.target_soc),  # target soc
                      np.full(shape=num_cars, fill_value=ev_conf.target_soc),  # charging left
                      # hours needed
-                     np.full(shape=num_cars, fill_value=(ev_conf.target_soc * ev_conf.battery_cap)
+                     np.full(shape=num_cars, fill_value=(ev_conf.target_soc * ev_conf.init_battery_cap)
                                                         / (load_calc.evse_max_power * ev_conf.charging_eff)),
                      np.full(shape=num_cars, fill_value=5),  # laxity
                      np.full(shape=1, fill_value=load_calc.evse_max_power),  # evse power
@@ -92,7 +92,7 @@ class UnitNormalization(Normalization):
                      np.full(shape=num_cars, fill_value=ev_conf.target_soc),  # target soc
                      np.full(shape=num_cars, fill_value=ev_conf.target_soc),  # charging left
                      # hours needed
-                     np.full(shape=num_cars, fill_value=(ev_conf.target_soc * ev_conf.battery_cap)
+                     np.full(shape=num_cars, fill_value=(ev_conf.target_soc * ev_conf.init_battery_cap)
                                                         / (load_calc.evse_max_power * ev_conf.charging_eff)),
                      np.full(shape=num_cars, fill_value=5),  # laxity
                      np.full(shape=1, fill_value=load_calc.evse_max_power),  # evse power
@@ -135,7 +135,7 @@ class UnitNormalization(Normalization):
                      np.full(shape=num_cars, fill_value=ev_conf.target_soc),  # target soc
                      np.full(shape=num_cars, fill_value=ev_conf.target_soc),  # charging left
                      # hours needed
-                     np.full(shape=num_cars, fill_value=(ev_conf.target_soc * ev_conf.battery_cap)
+                     np.full(shape=num_cars, fill_value=(ev_conf.target_soc * ev_conf.init_battery_cap)
                                                         / (load_calc.evse_max_power * ev_conf.charging_eff)),
                      np.full(shape=num_cars, fill_value=5),  # laxity
                      np.full(shape=1, fill_value=load_calc.evse_max_power),  # evse power
@@ -178,7 +178,7 @@ class UnitNormalization(Normalization):
                      np.full(shape=num_cars, fill_value=ev_conf.target_soc),  # target soc
                      np.full(shape=num_cars, fill_value=ev_conf.target_soc),  # charging left
                      # hours needed
-                     np.full(shape=num_cars, fill_value=(ev_conf.target_soc * ev_conf.battery_cap)
+                     np.full(shape=num_cars, fill_value=(ev_conf.target_soc * ev_conf.init_battery_cap)
                                                         / (load_calc.evse_max_power * ev_conf.charging_eff)),
                      np.full(shape=num_cars, fill_value=5),  # laxity
                      np.full(shape=1, fill_value=load_calc.evse_max_power),  # evse power
@@ -223,7 +223,7 @@ class UnitNormalization(Normalization):
                      np.full(shape=num_cars, fill_value=ev_conf.target_soc),  # target soc
                      np.full(shape=num_cars, fill_value=ev_conf.target_soc),  # charging left
                      # hours needed
-                     np.full(shape=num_cars, fill_value=(ev_conf.target_soc * ev_conf.battery_cap)
+                     np.full(shape=num_cars, fill_value=(ev_conf.target_soc * ev_conf.init_battery_cap)
                                                         / (load_calc.evse_max_power * ev_conf.charging_eff)),
                      np.full(shape=num_cars, fill_value=5),  # laxity
                      np.full(shape=1, fill_value=load_calc.evse_max_power),  # evse power

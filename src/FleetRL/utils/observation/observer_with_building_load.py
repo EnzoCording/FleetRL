@@ -6,8 +6,15 @@ from FleetRL.utils.load_calculation.load_calculation import LoadCalculation
 from FleetRL.fleet_env.config.ev_config import EvConfig
 
 class ObserverWithBuildingLoad(Observer):
-    def get_obs(self, db: pd.DataFrame, price_lookahead: int, bl_pv_lookahead:int, time: pd.Timestamp,
-                ev_conf: EvConfig, load_calc: LoadCalculation, aux: bool) -> list:
+    def get_obs(self,
+                db: pd.DataFrame,
+                price_lookahead: int,
+                bl_pv_lookahead:int,
+                time: pd.Timestamp,
+                ev_conf: EvConfig,
+                load_calc: LoadCalculation,
+                aux: bool,
+                target_soc: list) -> list:
 
         """
         :param db: Database from env
@@ -17,6 +24,7 @@ class ObserverWithBuildingLoad(Observer):
         :param ev_conf: EV config data, used for battery capacity, etc.
         :param load_calc: Load calc module, used for grid connection, etc.
         :param aux: Flag to include extra information on the problem or not. Can help with training
+        :param target_soc: List for the current target SOC of each car
         :return: List of numpy arrays with different parts of the observation
 
         # define the starting and ending time via lookahead, np.where returns the index in the dataframe
@@ -49,7 +57,7 @@ class ObserverWithBuildingLoad(Observer):
         ###
         # Auxiliary observations that might make it easier for the agent
         there = db.loc[db["date"]==time, "There"].values
-        target_soc = ev_conf.target_soc * there
+        target_soc = target_soc * there
         charging_left = np.subtract(target_soc, soc)
         hours_needed = charging_left * load_calc.batt_cap / (load_calc.evse_max_power * ev_conf.charging_eff)
         laxity = np.subtract(hours_left / (np.add(hours_needed, 0.001)), 1) * there
