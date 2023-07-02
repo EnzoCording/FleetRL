@@ -652,7 +652,7 @@ class FleetEnv(gym.Env):
                 
 
                 # other companies: if charging requirement wasn't met (with some tolerance eps)
-                elif self.target_soc - self.episode.soc[car] > self.eps:
+                elif self.target_soc[car] - self.episode.soc[car] > self.eps:
                     # penalty for not fulfilling charging requirement, square difference, scale and clip
                     soc_missing = self.target_soc[car] - self.episode.soc[car]
                     cum_soc_missing += soc_missing
