@@ -171,7 +171,6 @@ src/agents/RL/agent_training/trained/*
 src/agents/RL/agent_training/tblog/*
 src/agents/RL/agent_training/tb_log/*
 src/agents/RL/agent_training/tb_log_hp/*
-src/FleetRL/utils/battery_degradation/
 extensive_requirements.in
 extensive_requirements.txt
 /extensive_requirements.txt
