@@ -29,9 +29,9 @@ from FleetRL.utils.time_picker.static_time_picker import StaticTimePicker
 from FleetRL.utils.time_picker.eval_time_picker import EvalTimePicker
 from FleetRL.utils.time_picker.time_picker import TimePicker
 
-from FleetRL.utils.battery_degradation.new_batt_deg import NewBatteryDegradation
-from FleetRL.utils.battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
-from FleetRL.utils.battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
+from FleetRL.utils.battery_degradation.batt_deg import NewBatteryDegradation
+from FleetRL.utils.battery_degradation.empirical_degradation import NewEmpiricalDegradation
+from FleetRL.utils.battery_degradation.rainflow_sei_degradation import NewRainflowSeiDegradation
 from FleetRL.utils.battery_degradation.log_data_deg import LogDataDeg
 
 from FleetRL.utils.data_logger.data_logger import DataLogger

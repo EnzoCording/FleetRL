@@ -59,7 +59,7 @@ if __name__ == "__main__":
                                     "use_case": "ct",
                                     "include_building": True,
                                     "include_pv": True,
-                                    "static_time_picker": True,
+                                    "time_picker": "static",
                                     "deg_emp": False,
                                     "include_price": True,
                                     "ignore_price_reward": False,

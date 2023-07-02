@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import rainflow as rf
 import numpy as np
 from FleetRL.fleet_env.fleet_environment import FleetEnv
-from FleetRL.utils.battery_degradation.battery_degradation import BatteryDegradation
-from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDegradation
 # from FleetRL.utils.prices import load_prices
 
 env = FleetEnv(include_pv=True,
