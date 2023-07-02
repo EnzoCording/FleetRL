@@ -29,10 +29,10 @@ from FleetRL.utils.time_picker.static_time_picker import StaticTimePicker
 from FleetRL.utils.time_picker.eval_time_picker import EvalTimePicker
 from FleetRL.utils.time_picker.time_picker import TimePicker
 
-from FleetRL.utils.new_battery_degradation.new_batt_deg import NewBatteryDegradation
-from FleetRL.utils.new_battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
-from FleetRL.utils.new_battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
-from FleetRL.utils.new_battery_degradation.log_data_deg import LogDataDeg
+from FleetRL.utils.battery_degradation.new_batt_deg import NewBatteryDegradation
+from FleetRL.utils.battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
+from FleetRL.utils.battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
+from FleetRL.utils.battery_degradation.log_data_deg import LogDataDeg
 
 from FleetRL.utils.data_logger.data_logger import DataLogger
 
@@ -85,8 +85,7 @@ class FleetEnv(gym.Env):
                  include_building: bool = False,
                  include_pv: bool = False,
                  include_price: bool = True,
-                 static_time_picker: bool = False,
-                 eval_time_picker: bool = False,  # method assertion todo
+                 time_picker: Literal["static", "random", "eval"] = "random",
                  target_soc: float = 0.85,
                  init_soh: float = 1.0,
                  deg_emp: bool = False,
@@ -110,9 +109,7 @@ class FleetEnv(gym.Env):
         :param include_building: Flag to include building or not
         :param include_pv: Flag to include pv or not
         :param include_price: Flag to include price or not
-        :param static_time_picker: Always picks a pre-selected date
-        :param eval_time_picker: Picks a random date from oct - dec (test set)
-        # if both time picker flags are false, a random date from jan-oct will be picked (training set)
+        :param time_picker: Choose between picking same date, random from training set or random from validation set
         :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
         :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
         :param deg_emp: Flag to use empirical degradation. Default False
@@ -166,6 +163,7 @@ class FleetEnv(gym.Env):
         else:
             raise TypeError("Company not recognised.")
 
+        # adjust this if schedules need to be generated
         if self.generate_schedule:
             self.schedule_gen = ScheduleGenerator(file_comment="one_year_15_min_delivery",
                                                   schedule_dir=self.path_name,
@@ -176,7 +174,6 @@ class FleetEnv(gym.Env):
 
         # Setting flags for the type of environment to build
         # NOTE: observations are appended to the db in the order specified here
-        # NOTE: import the right observer!
         self.include_price = include_price
         self.include_building_load = include_building
         self.include_pv = include_pv
@@ -211,25 +208,22 @@ class FleetEnv(gym.Env):
         self.calc_deg = calculate_degradation
         self.log_data = log_data
 
-        # overriding, if both parameters have been chosen, eval has precedent.
-        if eval_time_picker:
-            static_time_picker = False
-
         # Class simulating EV charging
         self.ev_charger: EvCharger = EvCharger()
 
         # Load time picker module
-        if static_time_picker:
+        if time_picker == "static":
             # when an episode starts, this class picks the same starting time
             self.time_picker: TimePicker = StaticTimePicker()
-
-        elif eval_time_picker:
+        elif time_picker == "eval":
             # picks a random starting times from test set (nov - dez)
             self.time_picker: TimePicker = EvalTimePicker(self.time_conf.episode_length)
-
-        else:
+        elif time_picker =="random":
             # picks random starting times from training set (jan - oct)
             self.time_picker: TimePicker = RandomTimePicker()
+        else:
+            # must choose between static, eval or random
+            raise TypeError("Time picker type not recognised")
 
         # Choose the right observer module based on the environment settings
         # All observations are made in the observer class
@@ -444,10 +438,10 @@ class FleetEnv(gym.Env):
         self.episode.done = False
 
         # instantiate soh - depending on initial health settings
-        self.episode.soh = np.multiply(np.ones(self.num_cars), self.initial_soh)
+        self.episode.soh = np.ones(self.num_cars) * self.initial_soh
 
         # based on soh, instantiate battery capacity
-        self.episode.battery_cap = np.multiply(self.episode.soh, self.ev_conf.init_battery_cap)
+        self.episode.battery_cap = self.episode.soh * self.ev_conf.init_battery_cap
 
         # choose a start time based on the type of choice: same, random, deterministic
         self.episode.start_time = self.time_picker.choose_time(self.db, self.time_conf.freq,
@@ -577,14 +571,15 @@ class FleetEnv(gym.Env):
         there = self.db["There"][self.db["date"] == self.episode.time].values
         # correct actions for spots where no car is plugged in
         corrected_actions = actions * there
-        overloaded_flag, overload_amount = self.load_calculation.check_violation(corrected_actions, self.db,
+        overloaded_flag, overload_amount = self.load_calculation.check_violation(corrected_actions,
+                                                                                 self.db,
                                                                                  current_load, current_pv)
 
         # check if an overloading took place
         if overloaded_flag:
             # % of trafo overloading is squared and multiplied by a scaling factor, clipped to max value
-            overload_penalty = (self.score_conf.penalty_overloading * (
-                        (overload_amount / self.load_calculation.grid_connection) ** 2))
+            overload_penalty = (self.score_conf.penalty_overloading
+                                * ((overload_amount / self.load_calculation.grid_connection) ** 2))
             overload_penalty = max(overload_penalty, self.score_conf.clip_overloading)
             reward += overload_penalty
             self.episode.penalty_record += overload_penalty
@@ -642,7 +637,7 @@ class FleetEnv(gym.Env):
                                 print(f"A car left the station without reaching the target SoC."
                                       f" Penalty: {round(current_soc_pen, 3)}")
 
-                    # other operation times, check for violation
+                    # caretaker, other operation times, check for violation
                     elif self.target_soc[car] - self.episode.soc[car] > self.eps:
                         # penalty for not fulfilling charging requirement, square difference, scale and clip
                         soc_missing = self.target_soc[car] - self.episode.soc[car]
@@ -666,9 +661,8 @@ class FleetEnv(gym.Env):
                     reward += current_soc_pen
                     self.episode.penalty_record += current_soc_pen
                     if self.print_updates:
-                        print(
-                            f"A car left the station without reaching the target SoC."
-                            f" Penalty: {round(current_soc_pen, 3)}")
+                        print(f"A car left the station without reaching the target SoC."
+                              f" Penalty: {round(current_soc_pen, 3)}")
 
             # same car in the next time step
             if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
@@ -747,7 +741,7 @@ class FleetEnv(gym.Env):
             # calculate SOH from current degradation
             self.episode.soh -= degradation
             # calculate new resulting battery capacity after degradation
-            self.episode.battery_cap = np.multiply(self.episode.soh, self.ev_conf.init_battery_cap)
+            self.episode.battery_cap = self.episode.soh * self.ev_conf.init_battery_cap
 
         else:
             degradation = 0.0

@@ -1,7 +1,7 @@
 import FleetRL
 from FleetRL.fleet_env.fleet_environment import FleetEnv
-from FleetRL.utils.new_battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
-from FleetRL.utils.new_battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
+from FleetRL.utils.battery_degradation.new_rainflow_sei_degradation import NewRainflowSeiDegradation
+from FleetRL.utils.battery_degradation.new_empirical_degradation import NewEmpiricalDegradation
 
 import pandas as pd
 import numpy as np

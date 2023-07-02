@@ -7,8 +7,14 @@ from FleetRL.fleet_env.config.ev_config import EvConfig
 # This normalizes based on the global maximum values. These could be in the future, hence the oracle prefix.
 # For more realistic approaches, a rolling average could be used, or the sb3 vec normalize function
 class OracleNormalization(Normalization):
-    def __init__(self, db, building_flag, pv_flag, price_flag,
-                 ev_conf: EvConfig, load_calc: LoadCalculation, aux: bool):
+    def __init__(self,
+                 db,
+                 building_flag,
+                 pv_flag,
+                 price_flag,
+                 ev_conf: EvConfig,
+                 load_calc: LoadCalculation, aux: bool):
+
         self.max_time_left = max(db["time_left"])
         self.max_spot = max(db["DELU"])
         self.min_spot = min(db["DELU"])
@@ -16,6 +22,7 @@ class OracleNormalization(Normalization):
         self.pv_flag = pv_flag
         self.price_flag = price_flag
         self.aux = aux
+
         if self.building_flag:
             self.max_building = max(db["load"])
         if self.pv_flag:

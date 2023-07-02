@@ -11,7 +11,8 @@ class MyTestCase(unittest.TestCase):
 
     def test_soc_mod_on_reset(self):
         env = FleetEnv()
-        env.reset(start_time=pd.to_datetime('2020-01-06 10:30:00'))
+        env.reset()
+        env.episode.start_time=pd.to_datetime('2020-01-06 10:30:00')
         self.assertTrue(env.info["soc_mod"])
 
 

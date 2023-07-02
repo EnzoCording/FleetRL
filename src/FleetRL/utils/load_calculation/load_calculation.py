@@ -1,12 +1,10 @@
 # import pandapower as pp
 from enum import Enum
 
-
 class CompanyType(Enum):
     Delivery = 1
     Caretaker = 2
     Utility = 3
-
 
 class LoadCalculation:
 
@@ -18,19 +16,19 @@ class LoadCalculation:
         if company_type == CompanyType.Delivery:
             evse_power = 11
             grid_connection = max(max_load*1.1, max_load + 0.5*num_cars*evse_power)
-            batt_cap = 60
+            batt_cap = 60  # evito
 
         elif company_type == CompanyType.Utility:
             evse_power = 22  # charger cap in kW
             grid_connection = max(max_load*1.1, max_load + 0.5*num_cars*evse_power)
             if num_cars > 1:
                 grid_connection = 1000
-            batt_cap = 50
+            batt_cap = 50  # e berlingo
 
         elif company_type == CompanyType.Caretaker:
             evse_power = 4.6  # charger cap in kW
             grid_connection = max(max_load*1.1, max_load + 0.5*num_cars*evse_power)
-            batt_cap = 16.7
+            batt_cap = 16.7  # smart eq
 
         else:
             grid_connection = 200

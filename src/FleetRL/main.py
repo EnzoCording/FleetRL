@@ -15,7 +15,7 @@ env = FleetEnv(include_pv=True,
                calculate_degradation=True,
                log_data=True,
                episode_length=48,
-               static_time_picker=True,
+               time_picker="random",
                )
 
 env.reset()
