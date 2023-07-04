@@ -119,26 +119,26 @@ class RainflowSeiDegradation(BatteryDegradation):
             # check if a new entry appeared in the results of the rainflow counting
             if len(rainflow_result) > self.rainflow_length[i]:
 
-                # calculate degradation of the 2nd last rainflow entry (the most recent might still change)
-                last_complete_entry = rainflow_result.iloc[-2]
+                # calculate degradation of the most recent rainflow entries
+                last_complete_entries = rainflow_result.iloc[int(self.rainflow_length[i]-1):len(rainflow_result)-1]
 
                 # dod is equal to the range
-                dod = last_complete_entry["Range"]
+                dod = last_complete_entries["Range"]
 
                 # average soc is equal to the mean
-                avg_soc = last_complete_entry["Mean"]
+                avg_soc = last_complete_entries["Mean"]
 
                 # severity is equal to count: either 0.5 or 1.0
-                degradation_severity = last_complete_entry["Count"]
+                degradation_severity = last_complete_entries["Count"]
 
                 # self.deg_rate_total becomes negative for DoD > 1
                 # the two checks below count how many times dod is adjusted and in severe cases stops the code
 
-                if (dod > 2) and degradation_severity == 0.5:
+                if (np.max(dod) > 2) and degradation_severity[np.argmax(dod)] == 0.5:
                     self.adj_counter += 1
                     print("Minor adjustment made to DoD for degradation calculation.")
 
-                if dod > 5:
+                if np.max(dod) > 5:
                     print("Dod should be checked. Split cycle into multiple cycles.")
                     print("Remove this Error if problem should be ignored.")
                     raise TypeError("DoD too large.")
@@ -148,7 +148,7 @@ class RainflowSeiDegradation(BatteryDegradation):
 
                 # check if new battery, otherwise ignore sei film formation
                 if self.init_soh == 1.0:
-                    self.fd_cyc[i] += self.deg_rate_cycle(effective_dod, avg_soc, temp)
+                    self.fd_cyc[i] += np.sum(self.deg_rate_cycle(effective_dod, avg_soc, temp))
                     self.fd_cal[i] = self.deg_rate_calendar(t=battery_age, avg_soc=mean_soc_cal, temp=temp)
                     new_l = self.l_with_sei(self.fd_cyc[i] + self.fd_cal[i])
 
@@ -178,7 +178,7 @@ class RainflowSeiDegradation(BatteryDegradation):
                 print(f"Degradation was negative: {self.degradation[i]}."
                       f"Recheck calcs if it happens often."
                       f"Previous entry: {rainflow_result[-3]}"
-                      f"Current entry: {last_complete_entry}")
+                      f"Current entry: {last_complete_entries}")
 
             self.soh[i] -= self.degradation[i]
 

@@ -60,9 +60,7 @@ class FleetEnv(gym.Env):
     :param include_building: Flag to include building or not
     :param include_pv: Flag to include pv or not
     :param include_price: Flag to include price or not
-    :param static_time_picker: Always picks a pre-selected date
-    :param eval_time_picker: Picks a random date from oct - dec (test set)
-    # if both time picker flags are false, a random date from jan-oct will be picked (training set)
+    :param time_picker: Specify whether to pick time static, random or eval (train vs validation set)
     :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
     :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
     :param deg_emp: Flag to use empirical degradation. Default False
@@ -717,7 +715,9 @@ class FleetEnv(gym.Env):
         soc_v = abs(cum_soc_missing)
 
         # Calculate degradation and state of health based on chosen method
-        if self.calc_deg:
+        # calculate degradation once per day
+        if (self.calc_deg) and ((self.episode.time.hour == 14) and (self.episode.time.minute == 45)):
+            print("Calculating deg...")
             degradation = self.new_battery_degradation.calculate_degradation(self.deg_data_logger.soc_log,
                                                                              self.load_calculation.evse_max_power,
                                                                              self.time_conf,
