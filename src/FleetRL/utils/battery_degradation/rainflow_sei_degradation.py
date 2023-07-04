@@ -177,7 +177,7 @@ class RainflowSeiDegradation(BatteryDegradation):
             if self.degradation[i] < 0:
                 print(f"Degradation was negative: {self.degradation[i]}."
                       f"Recheck calcs if it happens often."
-                      f"Previous entry: {rainflow_result[-3]}"
+                      f"Previous entry: {rainflow_result.iloc[-3]}"
                       f"Current entry: {last_complete_entries}")
 
             self.soh[i] -= self.degradation[i]

@@ -717,7 +717,6 @@ class FleetEnv(gym.Env):
         # Calculate degradation and state of health based on chosen method
         # calculate degradation once per day
         if (self.calc_deg) and ((self.episode.time.hour == 14) and (self.episode.time.minute == 45)):
-            print("Calculating deg...")
             degradation = self.new_battery_degradation.calculate_degradation(self.deg_data_logger.soc_log,
                                                                              self.load_calculation.evse_max_power,
                                                                              self.time_conf,

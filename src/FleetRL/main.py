@@ -23,10 +23,9 @@ for i in range(steps):
     action = []
     # print(env.step([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
     # print(env.step([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
-    for j in range(env.num_cars):
-        if env.episode.done:
-            env.reset()
-        action.append(-1)
+    if env.episode.done:
+        env.reset()
+    action = [-1, -1, 1, 1, 1]
 
     print(env.step(action))
 
