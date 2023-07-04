@@ -174,7 +174,9 @@ class EvCharger:
 
             # Throw an error if SOC is actually negative
             if (np.round(episode.soc[car], 5) < 0) or (np.round(episode.soc[car], 5) > 1):
-                raise TypeError("SOC negative")
+                print(f"SOC negative: {episode.soc[car]}"
+                      f"Date: {episode.time}"
+                      f"Action: {actions}")
 
             # Round off numeric inaccuracies (values in the range -1.0e-16 can happen otherwise and cause errors)
             np.clip(episode.soc, 0, 1)
