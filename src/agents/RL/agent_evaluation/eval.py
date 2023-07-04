@@ -14,7 +14,7 @@ from FleetRL.fleet_env.fleet_environment import FleetEnv
 if __name__ == "__main__":
 
     # define parameters here for easier change
-    n_steps = 48
+    n_steps = 8600
     n_episodes = 1
     n_evs = 5
     n_envs = 1
@@ -142,19 +142,19 @@ if __name__ == "__main__":
 
     total_results["RL-based charging"] = [rl_reward,
                                           rl_cashflow,
-                                          np.round(rl_deg.mean(), 3),
+                                          np.round(rl_deg.mean(), 5),
                                           rl_overloading,
                                           rl_soc_violation,
                                           rl_n_violations,
-                                          np.round(rl_soh.mean(), 3)]
+                                          np.round(rl_soh.mean(), 5)]
 
     total_results["Dumb charging"] = [dumb_reward,
                                       dumb_cashflow,
-                                      np.round(dumb_deg.mean(), 3),
+                                      np.round(dumb_deg.mean(), 5),
                                       dumb_overloading,
                                       dumb_soc_violation,
                                       dumb_n_violations,
-                                      np.round(dumb_soh.mean(), 3)]
+                                      np.round(dumb_soh.mean(), 5)]
 
     print(total_results)
 

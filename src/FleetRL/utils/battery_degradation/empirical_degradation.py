@@ -1,8 +1,8 @@
 import numpy as np
 
 from FleetRL.fleet_env.config.time_config import TimeConfig
-from FleetRL.utils.battery_degradation.batt_deg import NewBatteryDegradation
-class NewEmpiricalDegradation(NewBatteryDegradation):
+from FleetRL.utils.battery_degradation.batt_deg import BatteryDegradation
+class EmpiricalDegradation(BatteryDegradation):
 
     def __init__(self, init_soh: float, num_cars: int):
 

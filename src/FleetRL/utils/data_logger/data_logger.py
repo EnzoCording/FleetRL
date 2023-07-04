@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import copy
 
 class DataLogger:
     def __init__(self, episode_length):
@@ -26,17 +27,17 @@ class DataLogger:
 
         self.entry = []
 
-        self.entry.append({"Episode": self.episode_count,
-                           "Time": time,
-                           "Observation": obs,
-                           "Action": action,
-                           "Reward": reward,
-                           "Cashflow": cashflow,
-                           "Penalties": penalty,
-                           "Grid overloading": grid,
-                           "SOC violation": soc_v,
-                           "Degradation": degradation,
-                           "Charging energy": charge_log,
-                           "SOH": soh})
+        self.entry.append({"Episode": copy.deepcopy(self.episode_count),
+                           "Time": copy.deepcopy(time),
+                           "Observation": copy.deepcopy(obs),
+                           "Action": copy.deepcopy(action),
+                           "Reward": copy.deepcopy(reward),
+                           "Cashflow": copy.deepcopy(cashflow),
+                           "Penalties": copy.deepcopy(penalty),
+                           "Grid overloading": copy.deepcopy(grid),
+                           "SOC violation": copy.deepcopy(soc_v),
+                           "Degradation": copy.deepcopy(degradation),
+                           "Charging energy": copy.deepcopy(charge_log),
+                           "SOH": copy.deepcopy(soh)})
 
         self.log = pd.concat((self.log, pd.DataFrame(self.entry)), axis=0)

@@ -6,18 +6,19 @@ from FleetRL.fleet_env.fleet_environment import FleetEnv
 # from FleetRL.utils.prices import load_prices
 
 env = FleetEnv(include_pv=True,
+               schedule_name="5_ct.csv",
                include_building=True,
                include_price=True,
                normalize_in_env=False,
                aux=True,
                calculate_degradation=True,
                log_data=True,
-               episode_length=48,
-               time_picker="random",
+               episode_length=72,
+               time_picker="static",
                )
 
 env.reset()
-steps = 48*4
+steps = 72*4
 for i in range(steps):
     action = []
     # print(env.step([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
@@ -25,7 +26,7 @@ for i in range(steps):
     for j in range(env.num_cars):
         if env.episode.done:
             env.reset()
-        action.append(1)
+        action.append(-1)
 
     print(env.step(action))
 

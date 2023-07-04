@@ -21,7 +21,7 @@ class Episode:
         self.next_soc_deg: list = None # Next State of charge for SoH calcs
         self.old_soc: list = None  # Previous soc, used to compute battery degradation
         self.old_soc_deg: list = None # Old State of charge for SoH calcs
-        self.soh: np.ndarray = None
+        self.soh: np.ndarray = None  # state of health per car
         self.hours_left: list[float] = None  # Hours left at the charger
         self.price: list[float] = None  # Price in €/kWh
         self.done: bool = None  # Episode done or not

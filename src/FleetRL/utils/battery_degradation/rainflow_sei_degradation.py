@@ -1,11 +1,12 @@
 import rainflow
 import numpy as np
+import pandas as pd
 
-from FleetRL.utils.battery_degradation.batt_deg import NewBatteryDegradation
+from FleetRL.utils.battery_degradation.batt_deg import BatteryDegradation
 from FleetRL.fleet_env.config.time_config import TimeConfig
 
 
-class NewRainflowSeiDegradation(NewBatteryDegradation):
+class RainflowSeiDegradation(BatteryDegradation):
 
     def __init__(self, init_soh: float, num_cars: int):
 
@@ -45,8 +46,11 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
         # rainflow list counter to check when to calculate next degradation
         self.rainflow_length = np.ones(self.num_cars)
 
-        # Accumulated function value for fd
-        self.fd: np.array = np.zeros(self.num_cars)
+        # Accumulated function value for fd for cycles
+        self.fd_cyc: np.array = np.zeros(self.num_cars)
+
+        # fd value for calendar aging, is overwritten every iteration
+        self.fd_cal: np.array = np.zeros(self.num_cars)
 
         # Absolute capacity reduction of the last cycle
         self.degradation = np.zeros(self.num_cars)
@@ -68,13 +72,11 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
                                                            * self.stress_soc(avg_soc)
                                                            * self.stress_temp(temp))
 
-    def deg_rate_total(self, dod, avg_soc, temp, t): return (self.deg_rate_cycle(dod, avg_soc, temp)
-                                                             + self.deg_rate_calendar(t, avg_soc, temp))
+    def l_with_sei(self, fd): return (1 - self.alpha_sei * np.e ** (-self.beta_sei * fd)
+                                  - (1 - self.alpha_sei) * np.e ** (-fd))
 
-    def l_with_sei(self, car): return (1 - self.alpha_sei * np.e ** (-1 * self.beta_sei * self.fd[car])
-                                  - (1 - self.alpha_sei) * np.e ** (-1 * self.fd[car]))
-
-    def l_without_sei(self, l, car): return 1 - (1 - l) * np.e ** (-1 * self.fd[car])
+    @staticmethod
+    def l_without_sei(self, l, fd): return 1 - (1 - l) * np.e ** (-fd)
 
     def calculate_degradation(self, soc_log: list, charging_power: float, time_conf: TimeConfig, temp: float) -> np.array:
 
@@ -89,6 +91,8 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
             # range(len(soc_log)) gives the number of time steps that the cars go through
             sorted_soc_list.append([soc_log[i][j] for i in range(len(soc_log))])
 
+        np.clip(sorted_soc_list, 0, 1)
+
         # this is 0 in the beginning and then gets updated with the new degradation due to the current time step
         self.degradation = np.zeros(len(sorted_soc_list))
 
@@ -100,32 +104,37 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
         # len(sorted_soc_list) gives the number of cars
         for i in range(self.num_cars):
 
-            # empty list, then fill it with the results of rainflow and check if it got longer
-            rainflow_result = []
+            rainflow_result = pd.DataFrame(columns=['Range', 'Mean', 'Count', 'Start', 'End'])
 
-            # execute rainflow counting algorithm
-            for rng, mean, count, i_start, i_end in rainflow.extract_cycles(sorted_soc_list[i]):
-                rainflow_result.append([rng, mean, count, i_start, i_end])
+            for rng, mean, count, i_start, i_end in rainflow.extract_cycles(np.tile(sorted_soc_list[i], 1)):
+                new_row = pd.DataFrame(
+                    {'Range': [rng], 'Mean': [mean], 'Count': [count], 'Start': [i_start], 'End': [i_end]})
+                rainflow_result = pd.concat([rainflow_result, new_row], ignore_index=True)
+
+            # battery age in seconds for calendar aging
+            battery_age = np.max(rainflow_result["End"]) * time_conf.dt * 3600
+            # mean soc over the lifetime for calendar aging
+            mean_soc_cal = rainflow_result["Mean"].mean()
 
             # check if a new entry appeared in the results of the rainflow counting
             if len(rainflow_result) > self.rainflow_length[i]:
 
                 # calculate degradation of the 2nd last rainflow entry (the most recent might still change)
-                last_complete_entry = rainflow_result[-2]
+                last_complete_entry = rainflow_result.iloc[-2]
 
                 # dod is equal to the range
-                dod = last_complete_entry[0]
+                dod = last_complete_entry["Range"]
 
                 # average soc is equal to the mean
-                avg_soc = last_complete_entry[1]
+                avg_soc = last_complete_entry["Mean"]
 
                 # severity is equal to count: either 0.5 or 1.0
-                degradation_severity = last_complete_entry[2]
+                degradation_severity = last_complete_entry["Count"]
 
                 # self.deg_rate_total becomes negative for DoD > 1
                 # the two checks below count how many times dod is adjusted and in severe cases stops the code
 
-                if (dod > 2) and (degradation_severity == 0.5):
+                if (dod > 2) and degradation_severity == 0.5:
                     self.adj_counter += 1
                     print("Minor adjustment made to DoD for degradation calculation.")
 
@@ -135,15 +144,13 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
                     raise TypeError("DoD too large.")
 
                 # half or full cycle, max of 1
-                effective_dod = min([1, dod * degradation_severity])
-
-                # time of the cycle
-                t = (last_complete_entry[4] - last_complete_entry[3]) * time_conf.dt * 3600
+                effective_dod = np.clip(dod * degradation_severity, 0, 1)
 
                 # check if new battery, otherwise ignore sei film formation
                 if self.init_soh == 1.0:
-                    self.fd[i] += self.deg_rate_total(effective_dod, avg_soc, temp, t)
-                    new_l = self.l_with_sei(i)
+                    self.fd_cyc[i] += self.deg_rate_cycle(effective_dod, avg_soc, temp)
+                    self.fd_cal[i] = self.deg_rate_calendar(t=battery_age, avg_soc=mean_soc_cal, temp=temp)
+                    new_l = self.l_with_sei(self.fd_cyc[i] + self.fd_cal[i])
 
                     # check if l is negative, then something is wrong
                     if new_l < 0:
@@ -151,8 +158,9 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
 
                 # if battery used, sei film formation is done and can be ignored
                 else:
-                    self.fd[i] += self.deg_rate_total(effective_dod, avg_soc, temp, t)
-                    new_l = self.l_without_sei(self.l[i], i)
+                    self.fd_cyc[i] += self.deg_rate_cycle(effective_dod, avg_soc, temp)
+                    self.fd_cal[i] = self.deg_rate_calendar(t=battery_age, avg_soc=mean_soc_cal, temp=temp)
+                    new_l = self.l_without_sei(self.l[i], self.fd_cyc[i] + self.fd_cal[i])
 
                 # calculate degradation based on the change of l
                 self.degradation[i] = new_l - self.l[i]
@@ -167,14 +175,13 @@ class NewRainflowSeiDegradation(NewBatteryDegradation):
                 self.degradation[i] = 0
 
             if self.degradation[i] < 0:
-                raise TypeError("Degradation negative, might have to do with DoD > 1.")
+                print(f"Degradation was negative: {self.degradation[i]}."
+                      f"Recheck calcs if it happens often. ")
 
-        self.soh[i] -= self.degradation[i]
+            self.soh[i] -= self.degradation[i]
 
-        # check that the adding up of degradation is equivalent to the newest lifetime value calculated
-        if abs(self.soh[i] - (1 - self.l[i])) > 0.0001:
-            raise RuntimeError("Degradation calculation is not correct")
-
-        # print(f"sei soh: {self.soh}")
+            # check that the adding up of degradation is equivalent to the newest lifetime value calculated
+            if abs(self.soh[i] - (1 - self.l[i])) > 0.0001:
+                raise RuntimeError("Degradation calculation is not correct")
 
         return np.array(self.degradation)

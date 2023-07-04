@@ -24,13 +24,20 @@ class EvCharger:
         self.grid_injection_tariff = 0.07  # €/kWh for Jan 2023, average from 10kW, 40kW and 100 kW
         self.handling_fees = 0.25  # 25%
 
-    def charge(self, db: pd.DataFrame, num_cars: int, actions, episode: Episode,
+    def charge(self,
+               db: pd.DataFrame,
+               num_cars: int,
+               actions,
+               episode: Episode,
                load_calculation: LoadCalculation,
-               ev_conf: EvConfig, time_conf: TimeConfig, score_conf: ScoreConfig, print_updates: bool, target_soc: list):
+               ev_conf: EvConfig,
+               time_conf: TimeConfig,
+               score_conf: ScoreConfig,
+               print_updates: bool,
+               target_soc: list):
 
         """
         :param db: The schedule database of the EVs
-        :param spot_price: Spot price information
         :param num_cars: Number of cars in the model
         :param actions: Actions taken by the agent
         :param episode: Episode object with its parameters and functions
@@ -38,8 +45,8 @@ class EvCharger:
         :param ev_conf: Config of the EVs
         :param time_conf: Time configuration
         :param score_conf: Score and penalty configuration
-        :param print_updates:
-        :param target_soc:
+        :param print_updates: Bool whether to print statements or not (maybe lower fps)
+        :param target_soc: target soc for each car
         :return: soc, next soc, the reward and the monetary value (cashflow)
         """
 
@@ -49,9 +56,11 @@ class EvCharger:
         episode.discharging_revenue = 0
         episode.total_charging_energy = 0
 
+        # reset penalty counters
         invalid_action_penalty = 0
         overcharging_penalty = 0
 
+        # reset energy values and log
         charge_log = np.ndarray(0)
         charging_energy = 0.0
         discharging_energy = 0.0
@@ -59,7 +68,7 @@ class EvCharger:
         # go through the cars and calculate the actual deliverable power based on action and constraints
         for car in range(num_cars):
 
-            # variable to check if car is plugged in
+            # variable to check if car is plugged in or not
             there = db.loc[(db["ID"] == car) & (db["date"] == episode.time), "There"].values[0]
 
             # max possible power in kW depends on the onboard charger equipment and the charging station
@@ -122,7 +131,7 @@ class EvCharger:
                 ev_total_energy_left = -1 * episode.soc[car] * episode.battery_cap[car]  # amount of energy left in the battery in kWh
                 demanded_discharge = possible_power * actions[car] * time_conf.dt  # demanded discharge in kWh by agent
 
-                # energy drawdown from battery bigger than what is left in the battery
+                # energy discharge command bigger than what is left in the battery
                 if (demanded_discharge * ev_conf.discharging_eff < ev_total_energy_left) and (there != 0):
                     current_oc_pen = score_conf.penalty_overcharging * (ev_total_energy_left - demanded_discharge) ** 2
                     overcharging_penalty += current_oc_pen
@@ -131,7 +140,7 @@ class EvCharger:
 
                 # if the car is there get the actual discharging energy
                 if there == 1:
-                    discharging_energy = max(ev_total_energy_left / ev_conf.discharging_eff, demanded_discharge)  # max because values are negative, kWh
+                    discharging_energy = max(ev_total_energy_left, demanded_discharge)  # max because values are negative, kWh
 
                 # car is not there, discharging energy is 0
                 else:
@@ -143,16 +152,16 @@ class EvCharger:
                         if print_updates:
                             print(f"Invalid action, penalty given: {round(current_inv_pen, 3)}.")
 
-                # calculate next soc, which will decrease, efficiency is taken into account below
+                # calculate next soc
+                # efficiency not taken into account here -> but you get out less (see below)
                 episode.next_soc.append(episode.soc[car] + discharging_energy / episode.battery_cap[car])
 
                 # Discharged energy renumerated at PV feed-in minus 30%
+                # Efficiency taken into account here
                 episode.discharging_revenue += (-1 * discharging_energy
                                                 * ev_conf.discharging_eff
                                                 * self.grid_injection_tariff
                                                 * (1-self.handling_fees))  # €
-
-                # print(f"discharging revenue: {discharging_revenue.values[0]}")
 
                 # save the total charging energy in a self variable
                 episode.total_charging_energy += discharging_energy
@@ -160,8 +169,15 @@ class EvCharger:
             else:
                 raise TypeError("The parsed action value was not recognised")
 
-            # append total charging energy of the car to the charge log, used in post processing
+            # append total charging energy of the car to the charge log, used in post-processing
             charge_log = np.append(charge_log, charging_energy + discharging_energy)
+
+            # Throw an error if SOC is actually negative
+            if (np.round(episode.soc[car], 5) < 0) or (np.round(episode.soc[car], 5) > 1):
+                raise TypeError("SOC negative")
+
+            # Round off numeric inaccuracies (values in the range -1.0e-16 can happen otherwise and cause errors)
+            np.clip(episode.soc, 0, 1)
 
         # calculate net cashflow based on cost and revenue
         cashflow = -1 * episode.charging_cost + episode.discharging_revenue
