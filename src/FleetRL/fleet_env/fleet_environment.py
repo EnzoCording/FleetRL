@@ -51,7 +51,14 @@ class FleetEnv(gym.Env):
     Base-derived class architecture is implemented wherever needed, and the code is structured in
     a modular manner to enable improvements, or changes in the model.
 
-    Only publicly available data has been used to implement this model.
+    Only publicly available data or own-generated data has been used to implement this model.
+
+    The agent only sees information coming from the chargers: SOC, how long the vehicle is still plugged in, etc.
+    However, this framework matches the number of chargers with the number of cars to reduce complexity in modelling.
+    If more cars than chargers should be modelled, an allocation algorithm is necessary.
+    What is more, battery degradation is modelled in this environment. In this case, the information of the car is
+    required (instead of the charger). Modelling is facilitated by matching cars and chargers one-to-one.
+    Therefore, throughout the code, car and ev_charger might be used interchangeably as indices.
 
     Parameters for __init__():
     :param schedule_name: String to specify file name of schedule
@@ -60,7 +67,7 @@ class FleetEnv(gym.Env):
     :param include_building: Flag to include building or not
     :param include_pv: Flag to include pv or not
     :param include_price: Flag to include price or not
-    :param time_picker: Specify whether to pick time static, random or eval (train vs validation set)
+    :param time_picker: Specify whether to pick time "static", "random" or "eval" (train vs validation set)
     :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
     :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
     :param deg_emp: Flag to use empirical degradation. Default False
@@ -108,7 +115,7 @@ class FleetEnv(gym.Env):
         :param include_building: Flag to include building or not
         :param include_pv: Flag to include pv or not
         :param include_price: Flag to include price or not
-        :param time_picker: Choose between picking same date, random from training set or random from validation set
+        :param time_picker: Specify whether to pick time "static", "random" or "eval" (train vs validation set)
         :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
         :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
         :param deg_emp: Flag to use empirical degradation. Default False

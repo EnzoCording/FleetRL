@@ -16,14 +16,14 @@ class LoadCalculation:
         if company_type == CompanyType.Delivery:
             evse_power = 11
             grid_connection = max(max_load*1.1, max_load + 0.5*num_cars*evse_power)
-            batt_cap = 60  # evito
+            batt_cap = 60  # e-vito
 
         elif company_type == CompanyType.Utility:
             evse_power = 22  # charger cap in kW
             grid_connection = max(max_load*1.1, max_load + 0.5*num_cars*evse_power)
             if num_cars > 1:
                 grid_connection = 1000
-            batt_cap = 50  # e berlingo
+            batt_cap = 50  # e-berlingo
 
         elif company_type == CompanyType.Caretaker:
             evse_power = 4.6  # charger cap in kW
@@ -52,7 +52,6 @@ class LoadCalculation:
                                                                                                    self.num_cars)
 
     def check_violation(self, actions: list[float], there: list[int], building_load: float, pv: float) -> (bool, float):
-        # grid connection - building load - total ev + pv >= 0
-        # TODO: double check that this makes sense from a component point of view
-        capacity_left = min(self.grid_connection - building_load - sum(actions) * self.evse_max_power + pv, 0.0)
-        return capacity_left < 0, capacity_left
+        # check if overloaded and by how much
+        overload_amount = abs(min(self.grid_connection - building_load - sum(actions) * self.evse_max_power + pv, 0.0))
+        return overload_amount > 0, overload_amount

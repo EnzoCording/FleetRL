@@ -7,9 +7,7 @@ class DataLogger:
         self.log: pd.DataFrame = pd.DataFrame()
         self.entry = None
         self.episode_count: int = 1
-        self.episode_length = episode_length
-        # column names depending on the env state
-        # obs - soc, time left, etc.
+        self.episode_length = episode_length  # counter if several episodes are evaluated
 
     def log_data(self, time: pd.Timestamp,
                  obs: np.ndarray,
@@ -27,6 +25,7 @@ class DataLogger:
 
         self.entry = []
 
+        #  deepcopy to avoid mutable variables in log
         self.entry.append({"Episode": copy.deepcopy(self.episode_count),
                            "Time": copy.deepcopy(time),
                            "Observation": copy.deepcopy(obs),
