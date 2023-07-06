@@ -1,6 +1,7 @@
 import os
 import gymnasium as gym
 import numpy as np
+import pandas as pd
 from typing import Literal
 import copy
 
@@ -105,7 +106,12 @@ class FleetEnv(gym.Env):
                  verbose: bool = 1,
                  normalize_in_env=True,
                  use_case: Literal["ct", "ut", "lmd"] = "lmd",
-                 aux=False
+                 aux=False,
+                 gen_schedule: bool = False,
+                 gen_start_date = None,
+                 gen_end_date = None,
+                 gen_name: str = None,
+                 gen_n_evs: int = None
                  ):
 
         """
@@ -141,7 +147,7 @@ class FleetEnv(gym.Env):
 
         # EV schedule database
         # generating own schedules or importing them
-        self.generate_schedule = False
+        self.generate_schedule = gen_schedule
         self.schedule_name = schedule_name
 
         # Spot price database
@@ -171,12 +177,24 @@ class FleetEnv(gym.Env):
 
         # adjust this if schedules need to be generated
         if self.generate_schedule:
-            self.schedule_gen = ScheduleGenerator(file_comment="one_year_15_min_delivery",
-                                                  schedule_dir=self.path_name,
-                                                  schedule_type=self.schedule_type,
-                                                  ending_date="30/12/2023")
-            self.schedule_gen.generate_schedule()
-            self.schedule_name = self.schedule_gen.get_file_name()
+            gen_sched = []
+            print("Generating schedules... This may take a while.")
+            for i in gen_n_evs:
+                self.schedule_gen = ScheduleGenerator(file_comment=gen_name,
+                                                      schedule_dir=self.path_name,
+                                                      schedule_type=self.schedule_type,
+                                                      starting_date=gen_start_date,
+                                                      ending_date=gen_end_date,
+                                                      vehicle_id=i,
+                                                      seed=i,
+                                                      save_schedule=False)
+                gen_sched.append(self.schedule_gen.generate_schedule())
+            complete_schedule = pd.concat(gen_sched)
+            if not gen_name.endswith(".csv"):
+                gen_name = gen_name + ".csv"
+            complete_schedule.to_csv(gen_name)
+            print(f"Schedule generation complete. File name: {gen_name}")
+            self.schedule_name = gen_name
 
         # Setting flags for the type of environment to build
         # NOTE: observations are appended to the db in the order specified here

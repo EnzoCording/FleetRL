@@ -14,7 +14,7 @@ from FleetRL.fleet_env.fleet_environment import FleetEnv
 if __name__ == "__main__":
 
     # define parameters here for easier change
-    n_steps = 8600
+    n_steps = 240
     n_episodes = 1
     n_evs = 5
     n_envs = 1
@@ -24,9 +24,9 @@ if __name__ == "__main__":
                                 n_envs=n_envs,
                                 vec_env_cls=SubprocVecEnv,
                                 env_kwargs={
-                                    "schedule_name": "ct_sched_5_eval.csv",
-                                    "building_name": "load_ct.csv",
-                                    "use_case": "ct",
+                                    "schedule_name": "ut_sched_5_eval.csv",
+                                    "building_name": "load_ut.csv",
+                                    "use_case": "ut",
                                     "include_building": True,
                                     "include_pv": True,
                                     "time_picker": "static",
@@ -54,9 +54,9 @@ if __name__ == "__main__":
                                 n_envs=n_envs,
                                 vec_env_cls=SubprocVecEnv,
                                 env_kwargs={
-                                    "schedule_name": "ct_sched_5_eval.csv",
-                                    "building_name": "load_ct.csv",
-                                    "use_case": "ct",
+                                    "schedule_name": "ut_sched_5_eval.csv",
+                                    "building_name": "load_ut.csv",
+                                    "use_case": "ut",
                                     "include_building": True,
                                     "include_pv": True,
                                     "time_picker": "static",
@@ -81,8 +81,8 @@ if __name__ == "__main__":
                                      clip_reward=10.0)
 
     # %%
-    model = TD3.load("./../trained/CT_5cars_TD3_jun26/980000.zip")
-
+    eval_norm_vec_env.load(load_path="./../trained_agents/TD3/5/UT/ut_5cars_jul5/vec_normalize-td3_new_5cars_UT_cont_on_new_env.pkl", venv=eval_norm_vec_env)
+    model = TD3.load("./../trained_agents/TD3/5/UT/ut_5cars_jul5/td3-fleet_td3_new_5cars_UT_cont_on_new_env.zip", eval_norm_vec_env)
     len = len(model.observation_space.low)
     model.observation_space.low = np.full(len, -np.inf)
     model.observation_space.high = np.full(len, np.inf)
