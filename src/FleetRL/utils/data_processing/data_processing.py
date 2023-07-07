@@ -65,7 +65,9 @@ class DataLoader:
             self.db = pd.concat([self.schedule, self.spot_price["DELU"], self.pv["pv"]], axis=1)
 
         elif building_flag and pv_flag:
-            self.db = pd.concat([self.schedule, self.spot_price["DELU"], self.building_load["load"],
+            self.db = pd.concat([self.schedule,
+                                 self.spot_price["DELU"],
+                                 self.building_load["load"],
                                  self.pv["pv"]], axis=1)
 
         else:

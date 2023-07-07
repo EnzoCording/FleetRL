@@ -89,6 +89,7 @@ class FleetEnv(gym.Env):
                  pv_name: str = None,
                  schedule_name: str = "lmd_sched_single.csv",
                  building_name: str = "load_lmd.csv",
+                 price_name: str = "spot_2020_new.csv",
                  include_building: bool = False,
                  include_pv: bool = False,
                  include_price: bool = True,
@@ -151,7 +152,7 @@ class FleetEnv(gym.Env):
         self.schedule_name = schedule_name
 
         # Spot price database
-        self.spot_name = 'spot_2020_new.csv'
+        self.spot_name = price_name
 
         # Building load database
         self.building_name = building_name
