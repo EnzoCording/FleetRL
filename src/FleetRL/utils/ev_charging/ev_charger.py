@@ -21,7 +21,6 @@ class EvCharger:
         # If energy is injected to the grid, it can be treated like solar feed-in from households
         # https://echtsolar.de/einspeiseverguetung/#t-1677761733663
         # Fees for handling of 25% are assumed
-        self.grid_injection_tariff = ev_conf.feed_in_tariff / 1000  # €/kWh, for 2023 from EEG law
         self.handling_fees = ev_conf.feed_in_deduction  # %
 
     def charge(self,
@@ -159,9 +158,12 @@ class EvCharger:
 
                 # Discharged energy renumerated at PV feed-in minus 30%
                 # Efficiency taken into account here
+
+                current_tariff = db.loc[db["date"] == episode.time, "tariff"].values[0]
+
                 episode.discharging_revenue += (-1 * discharging_energy
                                                 * ev_conf.discharging_eff
-                                                * self.grid_injection_tariff
+                                                * current_tariff / 1000
                                                 * (1-self.handling_fees))  # €
 
                 # save the total charging energy in a self variable

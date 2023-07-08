@@ -86,10 +86,12 @@ class FleetEnv(gym.Env):
     """
 
     def __init__(self,
+                 use_case: Literal["ct", "ut", "lmd"],
+                 schedule_name: str,
+                 building_name: str,
+                 price_name: str,
+                 tariff_name: str,
                  pv_name: str = None,
-                 schedule_name: str = "lmd_sched_single.csv",
-                 building_name: str = "load_lmd.csv",
-                 price_name: str = "spot_2020_new.csv",
                  include_building: bool = True,
                  include_pv: bool = True,
                  include_price: bool = True,
@@ -101,18 +103,21 @@ class FleetEnv(gym.Env):
                  ignore_overloading_penalty=False,
                  ignore_invalid_penalty=False,
                  ignore_overcharging_penalty=False,
-                 episode_length: int = 24,
-                 log_data: bool = False,
-                 calculate_degradation: bool = False,
+                 episode_length: int = 48,
+                 log_data: bool = True,
+                 calculate_degradation: bool = True,
                  verbose: bool = 1,
-                 normalize_in_env=True,
-                 use_case: Literal["ct", "ut", "lmd"] = "lmd",
-                 aux=False,
+                 normalize_in_env=False,
+                 aux=True,
                  gen_schedule: bool = False,
                  gen_start_date = None,
                  gen_end_date = None,
                  gen_name: str = None,
-                 gen_n_evs: int = None
+                 gen_n_evs: int = None,
+                 spot_markup: float=None,
+                 spot_mul: float=None,
+                 feed_in_ded: float=None,
+                 feed_in_tariff: float=None
                  ):
 
         """
@@ -151,8 +156,9 @@ class FleetEnv(gym.Env):
         self.generate_schedule = gen_schedule
         self.schedule_name = schedule_name
 
-        # Spot price database
+        # Price databases
         self.spot_name = price_name
+        self.tariff_name = tariff_name
 
         # Building load database
         self.building_name = building_name
@@ -211,6 +217,15 @@ class FleetEnv(gym.Env):
         self.time_conf = TimeConfig()
         self.ev_conf = EvConfig()
         self.score_conf = ScoreConfig()
+
+        if spot_markup is not None:
+            self.ev_conf.fixed_markup = spot_markup
+        if spot_mul is not None:
+            self.ev_conf.variable_multiplier = spot_mul
+        if feed_in_ded is not None:
+            self.ev_conf.feed_in_deduction = feed_in_ded
+        if feed_in_tariff is not None:
+            self.ev_conf.feed_in_tariff = feed_in_tariff
 
         # Changing parameters, if specified
         self.time_conf.episode_length = episode_length
@@ -288,7 +303,8 @@ class FleetEnv(gym.Env):
 
         # Loading the inputs
         self.data_loader: DataLoader = DataLoader(self.path_name, self.schedule_name,
-                                                  self.spot_name, self.building_name, self.pv_name,
+                                                  self.spot_name, self.tariff_name,
+                                                  self.building_name, self.pv_name,
                                                   self.time_conf, self.ev_conf, self.ev_conf.target_soc,
                                                   self.include_building_load, self.include_pv
                                                   )
@@ -345,16 +361,7 @@ class FleetEnv(gym.Env):
                                                                  ev_conf=self.ev_conf,
                                                                  load_calc=self.load_calculation)
         else:
-            self.normalizer: Normalization = UnitNormalization(self.db,
-                                                               self.num_cars,
-                                                               self.time_conf.price_lookahead,
-                                                               self.time_conf.bl_pv_lookahead,
-                                                               self.include_building_load,
-                                                               self.include_pv,
-                                                               self.include_price,
-                                                               aux=self.aux_flag,
-                                                               ev_conf=self.ev_conf,
-                                                               load_calc=self.load_calculation)
+            self.normalizer: Normalization = UnitNormalization()
 
         '''
         # set boundaries of the observation space, detects if normalized or not.
@@ -494,6 +501,7 @@ class FleetEnv(gym.Env):
         self.episode.hours_left = obs[1]
         if self.include_price:
             self.episode.price = obs[2]
+            self.episode.tariff = obs[3]
 
         ''' if time is insufficient due to unfavourable start date (for example loading an empty car with 15 min
         time left), soc is set in such a way that the agent always has a chance to fulfil the objective'''
@@ -526,6 +534,7 @@ class FleetEnv(gym.Env):
         obs[1] = self.episode.hours_left
         if self.include_price:
             obs[2] = self.episode.price
+            obs[3] = self.episode.tariff
 
         # Parse observation to normalization module
         norm_obs = self.normalizer.normalize_obs(obs)
@@ -621,6 +630,8 @@ class FleetEnv(gym.Env):
         if self.include_price:
             next_obs_price = next_obs[2]
             self.episode.price = next_obs_price
+            next_obs_tariff = next_obs[3]
+            self.episode.tariff = next_obs_tariff
 
         # go through the stations and check whether the same car is still there, no car, or a new arrival
         for car in range(self.num_cars):
@@ -729,6 +740,7 @@ class FleetEnv(gym.Env):
         next_obs[1] = self.episode.hours_left
         if self.include_price:
             next_obs[2] = self.episode.price
+            next_obs[3] = self.episode.tariff
         norm_next_obs = self.normalizer.normalize_obs(next_obs)
 
         # Log soc for battery degradation
@@ -778,9 +790,10 @@ class FleetEnv(gym.Env):
     def print(self, action):
         print(f"Timestep: {self.episode.time}")
         if self.include_price:
-            print(f"Price: {self.episode.price[0] / 1000} €/kWh")
+            print(f"Total price with fees: {np.round(self.episode.price[0] / 1000, 3)} €/kWh")
             current_spot = self.db.loc[self.db["date"]==self.episode.time, "DELU"].values[0]
-            print(f"Spot: {current_spot}")
+            print(f"Spot: {np.round(current_spot/1000, 3)} €/kWh")
+            print(f"Tariff: {self.episode.tariff[0] / 1000} €/kWh")
         print(f"SOC: {np.round(self.episode.soc, 3)}, Time left: {self.episode.hours_left} hours")
         print(f"Action taken: {np.round(action, 3)}")
         print(f"Actual charging energy: {round(self.episode.total_charging_energy, 3)} kWh")

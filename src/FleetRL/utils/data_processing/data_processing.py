@@ -12,7 +12,9 @@ from FleetRL.fleet_env.config.time_config import TimeConfig
 
 class DataLoader:
 
-    def __init__(self, path_name, schedule_name, spot_name, building_name, pv_name,
+    def __init__(self, path_name, schedule_name,
+                 spot_name, tariff_name,
+                 building_name, pv_name,
                  time_conf: TimeConfig, ev_conf: EvConfig,
                  target_soc, building_flag, pv_flag):
 
@@ -48,6 +50,7 @@ class DataLoader:
                                                 )
 
         self.spot_price = DataLoader.load_prices(path_name, spot_name, self.date_range)
+        self.tariff = DataLoader.load_feed_in(path_name, tariff_name, self.date_range)
 
         if building_flag:
             self.building_load = DataLoader.load_building_load(path_name, building_name, self.date_range)
@@ -56,17 +59,26 @@ class DataLoader:
             self.pv = DataLoader.load_pv(path_name, pv_name, self.date_range)
 
         if not building_flag and not pv_flag:
-            self.db = pd.concat([self.schedule, self.spot_price["DELU"]], axis=1)
+            self.db = pd.concat([self.schedule,
+                                 self.spot_price["DELU"],
+                                 self.tariff["tariff"]], axis=1)
 
         elif building_flag and not pv_flag:
-            self.db = pd.concat([self.schedule, self.spot_price["DELU"], self.building_load["load"]], axis=1)
+            self.db = pd.concat([self.schedule,
+                                 self.spot_price["DELU"],
+                                 self.tariff["tariff"],
+                                 self.building_load["load"]], axis=1)
 
         elif not building_flag and pv_flag:
-            self.db = pd.concat([self.schedule, self.spot_price["DELU"], self.pv["pv"]], axis=1)
+            self.db = pd.concat([self.schedule,
+                                 self.spot_price["DELU"],
+                                 self.tariff["tariff"],
+                                 self.pv["pv"]], axis=1)
 
         elif building_flag and pv_flag:
             self.db = pd.concat([self.schedule,
                                  self.spot_price["DELU"],
+                                 self.tariff["tariff"],
                                  self.building_load["load"],
                                  self.pv["pv"]], axis=1)
 
@@ -227,6 +239,20 @@ class DataLoader:
 
         # return the spot price at the right granularity
         return spot_price
+
+    @staticmethod
+    def load_feed_in(path_name, tariff_name, date_range):
+        # load csv
+        df = pd.read_csv(path_name + tariff_name, delimiter=";", decimal=",", parse_dates=["date"])
+
+        tariff = pd.merge_asof(date_range,
+                                   df.sort_values("date"),
+                                   on="date",
+                                   direction="backward"
+                                   )
+
+        # return the tariff at the right granularity
+        return tariff
 
     @staticmethod
     def load_building_load(path_name, file_name, date_range):

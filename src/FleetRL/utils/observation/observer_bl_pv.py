@@ -38,7 +38,8 @@ class ObserverWithBoth(Observer):
         hours_left = db.loc[(db['date'] == time), 'time_left'].values
 
         # variables to hold observation data
-        price=pd.DataFrame()
+        price = pd.DataFrame()
+        tariff = pd.DataFrame()
         building_load = pd.DataFrame()
         pv = pd.DataFrame()
 
@@ -49,10 +50,14 @@ class ObserverWithBoth(Observer):
         # get data of price and date from the specific indices
         price["DELU"] = db["DELU"][price_start: price_end]
         price["date"] = db["date"][price_start: price_end]
+        tariff["tariff"] = db["tariff"][price_start: price_end]
+        tariff["date"] = db["date"][price_start: price_end]
         # resample data to only include one value per hour (the others are duplicates)
         price = price.resample("H", on="date").first()["DELU"].values
+        tariff = tariff.resample("H", on="date").first()["tariff"].values
         # only take into account the current value, and the specified hours of lookahead
         price = np.multiply(np.add(price[0:price_lookahead+1], ev_conf.fixed_markup), ev_conf.variable_multiplier)
+        tariff = np.multiply(tariff[0:price_lookahead+1], 1-ev_conf.feed_in_deduction)
 
         bl_start = np.where(db["date"] == time)[0][0]
         bl_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead+2, 'h')))[0][0]
@@ -91,11 +96,11 @@ class ObserverWithBoth(Observer):
         ###
 
         if aux:
-            return [soc, hours_left, price, building_load, pv,
+            return [soc, hours_left, price, tariff, building_load, pv,
                     there, target_soc, charging_left, hours_needed, laxity,
                     evse_power, grid_cap, avail_grid_cap, possible_avg_action_per_car]
         else:
-            return [soc, hours_left, price, building_load, pv]
+            return [soc, hours_left, price, tariff, building_load, pv]
 
     @staticmethod
     def get_trip_len(db: pd.DataFrame, car: int, time: pd.Timestamp) -> float:

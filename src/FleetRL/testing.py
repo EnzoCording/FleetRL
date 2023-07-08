@@ -27,7 +27,9 @@ env_args = {"include_pv": True,
 
 env = FleetEnv(log_data=True, include_pv=True, schedule_name="lmd_sched_single.csv",
                use_case="lmd", normalize_in_env=False, aux=True, calculate_degradation=True,
-               time_picker="static", episode_length=24, include_building=True)
+               time_picker="static", episode_length=24, include_building=True,
+               building_name="load_lmd.csv", price_name="spot_2021_new.csv", tariff_name="spot_2021_new_tariff.csv",
+               spot_markup=0, spot_mul=1, feed_in_ded=0.1)
 
 '''
 env = make_vec_env(FleetEnv, env_kwargs=env_args)
