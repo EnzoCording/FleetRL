@@ -189,7 +189,7 @@ class EvCharger:
         cashflow = -1 * episode.charging_cost + episode.discharging_revenue
 
         # reward is a function of cashflow and penalties
-        reward = (score_conf.price_multiplier * cashflow) + invalid_action_penalty + overcharging_penalty
+        reward = (score_conf.price_multiplier * (cashflow**score_conf.price_exponent)) + invalid_action_penalty + overcharging_penalty
 
         # return soc, next soc and the value of reward (remove the index)
         return episode.soc, episode.next_soc, float(reward), float(cashflow), charge_log
