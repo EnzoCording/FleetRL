@@ -10,19 +10,19 @@ from FleetRL.utils.load_calculation.load_calculation import LoadCalculation
 
 class EvCharger:
 
-    def __init__(self):
+    def __init__(self, ev_conf: EvConfig):
         # Price analysis: https://www.bdew.de/media/documents/230215_BDEW-Strompreisanalyse_Februar_2023_15.02.2023.pdf
         # Average spot price for 2020 was ~3.2 ct/kWh and ~4 ct/kWh if looking at peak times only
         # --> 50% are fees --> spot price is multiplied by factor of 1.5 and offset by +1
         # this accounts for fees even when prices are negative or zero, but also scales with price levels
-        self.spot_multiplier = 1.5  # no unit
-        self.spot_offset = 0.01  # €/kWh
+        self.spot_multiplier = ev_conf.variable_multiplier  # no unit
+        self.spot_offset = ev_conf.fixed_markup / 1000  # from €/MWh to €/kWh
 
         # If energy is injected to the grid, it can be treated like solar feed-in from households
         # https://echtsolar.de/einspeiseverguetung/#t-1677761733663
         # Fees for handling of 25% are assumed
-        self.grid_injection_tariff = 0.07  # €/kWh for Jan 2023, average from 10kW, 40kW and 100 kW
-        self.handling_fees = 0.25  # 25%
+        self.grid_injection_tariff = ev_conf.feed_in_tariff / 1000  # €/kWh, for 2023 from EEG law
+        self.handling_fees = ev_conf.feed_in_deduction  # %
 
     def charge(self,
                db: pd.DataFrame,
@@ -82,6 +82,7 @@ class EvCharger:
                 # if the agent wants to charge more than the battery can hold
                 if demanded_charge * ev_conf.charging_eff > ev_total_energy_demand:
                     current_oc_pen = score_conf.penalty_overcharging * (demanded_charge - ev_total_energy_demand) ** 2
+                    current_oc_pen = max(current_oc_pen, score_conf.clip_overcharging)
                     overcharging_penalty += current_oc_pen
                     if print_updates:
                         print(f"Overcharged, penalty of: {current_oc_pen}")

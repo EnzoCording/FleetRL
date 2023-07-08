@@ -90,8 +90,8 @@ class FleetEnv(gym.Env):
                  schedule_name: str = "lmd_sched_single.csv",
                  building_name: str = "load_lmd.csv",
                  price_name: str = "spot_2020_new.csv",
-                 include_building: bool = False,
-                 include_pv: bool = False,
+                 include_building: bool = True,
+                 include_pv: bool = True,
                  include_price: bool = True,
                  time_picker: Literal["static", "random", "eval"] = "random",
                  target_soc: float = 0.85,
@@ -234,7 +234,7 @@ class FleetEnv(gym.Env):
         self.log_data = log_data
 
         # Class simulating EV charging
-        self.ev_charger: EvCharger = EvCharger()
+        self.ev_charger: EvCharger = EvCharger(self.ev_conf)
 
         # Load time picker module
         if time_picker == "static":
@@ -561,7 +561,7 @@ class FleetEnv(gym.Env):
         there = self.db["There"][self.db["date"] == self.episode.time].values  # plugged in y/n (before next time step)
 
         # parse the action to the charging function and receive the soc, next soc, reward and cashflow
-        self.episode.soc, self.episode.next_soc, reward, cashflow, charge_log = self.ev_charger.charge(
+        self.episode.soc, self.episode.next_soc, reward, cashflow, self.charge_log = self.ev_charger.charge(
             self.db, self.num_cars, actions, self.episode, self.load_calculation,
             self.ev_conf, self.time_conf, self.score_conf, self.print_updates, self.target_soc)
 
@@ -766,7 +766,7 @@ class FleetEnv(gym.Env):
                                       grid,
                                       soc_v,
                                       degradation,
-                                      charge_log,
+                                      self.charge_log,
                                       self.episode.soh)
 
         # return according to openAI gym core API
@@ -779,9 +779,12 @@ class FleetEnv(gym.Env):
         print(f"Timestep: {self.episode.time}")
         if self.include_price:
             print(f"Price: {self.episode.price[0] / 1000} €/kWh")
+            current_spot = self.db.loc[self.db["date"]==self.episode.time, "DELU"].values[0]
+            print(f"Spot: {current_spot}")
         print(f"SOC: {np.round(self.episode.soc, 3)}, Time left: {self.episode.hours_left} hours")
         print(f"Action taken: {np.round(action, 3)}")
         print(f"Actual charging energy: {round(self.episode.total_charging_energy, 3)} kWh")
+        print(f"Logging energy: {round(self.charge_log.sum(), 3)} kWh")
         print(f"Charging cost/revenue: {round(self.episode.current_charging_expense, 3)} €")
         print(f"SoH: {np.round(self.episode.soh, 3)}")
         print("--------------------------")

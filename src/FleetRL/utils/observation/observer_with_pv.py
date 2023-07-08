@@ -45,7 +45,7 @@ class ObserverWithPV(Observer):
         price["DELU"] = db["DELU"][price_start: price_end]
         price["date"] = db["date"][price_start: price_end]
         price = price.resample("H", on="date").first()["DELU"].values
-        price = price[0:price_lookahead+1]
+        price = np.multiply(np.add(price[0:price_lookahead+1], ev_conf.fixed_markup), ev_conf.variable_multiplier)
 
         pv_start = np.where(db["date"] == time)[0][0]
         pv_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead+2, 'h')))[0][0]

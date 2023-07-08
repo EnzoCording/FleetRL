@@ -10,3 +10,7 @@ class EvConfig:
         self.target_soc: float = 0.85  # Target soc when vehicle leaves
         self.target_soc_lunch = 0.65  # target soc after lunch break
         self.min_laxity: float = 2  # How much extra time the car should have at least: time left / time needed
+        self.fixed_markup: float = 10  # fixed cost added in €/MWh
+        self.variable_multiplier: float = 1.5  # variable cost multiplier to (spot + fix)
+        self.feed_in_tariff = 70  # €/MWh
+        self.feed_in_deduction = 0.25  # 25%

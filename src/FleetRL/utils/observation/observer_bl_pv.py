@@ -52,7 +52,7 @@ class ObserverWithBoth(Observer):
         # resample data to only include one value per hour (the others are duplicates)
         price = price.resample("H", on="date").first()["DELU"].values
         # only take into account the current value, and the specified hours of lookahead
-        price = price[0:price_lookahead+1]
+        price = np.multiply(np.add(price[0:price_lookahead+1], ev_conf.fixed_markup), ev_conf.variable_multiplier)
 
         bl_start = np.where(db["date"] == time)[0][0]
         bl_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead+2, 'h')))[0][0]

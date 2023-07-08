@@ -94,7 +94,9 @@ class Comparison:
         plt.legend(["SEI formation + Cycle counting", "Empirical linear degradation"])
         plt.xticks(range(11))
         plt.yticks([0.8, 0.85, 0.9, 0.95, 1.0])
-        plt.savefig("sei_emp_10.pdf")
+        plt.ylabel("State of Health")
+        plt.xlabel("Years")
+        plt.savefig("./src/FleetRL/Output_Files/Figures/sei_emp_10.pdf")
         plt.show()
 
     def rainflow_sei(self, soc_log):
