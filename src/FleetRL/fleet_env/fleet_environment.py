@@ -382,7 +382,7 @@ class FleetEnv(gym.Env):
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif not self.include_building_load and not self.include_pv:
-            dim = 2 * self.num_cars + self.time_conf.price_lookahead + 1
+            dim = 2 * self.num_cars + (self.time_conf.price_lookahead + 1) * 2
             if self.aux_flag:
                 dim += self.num_cars  # there
                 dim += self.num_cars  # target soc
@@ -394,7 +394,7 @@ class FleetEnv(gym.Env):
 
         elif self.include_building_load and not self.include_pv:
             dim = (2 * self.num_cars
-                   + self.time_conf.price_lookahead + 1
+                   + (self.time_conf.price_lookahead + 1) * 2
                    + self.time_conf.bl_pv_lookahead + 1
                    )
             if self.aux_flag:
@@ -411,7 +411,7 @@ class FleetEnv(gym.Env):
 
         elif not self.include_building_load and self.include_pv:
             dim = (2 * self.num_cars
-                   + self.time_conf.price_lookahead + 1
+                   + (self.time_conf.price_lookahead + 1) * 2
                    + self.time_conf.bl_pv_lookahead + 1
                    )
             if self.aux_flag:
@@ -425,7 +425,7 @@ class FleetEnv(gym.Env):
 
         elif self.include_building_load and self.include_pv:
             dim = (2 * self.num_cars
-                   + self.time_conf.price_lookahead + 1
+                   + (self.time_conf.price_lookahead + 1) * 2
                    + 2 * (self.time_conf.bl_pv_lookahead + 1)
                    )
             if self.aux_flag:
