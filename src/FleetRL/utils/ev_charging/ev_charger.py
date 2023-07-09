@@ -23,6 +23,8 @@ class EvCharger:
         # Fees for handling of 25% are assumed
         self.handling_fees = ev_conf.feed_in_deduction  # %
 
+
+
     def charge(self,
                db: pd.DataFrame,
                num_cars: int,
@@ -63,6 +65,9 @@ class EvCharger:
         charge_log = np.ndarray(0)
         charging_energy = 0.0
         discharging_energy = 0.0
+
+        charging_reward = 0.0
+        discharging_reward = 0.0
 
         # go through the cars and calculate the actual deliverable power based on action and constraints
         for car in range(num_cars):
@@ -125,6 +130,10 @@ class EvCharger:
                 # save the total charging energy in a variable
                 episode.total_charging_energy += charging_energy
 
+                charging_reward += (-1 * score_conf.price_multiplier
+                                   * db.loc[db["date"]==episode.time, "price_reward_curve"].values[0] / 1000
+                                   * grid_energy_demand)
+
             # car is discharging - v2g is currently modelled as energy arbitrage on the day ahead spot market
             elif actions[car] < 0:
                 # check how much energy is left in the battery and how much discharge is desired
@@ -169,6 +178,10 @@ class EvCharger:
                 # save the total charging energy in a self variable
                 episode.total_charging_energy += discharging_energy
 
+                discharging_reward += (-1 * score_conf.price_multiplier
+                                      * db.loc[db["date"]==episode.time, "tariff_reward_curve"].values[0] / 1000
+                                      * discharging_energy)
+
             else:
                 raise TypeError("The parsed action value was not recognised")
 
@@ -189,7 +202,7 @@ class EvCharger:
         cashflow = -1 * episode.charging_cost + episode.discharging_revenue
 
         # reward is a function of cashflow and penalties
-        reward = (score_conf.price_multiplier * (cashflow**score_conf.price_exponent)) + invalid_action_penalty + overcharging_penalty
+        reward = charging_reward + discharging_reward + invalid_action_penalty + overcharging_penalty
 
         # return soc, next soc and the value of reward (remove the index)
         return episode.soc, episode.next_soc, float(reward), float(cashflow), charge_log
