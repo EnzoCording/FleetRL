@@ -293,11 +293,11 @@ class DataLoader:
         # computing average for whole year, split data into monthly chunks
         # offset monthly chunks, such that the monthly average = annual average
         # this corrects for absolute price increases, but leaves fluctuations intact
-        price = db["DELU"]
+        price = db["DELU"].dropna()
         price = price.add(ev_conf.fixed_markup)
         price = price.mul(ev_conf.variable_multiplier)
         price_total_avg = price.mean()
-        price.index = db["date"]
+        price.index = db.loc[db["ID"]==0, "date"]
         resampled_price = price.resample("M")
         result = pd.DataFrame()
         for name, group in resampled_price:
@@ -308,10 +308,10 @@ class DataLoader:
         result = result.reset_index()
         db = pd.concat((db, result["price_reward_curve"]), axis=1)
 
-        tariff = db["tariff"]
+        tariff = db["tariff"].dropna()
         tariff = tariff.mul(1 - ev_conf.feed_in_deduction)
         tariff_total_avg = tariff.mean()
-        tariff.index = db["date"]
+        tariff.index = db.loc[db["ID"]==0, "date"]
         resampled_tariff = tariff.resample("M")
         result = pd.DataFrame()
         for name, group in resampled_tariff:
