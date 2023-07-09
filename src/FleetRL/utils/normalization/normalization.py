@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Normalization:
-    def normalize_obs(self, obs: list) -> np.ndarray:
+    def normalize_obs(self, obs: dict) -> np.ndarray:
         """
         Normalizes the values in an observation
 
