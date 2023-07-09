@@ -13,7 +13,7 @@ class ObserverWithBoth(Observer):
                 ev_conf: EvConfig,
                 load_calc: LoadCalculation,
                 aux: bool,
-                target_soc: list) -> list:
+                target_soc: list) -> dict:
 
         """
         :param db: Database from env
@@ -91,16 +91,43 @@ class ObserverWithBoth(Observer):
         num_cars = db["ID"].max() + 1
         possible_avg_action_per_car = min(avail_grid_cap / (num_cars * evse_power), 1) * np.ones(1)
 
-        #previous action
-        # [a1, ..., aN], sum, resulting power, building, pv, grid, total, penalty, total energy, price, reward
-        ###
+        month_sin = np.sin(2 * np.pi * time.month/12)
+        month_cos = np.cos(2 * np.pi * time.month/12)
+
+        week_sin = np.sin(2 * np.pi * time.weekday() / 6)
+        week_cos = np.cos(2 * np.pi * time.weekday() / 6)
+
+        hour_sin = np.sin(2 * np.pi * time.hour / 23)
+        hour_cos = np.cos(2 * np.pi * time.hour / 23)
+
+        obs = {
+            "soc": list(soc),
+            "hours_left": list(hours_left),
+            "price": list(price),
+            "tariff": list(tariff),
+            "building_load": list(building_load),
+            "pv": list(pv),
+            "there": list(there),
+            "target_soc": list(target_soc),
+            "charging_left": list(charging_left),
+            "hours_needed": list(hours_needed),
+            "laxity": list(laxity),
+            "evse_power": list(evse_power),
+            "grid_cap": list(grid_cap),
+            "avail_grid_cap": list(avail_grid_cap),
+            "possible_avg_action": list(possible_avg_action_per_car),
+            "month_sin": month_sin,
+            "month_cos": month_cos,
+            "week_sin": week_sin,
+            "week_cos": week_cos,
+            "hour_sin": hour_sin,
+            "hour_cos": hour_cos
+        }
 
         if aux:
-            return [soc, hours_left, price, tariff, building_load, pv,
-                    there, target_soc, charging_left, hours_needed, laxity,
-                    evse_power, grid_cap, avail_grid_cap, possible_avg_action_per_car]
+            return obs
         else:
-            return [soc, hours_left, price, tariff, building_load, pv]
+            return {key: obs[key] for key in ["soc", "hours_left", "price", "tariff", "building_load", "pv"]}
 
     @staticmethod
     def get_trip_len(db: pd.DataFrame, car: int, time: pd.Timestamp) -> float:

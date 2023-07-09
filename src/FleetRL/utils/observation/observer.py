@@ -12,7 +12,7 @@ class Observer:
                 ev_conf: EvConfig,
                 load_calc: LoadCalculation,
                 aux: bool,
-                target_soc: list) -> list:
+                target_soc: list) -> dict:
 
         """
         :param db: database from the env
@@ -36,4 +36,8 @@ class Observer:
         :param time: current timestamp
         :return: length of trip in hours as a float
         """
+        raise NotImplementedError("This is an abstract class")
+
+    @staticmethod
+    def flatten_obs(obs):
         raise NotImplementedError("This is an abstract class")
