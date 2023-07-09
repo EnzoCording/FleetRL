@@ -1,8 +1,8 @@
 class ScoreConfig:
 
     def __init__(self):
-        self.price_multiplier = 500
-        self.price_exponent = 3
+        self.price_multiplier = 2
+        self.price_exponent = 1
         self.penalty_soc_violation = -750
         self.clip_soc_violation = -1000
         self.penalty_overloading = -150
