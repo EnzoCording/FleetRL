@@ -60,29 +60,6 @@ class FleetEnv(gym.Env):
     What is more, battery degradation is modelled in this environment. In this case, the information of the car is
     required (instead of the charger). Modelling is facilitated by matching cars and chargers one-to-one.
     Therefore, throughout the code, car and ev_charger might be used interchangeably as indices.
-
-    Parameters for __init__():
-    :param schedule_name: String to specify file name of schedule
-    :param building_name: String to specify building load data, includes pv as well
-    :param pv_name: String to optionally specify own pv dataset
-    :param include_building: Flag to include building or not
-    :param include_pv: Flag to include pv or not
-    :param include_price: Flag to include price or not
-    :param time_picker: Specify whether to pick time "static", "random" or "eval" (train vs validation set)
-    :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
-    :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
-    :param deg_emp: Flag to use empirical degradation. Default False
-    :param ignore_price_reward: Flag to ignore price reward
-    :param ignore_overloading_penalty: Flag to ignore overloading penalty
-    :param ignore_invalid_penalty: Flag to ignore invalid action penalty
-    :param ignore_overcharging_penalty: Flag to ignore overcharging the battery penalty
-    :param episode_length: Length of episode in hours
-    :param log_data: Log SOC and SOH to csv files
-    :param calculate_degradation: Calculate degradation flag
-    :param verbose: Print statements
-    :param normalize_in_env: Conduct normalization in environment
-    :param use_case: String to specify the use-case
-    :param aux: Flag to include auxiliary information in the model
     """
 
     def __init__(self,
@@ -337,12 +314,15 @@ class FleetEnv(gym.Env):
         if self.load_calculation.batt_cap > 0:
             self.ev_conf.init_battery_cap = self.load_calculation.batt_cap
 
-        # choosing degradation methodology
+        # choosing degradation methodology: empirical linear or non-linear mathematical model
         if deg_emp:
-            self.new_emp_batt: BatteryDegradation = EmpiricalDegradation(self.initial_soh, self.num_cars)
+            self.emp_deg: BatteryDegradation = EmpiricalDegradation(self.initial_soh, self.num_cars)
         else:
-            self.new_battery_degradation: BatteryDegradation = RainflowSeiDegradation(self.initial_soh,
-                                                                                      self.num_cars)
+            self.sei_deg: BatteryDegradation = RainflowSeiDegradation(self.initial_soh, self.num_cars)
+
+        # de-trend prices to make them usable as agent rewards
+        if self.include_price:
+            self.db = DataLoader.shape_price_reward(self.db, self.ev_conf)
 
         '''
         # Normalizing observations (Oracle) or just concatenating (Unit)
@@ -371,7 +351,7 @@ class FleetEnv(gym.Env):
         '''
 
         if not self.include_price:
-            dim = 2 * self.num_cars
+            dim = 2 * self.num_cars  # soc and time left
             if self.aux_flag:
                 dim += self.num_cars  # there
                 dim += self.num_cars  # target soc
@@ -379,6 +359,7 @@ class FleetEnv(gym.Env):
                 dim += self.num_cars  # hours needed
                 dim += self.num_cars  # laxity
                 dim += 1  # evse power
+                dim += 6  # month, week, hour sin/cos
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif not self.include_building_load and not self.include_pv:
@@ -390,6 +371,7 @@ class FleetEnv(gym.Env):
                 dim += self.num_cars  # hours needed
                 dim += self.num_cars  # laxity
                 dim += 1  # evse power
+                dim += 6  # month, week, hour sin/cos
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif self.include_building_load and not self.include_pv:
@@ -407,6 +389,7 @@ class FleetEnv(gym.Env):
                 dim += 1  # grid cap
                 dim += 1  # avail grid cap for charging
                 dim += 1  # possible avg action per car
+                dim += 6  # month, week, hour sin/co
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif not self.include_building_load and self.include_pv:
@@ -421,12 +404,13 @@ class FleetEnv(gym.Env):
                 dim += self.num_cars  # hours needed
                 dim += self.num_cars  # laxity
                 dim += 1  # evse power
+                dim += 6  # month, week, hour sin/cos
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         elif self.include_building_load and self.include_pv:
-            dim = (2 * self.num_cars
-                   + (self.time_conf.price_lookahead + 1) * 2
-                   + 2 * (self.time_conf.bl_pv_lookahead + 1)
+            dim = (2 * self.num_cars  # soc and time left
+                   + (self.time_conf.price_lookahead + 1) * 2  # price and tariff
+                   + 2 * (self.time_conf.bl_pv_lookahead + 1)  # pv and building load
                    )
             if self.aux_flag:
                 dim += self.num_cars  # there
@@ -438,6 +422,7 @@ class FleetEnv(gym.Env):
                 dim += 1  # grid cap
                 dim += 1  # avail grid cap for charging
                 dim += 1  # possible avg action per car
+                dim += 6  # month, week, hour sin/cos
             low_obs, high_obs = self.normalizer.make_boundaries(dim)
 
         else:
@@ -497,11 +482,11 @@ class FleetEnv(gym.Env):
                                     target_soc=self.target_soc)
 
         # get the first soc and hours_left observation
-        self.episode.soc = obs[0]
-        self.episode.hours_left = obs[1]
+        self.episode.soc = obs["soc"]
+        self.episode.hours_left = obs["hours_left"]
         if self.include_price:
-            self.episode.price = obs[2]
-            self.episode.tariff = obs[3]
+            self.episode.price = obs["price"]
+            self.episode.tariff = obs["tariff"]
 
         ''' if time is insufficient due to unfavourable start date (for example loading an empty car with 15 min
         time left), soc is set in such a way that the agent always has a chance to fulfil the objective'''
@@ -530,11 +515,11 @@ class FleetEnv(gym.Env):
         self.episode.penalty_record = 0
 
         # rebuild the observation vector with modified values
-        obs[0] = self.episode.soc
-        obs[1] = self.episode.hours_left
+        obs["soc"] = self.episode.soc
+        obs["hours_left"] = self.episode.hours_left
         if self.include_price:
-            obs[2] = self.episode.price
-            obs[3] = self.episode.tariff
+            obs["price"] = self.episode.price
+            obs["tariff"] = self.episode.tariff
 
         # Parse observation to normalization module
         norm_obs = self.normalizer.normalize_obs(obs)
@@ -625,12 +610,12 @@ class FleetEnv(gym.Env):
                                          load_calc=self.load_calculation,
                                          aux=self.aux_flag,
                                          target_soc=self.target_soc)
-        next_obs_soc = next_obs[0]
-        next_obs_time_left = next_obs[1]
+        next_obs_soc = next_obs["soc"]
+        next_obs_time_left = next_obs["hours_left"]
         if self.include_price:
-            next_obs_price = next_obs[2]
+            next_obs_price = next_obs["price"]
             self.episode.price = next_obs_price
-            next_obs_tariff = next_obs[3]
+            next_obs_tariff = next_obs["tariff"]
             self.episode.tariff = next_obs_tariff
 
         # go through the stations and check whether the same car is still there, no car, or a new arrival
@@ -736,11 +721,13 @@ class FleetEnv(gym.Env):
             print("---------")
             print("\n")
 
-        next_obs[0] = self.episode.soc
-        next_obs[1] = self.episode.hours_left
+        next_obs["soc"] = self.episode.soc
+        next_obs["hours_left"] = self.episode.hours_left
         if self.include_price:
-            next_obs[2] = self.episode.price
-            next_obs[3] = self.episode.tariff
+            next_obs["price"] = self.episode.price
+            next_obs["tariff"] = self.episode.tariff
+
+        # normalize next observation
         norm_next_obs = self.normalizer.normalize_obs(next_obs)
 
         # Log soc for battery degradation
@@ -754,11 +741,11 @@ class FleetEnv(gym.Env):
 
         # Calculate degradation and state of health based on chosen method
         # calculate degradation once per day
-        if (self.calc_deg) and ((self.episode.time.hour == 14) and (self.episode.time.minute == 45)):
-            degradation = self.new_battery_degradation.calculate_degradation(self.deg_data_logger.soc_log,
-                                                                             self.load_calculation.evse_max_power,
-                                                                             self.time_conf,
-                                                                             self.ev_conf.temperature)
+        if self.calc_deg and ((self.episode.time.hour == 14) and (self.episode.time.minute == 45)):
+            degradation = self.sei_deg.calculate_degradation(self.deg_data_logger.soc_log,
+                                                             self.load_calculation.evse_max_power,
+                                                             self.time_conf,
+                                                             self.ev_conf.temperature)
             # calculate SOH from current degradation
             self.episode.soh = np.subtract(self.episode.soh, degradation)
             # calculate new resulting battery capacity after degradation
