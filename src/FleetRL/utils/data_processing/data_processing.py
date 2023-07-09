@@ -283,3 +283,44 @@ class DataLoader:
 
         # return pv generation
         return pv
+
+    @staticmethod
+    def shape_price_reward(db: pd.DataFrame, ev_conf: EvConfig):
+
+        # de-trend prices, so they can be used as a reward function
+        # agent should not be penalised more if the general price level is higher
+        # instead, the agent should just focus on price fluctuations and exploit them
+        # computing average for whole year, split data into monthly chunks
+        # offset monthly chunks, such that the monthly average = annual average
+        # this corrects for absolute price increases, but leaves fluctuations intact
+        price = db["DELU"]
+        price = price.add(ev_conf.fixed_markup)
+        price = price.mul(ev_conf.variable_multiplier)
+        price_total_avg = price.mean()
+        price.index = db["date"]
+        resampled_price = price.resample("M")
+        result = pd.DataFrame()
+        for name, group in resampled_price:
+            chunk_avg = group.mean()
+            offset_prices = group - chunk_avg + price_total_avg
+            result = pd.concat([result, offset_prices])
+        result.columns=["price_reward_curve"]
+        result = result.reset_index()
+        db = pd.concat((db, result["price_reward_curve"]), axis=1)
+
+        tariff = db["tariff"]
+        tariff = tariff.mul(1 - ev_conf.feed_in_deduction)
+        tariff_total_avg = tariff.mean()
+        tariff.index = db["date"]
+        resampled_tariff = tariff.resample("M")
+        result = pd.DataFrame()
+        for name, group in resampled_tariff:
+            chunk_avg = group.mean()
+            offset_tariff = group - chunk_avg + tariff_total_avg
+            result = pd.concat([result, offset_tariff])
+        result.columns=["tariff_reward_curve"]
+        result = result.reset_index()
+        db = pd.concat((db, result["tariff_reward_curve"]), axis=1)
+
+        return db
+
