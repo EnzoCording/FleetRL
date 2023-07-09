@@ -1,7 +1,7 @@
 from FleetRL.fleet_env.fleet_environment import FleetEnv
 
-env = FleetEnv(schedule_name="lmd_sched_single",
-               building_name="load_lmd",
+env = FleetEnv(schedule_name="lmd_sched_single.csv",
+               building_name="load_lmd.csv",
                use_case="lmd",
                price_name="spot_2021_new.csv",
                tariff_name="spot_2021_new.csv",
@@ -17,8 +17,8 @@ env = FleetEnv(schedule_name="lmd_sched_single",
                feed_in_ded=0
                )
 
-env_args = {"schedule_name": "lmd_sched_single",
-            "building_name": "load_lmd",
+env_args = {"schedule_name": "lmd_sched_single.csv",
+            "building_name": "load_lmd.csv",
             "price_name": "spot_2021_new.csv",
             "tariff_name": "spot_2021_new_tariff.csv",
             "use_case": "lmd",
