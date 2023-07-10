@@ -167,7 +167,9 @@ src/FleetRL/agents/RL/Models/*
 ./trained/*
 src/FleetRL/agents/RL/hyperparameter_tuning/tb_log/*
 src/FleetRL/agents/RL/hyperparameter_tuning/tb_log_hp/*
-src/FleetRL/agents/RL/agent_training/trained/*
+src/FleetRL/agents/RL/agent_training/tmp/*
+src/FleetRL/agents/RL/agent_training/misc_models/*
+src/FleetRL/agents/RL/trained_agents/*
 src/FleetRL/agents/RL/agent_training/tblog/*
 src/FleetRL/agents/RL/agent_training/tb_log/*
 src/FleetRL/agents/RL/agent_training/tb_log_hp/*
