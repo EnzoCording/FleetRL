@@ -157,6 +157,9 @@ class ScheduleGenerator:
                                    self.sc.consumption_min])
                 # Clipping to max
                 cons_rating = min([cons_rating, self.sc.consumption_max])
+                # Clipping such that the maximum amount of energy per trip is not exceeded
+                cons_rating = min([cons_rating, self.sc.total_cons_clip / total_distance])
+
                 ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = (total_distance / trip_steps) * cons_rating
 
                 # set relevant entries
@@ -305,6 +308,8 @@ class ScheduleGenerator:
                                    self.sc.consumption_min])
                 # Clipping to max
                 cons_rating = min([cons_rating, self.sc.consumption_max])
+                # Clipping such that the maximum amount of energy per trip is not exceeded
+                cons_rating = min([cons_rating, self.sc.total_cons_clip / total_distance])
                 ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = (total_distance / first_trip_steps) * cons_rating
 
                 # set relevant entries
@@ -323,6 +328,8 @@ class ScheduleGenerator:
                                    self.sc.consumption_min])
                 # Clipping to max
                 cons_rating = min([cons_rating, self.sc.consumption_max])
+                # Clipping such that the maximum amount of energy per trip is not exceeded
+                cons_rating = min([cons_rating, self.sc.total_cons_clip_afternoon / total_distance])
                 ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = (total_distance / second_trip_steps) * cons_rating
 
                 # set relevant entries
@@ -359,6 +366,8 @@ class ScheduleGenerator:
                                            self.sc.consumption_min])
                         # Clipping to max
                         cons_rating = min([cons_rating, self.sc.consumption_max])
+                        # Clipping such that the maximum amount of energy per trip is not exceeded
+                        cons_rating = min([cons_rating, self.sc.total_cons_clip / total_distance])
                         ev_schedule.loc[ev_schedule[
                                             "date"] == step, "Consumption_kWh"] = (total_distance / trip_steps) * cons_rating
 
@@ -499,6 +508,8 @@ class ScheduleGenerator:
                                    self.sc.consumption_min])
                 # Clipping to max
                 cons_rating = min([cons_rating, self.sc.consumption_max])
+                # Clipping such that the maximum amount of energy per trip is not exceeded
+                cons_rating = min([cons_rating, self.sc.total_cons_clip / total_distance])
                 ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = (total_distance / trip_steps) * cons_rating
 
                 # set relevant entries

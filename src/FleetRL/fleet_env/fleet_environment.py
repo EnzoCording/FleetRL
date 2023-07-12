@@ -124,6 +124,21 @@ class FleetEnv(gym.Env):
         # call __init__() of parent class to ensure inheritance chain
         super().__init__()
 
+        # Loading configs
+        self.time_conf = TimeConfig()
+        self.ev_conf = EvConfig()
+        self.score_conf = ScoreConfig()
+
+        # Setting flags for the type of environment to build
+        # NOTE: observations are appended to the db in the order specified here
+        self.include_price = include_price
+        self.include_building_load = include_building
+        self.include_pv = include_pv
+        self.aux_flag = aux  # include auxiliary information
+
+        # conduct normalization of observations
+        self.normalize_in_env = normalize_in_env
+
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs
         self.path_name = os.path.dirname(__file__) + '/../Final_Inputs/'
@@ -150,12 +165,15 @@ class FleetEnv(gym.Env):
         if use_case == "ct":
             self.company = CompanyType.Caretaker
             self.schedule_type = ScheduleType.Caretaker
+            self.ev_conf.init_battery_cap = 16.7
         elif use_case == "ut":
             self.company = CompanyType.Utility
             self.schedule_type = ScheduleType.Utility
+            self.ev_conf.init_battery_cap = 50.0
         elif use_case == "lmd":
             self.company = CompanyType.Delivery
             self.schedule_type = ScheduleType.Delivery
+            self.ev_conf.init_battery_cap = 60.0
         else:
             raise TypeError("Company not recognised.")
 
@@ -180,21 +198,7 @@ class FleetEnv(gym.Env):
             print(f"Schedule generation complete. File name: {gen_name}")
             self.schedule_name = gen_name
 
-        # Setting flags for the type of environment to build
-        # NOTE: observations are appended to the db in the order specified here
-        self.include_price = include_price
-        self.include_building_load = include_building
-        self.include_pv = include_pv
-        self.aux_flag = aux  # include auxiliary information
-
-        # conduct normalization of observations
-        self.normalize_in_env = normalize_in_env
-
-        # Loading configs
-        self.time_conf = TimeConfig()
-        self.ev_conf = EvConfig()
-        self.score_conf = ScoreConfig()
-
+        # Changing markups if specified
         if spot_markup is not None:
             self.ev_conf.fixed_markup = spot_markup
         if spot_mul is not None:
@@ -289,6 +293,15 @@ class FleetEnv(gym.Env):
         # get the total database
         self.db = self.data_loader.db
 
+        # make an adjustment for caretakers: the afternoon tour SOC on arrival should be calculated with the
+        # afternoon target SOC. This is set to 0.65 in this case
+        if use_case == "ct":
+            afternoon_trips = self.db.loc[(self.db["date"].dt.hour > 15) & (self.db["date"].dt.hour < 23)]
+            self.db.loc[(self.db["date"].dt.hour > 15) &
+                        (self.db["date"].dt.hour < 23), "SOC_on_return"] = (self.ev_conf.target_soc_lunch
+                                                                            - afternoon_trips["last_trip_total_consumption"].div(self.ev_conf.init_battery_cap))
+            self.db.loc[self.db["There"] == 0, "SOC_on_return"] = 0
+
         # first ID is 0
         self.num_cars = self.db["ID"].max() + 1
 
@@ -309,10 +322,6 @@ class FleetEnv(gym.Env):
 
         # Instantiate load calculation with the necessary information
         self.load_calculation = LoadCalculation(self.company, num_cars=self.num_cars, max_load=max_load)
-
-        # Overwrite battery capacity in ev config with use-case-specific value
-        if self.load_calculation.batt_cap > 0:
-            self.ev_conf.init_battery_cap = self.load_calculation.batt_cap
 
         # choosing degradation methodology: empirical linear or non-linear mathematical model
         if deg_emp:

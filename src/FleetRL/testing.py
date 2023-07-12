@@ -27,7 +27,7 @@ env_args = {"include_pv": True,
 
 env = FleetEnv(log_data=True,
                include_pv=True,
-               schedule_name="ct_sched_single.csv",
+               schedule_name="5_ct.csv",
                use_case="ct",
                normalize_in_env=False,
                aux=True, 

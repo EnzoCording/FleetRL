@@ -31,6 +31,7 @@ class ScheduleConfig:
             self.consumption_std = 0.167463672468669  # Standard deviation of consumption in kWh/km
             self.consumption_min = 0.0994  # Minimum value of consumption, used as a floor for consumption levels
             self.consumption_max = 0.453  # Maximum consumption, ceiling of consumption levels
+            self.total_cons_clip = 50  # max kWh that a trip can use
 
             self.min_dep = 3
             self.max_dep = 11
@@ -65,20 +66,22 @@ class ScheduleConfig:
 
             self.prob_emergency = 0.02
 
-            self.avg_distance_wd = 60  # mean distance travelled weekday
+            self.avg_distance_wd = 30  # mean distance travelled weekday
             self.dev_distance_wd = 10  # std deviation distance weekday
-            self.avg_distance_we = 30  # mean distance weekend
-            self.dev_distance_we = 20
-            self.min_distance = 20
-            self.max_distance = 80
+            self.avg_distance_we = 15  # mean distance weekend
+            self.dev_distance_we = 15
+            self.min_distance = 5
+            self.max_distance = 50
             self.avg_distance_em = 15
-            self.dev_distance_em = 15
+            self.dev_distance_em = 5
             self.min_em_distance = 5
 
             self.consumption_mean = 0.17  # Average consumption in kWh/km of Smart EQ
             self.consumption_std = 0.167463672468669  # Standard deviation of consumption in kWh/km
             self.consumption_min = 0.0994  # Minimum value of consumption, used as a floor for consumption levels
             self.consumption_max = 0.453  # Maximum consumption, ceiling of consumption levels
+            self.total_cons_clip = 13.5  # max kWh that a trip can use
+            self.total_cons_clip_afternoon = 10  # max kWh a trip can use in the afternoon
 
             self.charging_power = 4.7  # kW
 
@@ -109,6 +112,7 @@ class ScheduleConfig:
             self.consumption_std = 0.167463672468669  # Standard deviation of consumption in kWh/km
             self.consumption_min = 0.0994  # Minimum value of consumption, used as a floor for consumption levels
             self.consumption_max = 0.453  # Maximum consumption, ceiling of consumption levels
+            self.total_cons_clip = 41  # max kWh that a trip can use
 
             self.charging_power = 22  # kW
 
