@@ -101,9 +101,9 @@ class ScheduleConfig:
             self.max_return_hour = 23  # Return hour must be smaller or equal to this value
             self.min_return = 12  # Return hour must be bigger or equal to this value
 
-            self.avg_distance_wd = 40  # mean distance travelled weekday
+            self.avg_distance_wd = 120  # mean distance travelled weekday
             self.dev_distance_wd = 30  # std deviation distance weekday
-            self.avg_distance_we = 30  # mean distance weekend
+            self.avg_distance_we = 80  # mean distance weekend
             self.dev_distance_we = 25
             self.min_distance = 20
             self.max_distance = 220
