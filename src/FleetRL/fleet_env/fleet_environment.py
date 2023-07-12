@@ -296,10 +296,14 @@ class FleetEnv(gym.Env):
         # make an adjustment for caretakers: the afternoon tour SOC on arrival should be calculated with the
         # afternoon target SOC. This is set to 0.65 in this case
         if use_case == "ct":
-            afternoon_trips = self.db.loc[((self.db["date"].dt.hour >= 0) & (self.db["date"].dt.hour <= 10)) | ((self.db["date"].dt.hour >= 15) & (self.db["date"].dt.hour <= 23))]
-            self.db.loc[(self.db["date"].dt.hour > 15) &
-                        (self.db["date"].dt.hour < 23), "SOC_on_return"] = (self.ev_conf.target_soc_lunch
-                                                                            - afternoon_trips["last_trip_total_consumption"].div(self.ev_conf.init_battery_cap))
+            afternoon_trips = self.db.loc[((self.db["date"].dt.hour >= 0) & (self.db["date"].dt.hour <= 10))
+                                          | ((self.db["date"].dt.hour >= 15) & (self.db["date"].dt.hour <= 23))]
+
+            self.db.loc[((self.db["date"].dt.hour >= 0) & (self.db["date"].dt.hour <= 10))
+                        | ((self.db["date"].dt.hour >= 15) & (self.db["date"].dt.hour <= 23)), "SOC_on_return"]\
+                = (self.ev_conf.target_soc_lunch
+                   - afternoon_trips["last_trip_total_consumption"].div(self.ev_conf.init_battery_cap))
+
             self.db.loc[self.db["There"] == 0, "SOC_on_return"] = 0
 
         # first ID is 0
