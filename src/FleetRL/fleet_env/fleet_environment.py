@@ -94,12 +94,7 @@ class FleetEnv(gym.Env):
                  spot_markup: float=None,
                  spot_mul: float=None,
                  feed_in_ded: float=None,
-                 feed_in_tariff: float=None,
-                 rew_price_mul: float = None,
-                 rew_soc_v_mul: float = None,
-                 rew_soc_v_clip: float = None,
-                 rew_overload_mul: float = None,
-                 rew_overload_clip: float = None,
+                 feed_in_tariff: float=None
                  ):
 
         """
@@ -212,21 +207,10 @@ class FleetEnv(gym.Env):
             self.ev_conf.feed_in_deduction = feed_in_ded
         if feed_in_tariff is not None:
             self.ev_conf.feed_in_tariff = feed_in_tariff
-        if rew_price_mul is not None:
-            self.score_conf.price_multiplier = rew_price_mul
-            assert (rew_price_mul > 0)
-        if rew_soc_v_mul is not None:
-            self.score_conf.penalty_soc_violation = rew_soc_v_mul
-            assert (rew_soc_v_mul < 0)
-        if rew_soc_v_clip is not None:
-            self.score_conf.clip_soc_violation = rew_soc_v_clip
-            assert (rew_soc_v_clip < 0)
-        if rew_overload_mul is not None:
-            self.score_conf.penalty_overloading = rew_overload_mul
-            assert (rew_overload_mul < 0)
-        if rew_overload_clip is not None:
-            self.score_conf.clip_overloading = rew_overload_clip
-            assert (rew_overload_clip < 0)
+
+        # scaling price conf with battery capacity. Each use-case has different battery sizes, so a full charge
+        # would have different penalty ranges with different battery capacities. Normalized to LMD (60 kWh)
+        self.score_conf.price_multiplier = self.score_conf.price_multiplier * (60.0 / self.ev_conf.init_battery_cap)
 
         # Changing parameters, if specified
         self.time_conf.episode_length = episode_length
