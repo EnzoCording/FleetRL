@@ -1,12 +1,12 @@
 class ScoreConfig:
 
     def __init__(self):
-        self.price_multiplier = 15
+        self.price_multiplier = 4
         self.price_exponent = 1
-        self.penalty_soc_violation = -2500
-        self.clip_soc_violation = -1500
-        self.penalty_overloading = -4000
-        self.clip_overloading = -1000
+        self.penalty_soc_violation = -750
+        self.clip_soc_violation = -1000
+        self.penalty_overloading = -150
+        self.clip_overloading = -700
         # in cold weather trafo can operate >100%
         # TODO give overcharging/underloading penalty not only when the car departs, but
         # also in realtime when the battery dips below or goes above the healthy range

@@ -94,7 +94,12 @@ class FleetEnv(gym.Env):
                  spot_markup: float=None,
                  spot_mul: float=None,
                  feed_in_ded: float=None,
-                 feed_in_tariff: float=None
+                 feed_in_tariff: float=None,
+                 rew_price_mul: float = None,
+                 rew_soc_v_mul: float = None,
+                 rew_soc_v_clip: float = None,
+                 rew_overload_mul: float = None,
+                 rew_overload_clip: float = None,
                  ):
 
         """
@@ -207,6 +212,21 @@ class FleetEnv(gym.Env):
             self.ev_conf.feed_in_deduction = feed_in_ded
         if feed_in_tariff is not None:
             self.ev_conf.feed_in_tariff = feed_in_tariff
+        if rew_price_mul is not None:
+            self.score_conf.price_multiplier = rew_price_mul
+            assert (rew_price_mul > 0)
+        if rew_soc_v_mul is not None:
+            self.score_conf.penalty_soc_violation = rew_soc_v_mul
+            assert (rew_soc_v_mul < 0)
+        if rew_soc_v_clip is not None:
+            self.score_conf.clip_soc_violation = rew_soc_v_clip
+            assert (rew_soc_v_clip < 0)
+        if rew_overload_mul is not None:
+            self.score_conf.penalty_overloading = rew_overload_mul
+            assert (rew_overload_mul < 0)
+        if rew_overload_clip is not None:
+            self.score_conf.clip_overloading = rew_overload_clip
+            assert (rew_overload_clip < 0)
 
         # Changing parameters, if specified
         self.time_conf.episode_length = episode_length
@@ -603,7 +623,7 @@ class FleetEnv(gym.Env):
         # percentage of trafo overloading is squared and multiplied by a scaling factor, clipped to max value
         if overloaded_flag:
             overload_penalty = (self.score_conf.penalty_overloading
-                                * (((overload_amount / self.load_calculation.grid_connection) - 1) ** 2))
+                                * ((overload_amount / self.load_calculation.grid_connection) ** 2))
             overload_penalty = max(overload_penalty, self.score_conf.clip_overloading)
             reward += overload_penalty
             self.episode.penalty_record += overload_penalty
