@@ -603,7 +603,7 @@ class FleetEnv(gym.Env):
         # percentage of trafo overloading is squared and multiplied by a scaling factor, clipped to max value
         if overloaded_flag:
             overload_penalty = (self.score_conf.penalty_overloading
-                                * ((overload_amount / self.load_calculation.grid_connection) ** 2))
+                                * (((overload_amount / self.load_calculation.grid_connection) - 1) ** 2))
             overload_penalty = max(overload_penalty, self.score_conf.clip_overloading)
             reward += overload_penalty
             self.episode.penalty_record += overload_penalty
