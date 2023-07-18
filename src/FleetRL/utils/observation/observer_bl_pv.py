@@ -101,22 +101,22 @@ class ObserverWithBoth(Observer):
         hour_cos = np.cos(2 * np.pi * time.hour / 23)
 
         obs = {
-            "soc": list(soc),
-            "hours_left": list(hours_left),
-            "price": list(price),
-            "tariff": list(tariff),
-            "building_load": list(building_load),
-            "pv": list(pv),
-            "there": list(there),
-            "target_soc": list(target_soc),
-            "charging_left": list(charging_left),
-            "hours_needed": list(hours_needed),
-            "laxity": list(laxity),
-            "evse_power": list(evse_power),
-            "grid_cap": list(grid_cap),
-            "avail_grid_cap": list(avail_grid_cap),
-            "possible_avg_action": list(possible_avg_action_per_car),
-            "month_sin": month_sin,
+            "soc": list(soc),  # state of charge
+            "hours_left": list(hours_left),  # hours left at the charger
+            "price": list(price),  # price for charging
+            "tariff": list(tariff),  # price received when discharging
+            "building_load": list(building_load),  # building load in kW
+            "pv": list(pv),  # pv power in kW
+            "there": list(there),  # boolean, is the car i there or not
+            "target_soc": list(target_soc),  # target soc of car i
+            "charging_left": list(charging_left),  # charging % left
+            "hours_needed": list(hours_needed),  # hours needed to get to target soc
+            "laxity": list(laxity),  # laxity factor
+            "evse_power": list(evse_power),  # evse power in kW
+            "grid_cap": list(grid_cap),  # grid capacity
+            "avail_grid_cap": list(avail_grid_cap),  # available grid capacity
+            "possible_avg_action": list(possible_avg_action_per_car),  # possible avg action without overloading
+            "month_sin": month_sin,  # month in sin, and so on
             "month_cos": month_cos,
             "week_sin": week_sin,
             "week_cos": week_cos,

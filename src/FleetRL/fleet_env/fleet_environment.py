@@ -604,11 +604,13 @@ class FleetEnv(gym.Env):
         overloaded_flag, overload_amount = self.load_calculation.check_violation(corrected_actions,
                                                                                  self.db,
                                                                                  current_load, current_pv)
+        relative_loading = overload_amount / self.load_calculation.grid_connection + 1
         # percentage of trafo overloading is squared and multiplied by a scaling factor, clipped to max value
         if overloaded_flag:
-            overload_penalty = (self.score_conf.penalty_overloading
-                                * ((overload_amount / self.load_calculation.grid_connection) ** 2))
-            overload_penalty = max(overload_penalty, self.score_conf.clip_overloading)
+            # overload_penalty = (self.score_conf.penalty_overloading
+            #                     * ((overload_amount / self.load_calculation.grid_connection) ** 2))
+            # overload_penalty = max(overload_penalty, self.score_conf.clip_overloading)
+            overload_penalty = self.score_conf.overloading_penalty(relative_loading)
             reward += overload_penalty
             self.episode.penalty_record += overload_penalty
             if self.print_updates:
@@ -651,40 +653,50 @@ class FleetEnv(gym.Env):
                             # penalty for not fulfilling charging requirement, square difference, scale and clip
                             soc_missing = self.ev_conf.target_soc_lunch - self.episode.soc[car]
                             cum_soc_missing += soc_missing
-                            current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
-                            current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
+                            #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
+                            #current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
+                            current_soc_pen = self.score_conf.soc_violation_penalty(soc_missing)
                             reward += current_soc_pen
                             self.episode.penalty_record += current_soc_pen
                             if self.print_updates:
                                 print(f"A car left the station without reaching the target SoC."
                                       f" Penalty: {round(current_soc_pen, 3)}")
 
+                        else: reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
+
                     # caretaker, other operation times, check for violation
                     elif self.target_soc[car] - self.episode.soc[car] > self.eps:
                         # penalty for not fulfilling charging requirement, square difference, scale and clip
                         soc_missing = self.target_soc[car] - self.episode.soc[car]
                         cum_soc_missing += soc_missing
-                        current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
-                        current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
+                        #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
+                        #current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
+                        current_soc_pen = self.score_conf.soc_violation_penalty(soc_missing)
                         reward += current_soc_pen
                         self.episode.penalty_record += current_soc_pen
                         if self.print_updates:
                             print(f"A car left the station without reaching the target SoC."
                                   f" Penalty: {round(current_soc_pen, 3)}")
-                
+
+                    else:
+                        reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
 
                 # other companies: if charging requirement wasn't met (with some tolerance eps)
                 elif self.target_soc[car] - self.episode.soc[car] > self.eps:
                     # penalty for not fulfilling charging requirement, square difference, scale and clip
                     soc_missing = self.target_soc[car] - self.episode.soc[car]
                     cum_soc_missing += soc_missing
-                    current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
-                    current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
+                    #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
+                    #current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
+                    current_soc_pen = self.score_conf.soc_violation_penalty(soc_missing)
                     reward += current_soc_pen
                     self.episode.penalty_record += current_soc_pen
                     if self.print_updates:
                         print(f"A car left the station without reaching the target SoC."
                               f" Penalty: {round(current_soc_pen, 3)}")
+
+                else:
+                    reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
 
             # still charging
             if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
