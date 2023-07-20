@@ -838,3 +838,6 @@ class FleetEnv(gym.Env):
     def set_start_time(self, start_time: str):
         self.episode.start_time = start_time
         return None
+
+    def get_time(self):
+        return self.episode.time
