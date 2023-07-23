@@ -841,3 +841,15 @@ class FleetEnv(gym.Env):
 
     def get_time(self):
         return self.episode.time
+
+    def get_dist_factor(self):
+        obs = self.observer.get_obs(self.db,
+                                    self.time_conf.price_lookahead,
+                                    self.time_conf.bl_pv_lookahead,
+                                    self.episode.time,
+                                    ev_conf=self.ev_conf,
+                                    load_calc=self.load_calculation,
+                                    aux=self.aux_flag,
+                                    target_soc=self.target_soc)
+
+        return np.divide(obs["hours_needed"], np.add(obs["hours_left"], 0.001))

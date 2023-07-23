@@ -17,18 +17,18 @@ if __name__ == "__main__":
 
 
     # define parameters here for easier change
-    n_steps = 240
+    n_steps = 8600
     n_episodes = 1
     n_evs = 1
     n_envs = 1
     timesteps_per_hour = 4
-    use_case: str = "lmd"  # for file name
+    use_case: str = "ct"  # for file name
 
-    env_kwargs= {"schedule_name": "lmd_sched_single_eval.csv",
-                "building_name": "load_lmd.csv",
+    env_kwargs={"schedule_name": "ct_sched_single_eval.csv",
+                "building_name": "load_ct.csv",
                 "price_name": "spot_2021_new.csv",
                 "tariff_name": "spot_2021_new_tariff.csv",
-                "use_case": "lmd",
+                "use_case": "ct",
                 "include_building": True,
                 "include_pv": True,
                 "time_picker": "static",
@@ -101,6 +101,10 @@ if __name__ == "__main__":
         if night_norm_vec_env.env_method("is_done")[0]:
             night_norm_vec_env.reset()
         time: pd.Timestamp = night_norm_vec_env.env_method("get_time")[0]
+        if (use_case == "ct" and ((time.hour >= 11) and (time.hour <= 15))):
+            night_norm_vec_env.step(([np.clip(np.multiply(np.ones(n_evs), night_norm_vec_env.env_method("get_dist_factor")[0]),0,1)]))
+            continue
+        time: pd.Timestamp = night_norm_vec_env.env_method("get_time")[0]
         if (((charging_hour <= time.hour) and (charging_minute <= time.minute)) or (charging)):
             if not charging:
                 charging_start: pd.Timestamp = copy(time)
@@ -116,7 +120,7 @@ if __name__ == "__main__":
     night_log.reset_index(drop=True, inplace=True)
     night_log = night_log.iloc[0:-2]
 
-    # night_log.to_csv(f"log_dumb_{use_case}_{n_evs}.csv")
+    night_log.to_csv(f"log_night_{use_case}_{n_evs}.csv")
     real_power_night = []
     for i in range(night_log.__len__()):
         night_log.loc[i, "hour_id"] = (night_log.loc[i, "Time"].hour + night_log.loc[i, "Time"].minute / 60)
@@ -126,10 +130,10 @@ if __name__ == "__main__":
     for i in range(mean_per_hid_night.__len__()):
         mean_all_night.append(np.mean(mean_per_hid_night[i]))
 
-    mean = pd.DataFrame()
-    mean["Night charging"] = np.multiply(mean_all_night, 4)
+    mean_night = pd.DataFrame()
+    mean_night["Night charging"] = np.multiply(mean_all_night, 4)
 
-    mean.plot()
+    mean_night.plot()
 
     plt.xticks([0,8,16,24,32,40,48,56,64,72,80,88]
                ,["00:00","02:00","04:00","06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"],

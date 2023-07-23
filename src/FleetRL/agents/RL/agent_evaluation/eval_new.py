@@ -9,14 +9,13 @@ from stable_baselines3.common.vec_env import VecNormalize, SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
 from FleetRL.fleet_env.fleet_environment import FleetEnv
 
-# %%
-# wrap for multi-processing option
 if __name__ == "__main__":
-
+#if True:
     # define parameters here for easier change
-    n_steps = 2
+    n_steps = 480
+
     n_episodes = 1
-    n_evs = 5
+    n_evs = 1
     n_envs = 1
 
     # make env for the agent
@@ -24,11 +23,11 @@ if __name__ == "__main__":
                                 n_envs=n_envs,
                                 vec_env_cls=SubprocVecEnv,
                                 env_kwargs={
-                                    "schedule_name": "5_ut_eval.csv",
-                                    "building_name": "load_ut.csv",
+                                    "schedule_name": "lmd_sched_single_eval.csv",
+                                    "building_name": "load_lmd.csv",
                                     "price_name": "spot_2021_new.csv",
-                                    "tariff_name": "spot_2021_new_tariff.csv",
-                                    "use_case": "ut",
+                                    "tariff_name": "fixed_feed_in.csv",
+                                    "use_case": "lmd",
                                     "include_building": True,
                                     "include_pv": True,
                                     "time_picker": "static",
@@ -40,10 +39,13 @@ if __name__ == "__main__":
                                     "ignore_overloading_penalty": False,
                                     "episode_length": n_steps,
                                     "normalize_in_env": False,
-                                    "verbose": 0,
+                                    "verbose": True,
                                     "aux": True,
                                     "log_data": True,
-                                    "calculate_degradation": True
+                                    "calculate_degradation": True,
+                                    "spot_markup": 10,
+                                    "spot_mul": 1.5,
+                                    "feed_in_ded": 0.25
                                 })
     # %%
     eval_norm_vec_env = VecNormalize(venv=eval_vec_env,
@@ -56,26 +58,29 @@ if __name__ == "__main__":
                                 n_envs=n_envs,
                                 vec_env_cls=SubprocVecEnv,
                                 env_kwargs={
-                                    "schedule_name": "5_ut_eval.csv",
-                                    "building_name": "load_ut.csv",
+                                    "schedule_name": "lmd_sched_single_eval.csv",
+                                    "building_name": "load_lmd.csv",
                                     "price_name": "spot_2021_new.csv",
                                     "tariff_name": "spot_2021_new_tariff.csv",
-                                    "use_case": "ut",
+                                    "use_case": "lmd",
                                     "include_building": True,
                                     "include_pv": True,
                                     "time_picker": "static",
                                     "deg_emp": False,
                                     "include_price": True,
                                     "ignore_price_reward": False,
-                                    "ignore_invalid_penalty": False,
-                                    "ignore_overcharging_penalty": False,
+                                    "ignore_invalid_penalty": True,
+                                    "ignore_overcharging_penalty": True,
                                     "ignore_overloading_penalty": False,
                                     "episode_length": n_steps,
                                     "normalize_in_env": False,
                                     "verbose": 0,
                                     "aux": True,
                                     "log_data": True,
-                                    "calculate_degradation": True
+                                    "calculate_degradation": True,
+                                    "spot_markup": 10,
+                                    "spot_mul": 1.5,
+                                    "feed_in_ded": 0.25
                                 })
     # %%
     dumb_norm_vec_env = VecNormalize(venv=dumb_vec_env,
@@ -85,13 +90,13 @@ if __name__ == "__main__":
                                      clip_reward=10.0)
 
     # %%
-    eval_norm_vec_env.load(load_path="./../trained_agents/TD3/5/UT/ut_5cars_jul5/vec_normalize-td3_new_5cars_UT_cont_on_new_env.pkl", venv=eval_norm_vec_env)
-    model = TD3.load("./../trained_agents/TD3/5/UT/ut_5cars_jul5/td3-fleet_td3_new_5cars_UT_cont_on_new_env.zip", env = eval_norm_vec_env)
+    #eval_norm_vec_env.load(load_path="./../trained_agents/TD3/", venv=eval_norm_vec_env)
+    model = TD3.load(path="./../trained_agents/TD3/1/vast_jul19_16env_all/td3-fleet_LMD_2021_real_TD3.zip", env = eval_norm_vec_env)
 
-    len = len(model.observation_space.low)
-    model.observation_space.low = np.full(len, -np.inf)
-    model.observation_space.high = np.full(len, np.inf)
-    model.env = eval_norm_vec_env
+    #len = len(model.observation_space.low)
+    #model.observation_space.low = np.full(len, -np.inf)
+    #model.observation_space.high = np.full(len, np.inf)
+    #model.env = eval_norm_vec_env
 
     # %%
     mean_reward, _ = evaluate_policy(model, eval_norm_vec_env, n_eval_episodes=n_episodes, deterministic=True)
@@ -147,19 +152,19 @@ if __name__ == "__main__":
 
     total_results["RL-based charging"] = [rl_reward,
                                           rl_cashflow,
-                                          np.round(rl_deg.mean(), 5),
+                                          np.round(np.mean(rl_deg), 5),
                                           rl_overloading,
                                           rl_soc_violation,
                                           rl_n_violations,
-                                          np.round(rl_soh.mean(), 5)]
+                                          np.round(np.mean(rl_soh), 5)]
 
     total_results["Dumb charging"] = [dumb_reward,
                                       dumb_cashflow,
-                                      np.round(dumb_deg.mean(), 5),
+                                      np.round(np.mean(dumb_deg), 5),
                                       dumb_overloading,
                                       dumb_soc_violation,
                                       dumb_n_violations,
-                                      np.round(dumb_soh.mean(), 5)]
+                                      np.round(np.mean(dumb_soh), 5)]
 
     print(total_results)
 
@@ -208,7 +213,7 @@ if __name__ == "__main__":
     plt.grid(alpha=0.2)
 
     plt.ylabel("Charging power in kW")
-    max = log_RL.loc[0, "Observation"][-4]
+    max = log_RL.loc[0, "Observation"][-10]
     plt.ylim([-max * 1.2, max * 1.2])
 
     plt.show()
