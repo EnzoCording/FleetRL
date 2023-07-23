@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
 
     # define parameters here for easier change
-    n_steps = 8600
+    n_steps = 86
     n_episodes = 1
     n_evs = 1
     n_envs = 1
@@ -101,7 +101,7 @@ if __name__ == "__main__":
         if night_norm_vec_env.env_method("is_done")[0]:
             night_norm_vec_env.reset()
         time: pd.Timestamp = night_norm_vec_env.env_method("get_time")[0]
-        if (use_case == "ct" and ((time.hour >= 11) and (time.hour <= 15))):
+        if ((time.hour >= 11) and (time.hour <= 14)) and (use_case=="ct"):
             night_norm_vec_env.step(([np.clip(np.multiply(np.ones(n_evs), night_norm_vec_env.env_method("get_dist_factor")[0]),0,1)]))
             continue
         time: pd.Timestamp = night_norm_vec_env.env_method("get_time")[0]

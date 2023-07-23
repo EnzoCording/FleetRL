@@ -16,18 +16,18 @@ if __name__ == "__main__":
 
 
     # define parameters here for easier change
-    n_steps = 240
+    n_steps = 86
     n_episodes = 1
     n_evs = 1
     n_envs = 1
     timesteps_per_hour = 4
-    use_case: str = "lmd"  # for file name
+    use_case: str = "ct"  # for file name
 
-    env_kwargs= {"schedule_name": "lmd_sched_single_eval.csv",
-                "building_name": "load_lmd.csv",
+    env_kwargs={"schedule_name": "ct_sched_single_eval.csv",
+                "building_name": "load_ct.csv",
                 "price_name": "spot_2021_new.csv",
                 "tariff_name": "spot_2021_new_tariff.csv",
-                "use_case": "lmd",
+                "use_case": "ct",
                 "include_building": True,
                 "include_pv": True,
                 "time_picker": "static",
@@ -74,18 +74,15 @@ if __name__ == "__main__":
     for i in range(episode_length * timesteps_per_hour * n_episodes):
         if dist_norm_vec_env.env_method("is_done")[0]:
             dist_norm_vec_env.reset()
-        if (np.random.random() > 0.5):
-            charging=True
-            dist_norm_vec_env.step([np.ones(n_evs)])
-        else:
-            dist_norm_vec_env.step([np.zeros(n_evs)])
+        dist_norm_vec_env.step(([np.clip(np.multiply(np.ones(n_evs), dist_norm_vec_env.env_method("get_dist_factor")[0]),0,1)]))
+
 
     dist_log: pd.DataFrame = dist_norm_vec_env.env_method("get_log")[0]
 
     dist_log.reset_index(drop=True, inplace=True)
     dist_log = dist_log.iloc[0:-2]
 
-    # night_log.to_csv(f"log_dumb_{use_case}_{n_evs}.csv")
+    dist_log.to_csv(f"log_dist_{use_case}_{n_evs}.csv")
     real_power_dist = []
     for i in range(dist_log.__len__()):
         dist_log.loc[i, "hour_id"] = (dist_log.loc[i, "Time"].hour + dist_log.loc[i, "Time"].minute / 60)
@@ -95,10 +92,10 @@ if __name__ == "__main__":
     for i in range(mean_per_hid_dist.__len__()):
         mean_all_dist.append(np.mean(mean_per_hid_dist[i]))
 
-    mean = pd.DataFrame()
-    mean["Distributed charging"] = np.multiply(mean_all_dist, 4)
+    mean_dist = pd.DataFrame()
+    mean_dist["Distributed charging"] = np.multiply(mean_all_dist, 4)
 
-    mean.plot()
+    mean_dist.plot()
 
     plt.xticks([0,8,16,24,32,40,48,56,64,72,80,88]
                ,["00:00","02:00","04:00","06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"],
