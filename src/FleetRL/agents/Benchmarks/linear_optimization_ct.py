@@ -76,7 +76,10 @@ if __name__ == "__main__":
                    price_name=env_kwargs["price_name"],
                    episode_length=n_steps,
                    time_picker=env_kwargs["time_picker"],
-                   building_name=env_kwargs["building_name"])
+                   building_name=env_kwargs["building_name"],
+                   spot_markup=env_kwargs["spot_markup"],
+                   spot_mul=env_kwargs["spot_mul"],
+                   feed_in_ded=env_kwargs["feed_in_ded"])
 
     # reading the input file as a pandas DataFrame
     df: pd.DataFrame = env.db
