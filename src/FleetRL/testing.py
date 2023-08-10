@@ -27,22 +27,28 @@ env_args = {"include_pv": True,
 
 env = FleetEnv(log_data=True,
                include_pv=True,
-               schedule_name="5_ct.csv",
-               use_case="ct",
-               normalize_in_env=False,
-               aux=True, 
-               calculate_degradation=True,
-               time_picker="random",
-               episode_length=24,
-               include_building=True,
+               schedule_name="lmd_sched_single.csv",
+               use_case="lmd",
                building_name="load_ct.csv",
                price_name="spot_2021_new.csv",
                tariff_name="fixed_feed_in.csv",
+               normalize_in_env=False,
+               aux=True, 
+               calculate_degradation=True,
+               time_picker="static",
+               episode_length=48,
+               include_building=True,
                spot_markup=10,
                spot_mul=1.5,
                feed_in_ded=0.25)
 
-env.reset()
+env.reset();
+#
+# for i in range (90): env.step([0,0,0,0,0]);
+
+# for i in range(96):
+#     env.step([-1,-1,-1,-1,-1])
+#
 
 '''
 env = make_vec_env(FleetEnv, env_kwargs=env_args)

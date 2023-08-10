@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import rainflow as rf
+import matplotlib
+matplotlib.rcParams.update({'font.size': 16})
+
 
 class Comparison:
 
@@ -85,18 +88,40 @@ class Comparison:
     @staticmethod
     def l_without_sei(self, l, fd): return 1 - (1 - l) * np.e ** (-fd)
 
-    def compare_methods(self, data, years):
-        plt.plot(self.rainflow_sei(data))
-        plt.plot(self.emp_deg(data))
-        plt.grid(True)
-        plt.xlim([0, 10])
-        plt.ylim([0.8, 1])
-        plt.legend(["SEI formation + Cycle counting", "Empirical linear degradation"])
-        plt.xticks(range(11))
-        plt.yticks([0.8, 0.85, 0.9, 0.95, 1.0])
-        plt.ylabel("State of Health")
-        plt.xlabel("Years")
-        plt.savefig("./src/FleetRL/Output_Files/Figures/sei_emp_10.pdf")
+    def compare_methods(self, data, save:bool=False):
+        fig, ax = plt.subplots(1,2, figsize=(10,5))
+        ax[0].plot(self.rainflow_sei(data[0]))
+        #plt.plot(self.emp_deg(data))
+        ax[0].plot(self.rainflow_sei(data[1]))
+
+        ax[1].plot(self.rainflow_sei(data[2]))
+        ax[1].plot(self.rainflow_sei(data[3]))
+
+        for i in range(2):
+            ax[i].grid(alpha=0.2)
+            ax[i].set_ylim([0.8,1])
+            ax[i].set_xlim([0,10])
+            ax[i].legend(["RL-based charging", "LP-based charging"])
+            ax[i].set_xticks(range(11))
+            ax[i].set_ylabel("State of Health")
+            ax[i].set_xlabel("Years")
+            ax[i].set_yticks([0.8, 0.85, 0.9, 0.95, 1.0])
+
+        # plt.grid(True)
+        # plt.xlim([0, 10])
+        # plt.ylim([0.8, 1])
+        # #plt.legend(["SEI formation + Cycle counting", "Empirical linear degradation"])
+        # plt.legend(["RL-based charging", "LP-based charging"])
+        # plt.xticks(range(11))
+        # plt.yticks([0.8, 0.85, 0.9, 0.95, 1.0])
+        # plt.ylabel("State of Health")
+        # plt.xlabel("Years")
+        ax[0].set_title("Arbitrage")
+        ax[1].set_title("Realistic")
+        ax[1].get_legend().remove()
+        plt.tight_layout()
+        if save:
+            plt.savefig("sei_rl_lin_ut_v2.pdf")
         plt.show()
 
     def rainflow_sei(self, soc_log):
