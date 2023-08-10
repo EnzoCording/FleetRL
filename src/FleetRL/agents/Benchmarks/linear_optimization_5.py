@@ -21,18 +21,18 @@ if __name__ == "__main__":
     # define parameters here for easier change
     n_steps = 8600
     n_episodes = 1
-    n_evs = 1
+    n_evs = 5
     n_envs = 1
     time_steps_per_hour = 4
-    use_case: str = "ut"  # for file name
-    scenario: Literal["arb", "real"] = "arb"
+    use_case: str = "lmd"  # for file name
+    scenario: Literal["arb", "real"] = "real"
 
     # environment arguments
-    env_kwargs = {"schedule_name": "ut_sched_single_eval.csv",
-                  "building_name": "load_ut.csv",
+    env_kwargs = {"schedule_name": "5_lmd_eval.csv",
+                  "building_name": "load_lmd.csv",
                   "price_name": "spot_2021_new.csv",
                   "tariff_name": "spot_2021_new_tariff.csv",
-                  "use_case": "ut",
+                  "use_case": "lmd",
                   "include_building": True,
                   "include_pv": True,
                   "time_picker": "static",
@@ -85,18 +85,16 @@ if __name__ == "__main__":
     df: pd.DataFrame = env.db
 
     # Extracting information from the df
-    ev_data = df["There"]
+    ev_data = [df.loc[df["ID"]==i, "There"] for i in range(n_evs)]
     building_data = df["load"]  # building load in kW
 
-    if scenario == "arb":
-        price_data = np.multiply(np.add(df["DELU"], env.ev_conf.fixed_markup), env.ev_conf.variable_multiplier) / 1000
-        tariff_data = np.multiply(df["tariff"], 1-env.ev_conf.feed_in_deduction) / 1000
-    elif scenario == "real":
-        price_data = np.multiply(np.add(df["DELU"], 0), 1) / 1000  # price in EUR/kWh
-        tariff_data = np.multiply(np.add(df["DELU"], 0), 1) / 1000  # price in EUR/kWh
+    length_time_load_pv = 8760 * 4
+
+    price_data = np.multiply(np.add(df["DELU"], env.ev_conf.fixed_markup), env.ev_conf.variable_multiplier) / 1000
+    tariff_data = np.multiply(df["tariff"], 1-env.ev_conf.feed_in_deduction) / 1000
 
     pv_data = df["pv"]  # pv power in kW
-    soc_on_return = df["SOC_on_return"]
+    soc_on_return = [df.loc[df["ID"]==i, "SOC_on_return"] for i in range(n_evs)]
 
     battery_capacity = env.ev_conf.init_battery_cap  # EV batt size in kWh
     p_trafo = env.load_calculation.grid_connection  # Transformer rating in kW
@@ -111,121 +109,123 @@ if __name__ == "__main__":
     # create pyomo model
     model = pyo.ConcreteModel(name="sc_pyomo")
 
-    model.timestep = pyo.Set(initialize=range(len(df)))
-    model.time_batt = pyo.Set(initialize=range(0, len(df)+1))
+    model.timestep = pyo.Set(initialize=range(length_time_load_pv))
+    model.time_batt = pyo.Set(initialize=range(0, length_time_load_pv+1))
+    model.ev_id = pyo.Set(initialize=range(n_evs))
 
     # model parameters
-    model.building_load = pyo.Param(model.timestep, initialize={i: building_data[i] for i in range(len(df))})
-    model.pv = pyo.Param(model.timestep, initialize={i: pv_data[i] for i in range(len(df))})
-    model.ev_availability = pyo.Param(model.timestep, initialize={i: ev_data[i] for i in range(len(df))})
-    model.price = pyo.Param(model.timestep, initialize={i: price_data[i] for i in range(len(df))})
-    model.tariff = pyo.Param(model.timestep, initialize={i: tariff_data[i] for i in range(len(df))})
+    model.building_load = pyo.Param(model.timestep, initialize={i: building_data[i] for i in range(length_time_load_pv)})
+    model.pv = pyo.Param(model.timestep, initialize={i: pv_data[i] for i in range(length_time_load_pv)})
+    model.ev_availability = pyo.Param(model.timestep, model.ev_id, initialize={(i, j): ev_data[j].iloc[i] for i in range(length_time_load_pv) for j in range(n_evs)})
+    model.soc_on_return = pyo.Param(model.timestep, model.ev_id, initialize={(i, j): soc_on_return[j].iloc[i] for i in range(length_time_load_pv) for j in range(n_evs)})
+    model.price = pyo.Param(model.timestep, initialize={i: price_data[i] for i in range(length_time_load_pv)})
+    model.tariff = pyo.Param(model.timestep, initialize={i: tariff_data[i] for i in range(length_time_load_pv)})
 
     # decision variables
     # this assumes only charging, I could also make bidirectional later
-    model.soc = pyo.Var(model.time_batt, bounds=(0, env.ev_conf.target_soc))
-    model.charging_signal = pyo.Var(model.timestep, within=pyo.NonNegativeReals, bounds=(0,1))
-    model.discharging_signal = pyo.Var(model.timestep, within=pyo.NonPositiveReals, bounds=(-1,0))
-    model.positive_action = pyo.Var(model.timestep, within=pyo.Binary)
-    model.used_pv = pyo.Var(model.timestep, within=pyo.NonNegativeReals)
+    model.soc = pyo.Var(model.time_batt, model.ev_id, bounds=(0, env.ev_conf.target_soc))
+    model.charging_signal = pyo.Var(model.timestep, model.ev_id, within=pyo.NonNegativeReals, bounds=(0,1))
+    model.discharging_signal = pyo.Var(model.timestep, model.ev_id, within=pyo.NonPositiveReals, bounds=(-1,0))
+    model.positive_action = pyo.Var(model.timestep, model.ev_id, within=pyo.Binary)
+    model.used_pv = pyo.Var(model.timestep, model.ev_id, within=pyo.NonNegativeReals)
 
-    def grid_limit(m, i):
-        return ((m.charging_signal[i] + m.discharging_signal[i]) * evse_max_power
+    def grid_limit(m, i, ev):
+        return ((m.charging_signal[i, ev] + m.discharging_signal[i, ev]) * evse_max_power
                 + m.building_load[i] - m.pv[i] <= p_trafo)
 
-    def mutual_exclusivity_charging(m, i):
-        return m.charging_signal[i] <= m.positive_action[i]
+    def mutual_exclusivity_charging(m, i, ev):
+        return m.charging_signal[i, ev] <= m.positive_action[i, ev]
 
-    def mutual_exclusivity_discharging(m, i):
-        return m.discharging_signal[i] >= (m.positive_action[i] - 1)
+    def mutual_exclusivity_discharging(m, i, ev):
+        return m.discharging_signal[i, ev] >= (m.positive_action[i, ev] - 1)
 
-    def pv_use(m, i):
-        return m.used_pv[i] <= m.charging_signal[i] * evse_max_power
+    def pv_use(m, i, ev):
+        return m.used_pv[i, ev] <= m.charging_signal[i, ev] * evse_max_power
 
-    def pv_avail(m, i):
-        return m.used_pv[i] <= m.pv[i]
+    def pv_avail(m, i, ev):
+        return m.used_pv[i, ev] <= m.pv[i] / n_evs
 
-    def no_charge_when_no_car(m, i):
-        if m.ev_availability[i] == 0:
-            return m.charging_signal[i] == 0
+    def no_charge_when_no_car(m, i, ev):
+        if m.ev_availability[i, ev] == 0:
+            return m.charging_signal[i, ev] == 0
         else:
             return pyo.Constraint.Feasible
 
-    def no_discharge_when_no_car(m, i):
-        if m.ev_availability[i] == 0:
-            return m.discharging_signal[i] == 0
+    def no_discharge_when_no_car(m, i, ev):
+        if m.ev_availability[i, ev] == 0:
+            return m.discharging_signal[i, ev] == 0
         else:
             return pyo.Constraint.Feasible
 
-    def soc_rules(m, i):
+    def soc_rules(m, i, ev):
         #last time step
-        if i == len(df)-1:
-            return (m.soc[i+1]
-                    == m.soc[i] + (m.charging_signal[i]*charging_eff + m.discharging_signal[i])
+        if i == length_time_load_pv-1:
+            return (m.soc[i+1, ev]
+                    == m.soc[i, ev] + (m.charging_signal[i, ev]*charging_eff + m.discharging_signal[i, ev])
                     * evse_max_power * 1 / time_steps_per_hour / battery_capacity)
 
         # new arrival
-        elif (m.ev_availability[i] == 0) and (m.ev_availability[i+1] == 1):
-            return m.soc[i+1] == soc_on_return[i+1]
+        elif (m.ev_availability[i, ev] == 0) and (m.ev_availability[i+1, ev] == 1):
+            return m.soc[i+1, ev] == m.soc_on_return[i+1, ev]
 
         # departure in next time step
-        elif (m.ev_availability[i] == 1) and (m.ev_availability[i+1] == 0):
-            return m.soc[i] == env.ev_conf.target_soc
+        elif (m.ev_availability[i, ev] == 1) and (m.ev_availability[i+1, ev] == 0):
+            return m.soc[i, ev] == env.ev_conf.target_soc
 
         else:
             return pyo.Constraint.Feasible
 
-    def charging_dynamics(m, i):
+    def charging_dynamics(m, i, ev):
         #last time step
-        if i == len(df)-1:
-            return (m.soc[i+1]
-                    == m.soc[i] + (m.charging_signal[i]*charging_eff + m.discharging_signal[i])
+        if i == length_time_load_pv-1:
+            return (m.soc[i+1, ev]
+                    == m.soc[i, ev] + (m.charging_signal[i, ev]*charging_eff + m.discharging_signal[i, ev])
                     * evse_max_power * 1 / time_steps_per_hour / battery_capacity)
 
         # charging
-        if (m.ev_availability[i] == 1) and (m.ev_availability[i+1] == 1):
-            return (m.soc[i+1]
-                    == m.soc[i] + (m.charging_signal[i]*charging_eff + m.discharging_signal[i])
+        if (m.ev_availability[i, ev] == 1) and (m.ev_availability[i+1, ev] == 1):
+            return (m.soc[i+1, ev]
+                    == m.soc[i, ev] + (m.charging_signal[i, ev]*charging_eff + m.discharging_signal[i, ev])
                     * evse_max_power * 1 / time_steps_per_hour / battery_capacity)
 
-        elif (m.ev_availability[i] == 1) and (m.ev_availability[i+1] == 0):
-            return m.soc[i+1] == 0
+        elif (m.ev_availability[i, ev] == 1) and (m.ev_availability[i+1, ev] == 0):
+            return m.soc[i+1, ev] == 0
 
-        elif m.ev_availability[i] == 0:
-            return m.soc[i] == 0
+        elif m.ev_availability[i, ev] == 0:
+            return m.soc[i, ev] == 0
 
         else:
             return pyo.Constraint.Feasible
 
-    def max_charging_limit(m, i):
-        return m.charging_signal[i]*evse_max_power <= evse_max_power * m.ev_availability[i]
+    def max_charging_limit(m, i, ev):
+        return m.charging_signal[i, ev]*evse_max_power <= evse_max_power * m.ev_availability[i, ev]
 
-    def max_discharging_limit(m, i):
-        return m.discharging_signal[i]*evse_max_power*-1 <= evse_max_power * m.ev_availability[i]
+    def max_discharging_limit(m, i, ev):
+        return m.discharging_signal[i, ev]*evse_max_power*-1 <= evse_max_power * m.ev_availability[i, ev]
 
-    def first_soc(m):
-        return m.soc[0] == init_soc
+    def first_soc(m, i, ev):
+        return m.soc[0, ev] == init_soc
 
     # constraints
-    model.cs1 = pyo.Constraint(rule=first_soc)
-    model.cs2 = pyo.Constraint(model.timestep, rule=grid_limit)
-    model.cs3 = pyo.Constraint(model.timestep, rule=max_charging_limit)
-    model.cs4 = pyo.Constraint(model.timestep, rule=max_discharging_limit)
-    model.cs5 = pyo.Constraint(model.timestep, rule=soc_rules)
-    model.cs6 = pyo.Constraint(model.timestep, rule=charging_dynamics)
-    model.cs8 = pyo.Constraint(model.timestep, rule=mutual_exclusivity_charging)
-    model.cs9 = pyo.Constraint(model.timestep, rule=mutual_exclusivity_discharging)
-    model.cs10 = pyo.Constraint(model.timestep, rule=no_charge_when_no_car)
-    model.cs11 = pyo.Constraint(model.timestep, rule=no_discharge_when_no_car)
-    model.cs12 = pyo.Constraint(model.timestep, rule=pv_use)
-    model.cs13 = pyo.Constraint(model.timestep, rule=pv_avail)
+    model.cs1 = pyo.Constraint(model.timestep, model.ev_id, rule=first_soc)
+    model.cs2 = pyo.Constraint(model.timestep, model.ev_id, rule=grid_limit)
+    model.cs3 = pyo.Constraint(model.timestep, model.ev_id, rule=max_charging_limit)
+    model.cs4 = pyo.Constraint(model.timestep, model.ev_id, rule=max_discharging_limit)
+    model.cs5 = pyo.Constraint(model.timestep, model.ev_id, rule=soc_rules)
+    model.cs6 = pyo.Constraint(model.timestep, model.ev_id, rule=charging_dynamics)
+    model.cs8 = pyo.Constraint(model.timestep, model.ev_id, rule=mutual_exclusivity_charging)
+    model.cs9 = pyo.Constraint(model.timestep, model.ev_id, rule=mutual_exclusivity_discharging)
+    model.cs10 = pyo.Constraint(model.timestep, model.ev_id, rule=no_charge_when_no_car)
+    model.cs11 = pyo.Constraint(model.timestep, model.ev_id, rule=no_discharge_when_no_car)
+    model.cs12 = pyo.Constraint(model.timestep, model.ev_id, rule=pv_use)
+    model.cs13 = pyo.Constraint(model.timestep, model.ev_id, rule=pv_avail)
 
-    timestep_set = pyo.RangeSet(0, len(df)-1)
+    timestep_set = pyo.RangeSet(0, length_time_load_pv-1)
 
     def obj_fun(m):
-        return (sum([((m.charging_signal[i] * evse_max_power - m.used_pv[i]) / time_steps_per_hour) * m.price[i] +
-                     ((m.discharging_signal[i] * evse_max_power * discharging_eff) / time_steps_per_hour) * m.tariff[i]
-                     for i in m.timestep]))
+        return (sum([((m.charging_signal[i, ev] * evse_max_power - m.used_pv[i, ev]) / time_steps_per_hour) * m.price[i] +
+                     ((m.discharging_signal[i, ev] * evse_max_power * discharging_eff) / time_steps_per_hour) * m.tariff[i]
+                     for i in m.timestep for ev in range(n_evs)]))
 
     model.obj = pyo.Objective(rule=obj_fun, sense=pyo.minimize)
     opt = pyo.SolverFactory('gurobi')#, executable="/home/enzo/Downloads/gurobi10.0.2_linux64/gurobi1002/linux64/")
@@ -234,15 +234,18 @@ if __name__ == "__main__":
     res = opt.solve(model, tee=True)
     print(res)
 
-    actions = [model.charging_signal[i].value + model.discharging_signal[i].value for i in range(len(df))]
-
+    actions = [np.array([model.charging_signal[i,j].value + model.discharging_signal[i,j].value for j in range(n_evs)]) for i in range(length_time_load_pv)]
     actions = pd.DataFrame({"action": actions})
 
     actions.index = pd.date_range(start="2020-01-01 00:00", end="2020-12-30 23:59", freq="15T")
 
     actions["hid"] = actions.index.hour + actions.index.minute/60
 
-    actions.groupby("hid").mean().reset_index()["action"].plot()
+    len_day = 24*4
+    action_plot = []
+    for i in range(len_day):
+        action_plot.append(actions.groupby("hid").mean()["action"].reset_index(drop=True)[i].mean())
+    plt.plot(action_plot)
     plt.show()
 
     lin_norm_vec_env.reset()
@@ -285,4 +288,3 @@ if __name__ == "__main__":
     plt.ylim([-max * 1.2, max * 1.2])
 
     plt.show()
-

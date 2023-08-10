@@ -128,10 +128,33 @@ if __name__ == "__main__":
     model.discharging_signal = pyo.Var(model.timestep, within=pyo.NonPositiveReals, bounds=(-1,0))
     model.positive_action = pyo.Var(model.timestep, within=pyo.Binary)
     model.used_pv = pyo.Var(model.timestep, within=pyo.NonNegativeReals)
+    model.soc_violation = pyo.Var(model.timestep, within=pyo.Reals)
+    model.overloading_violation = pyo.Var(model.timestep, within=pyo.Reals)
 
-    def grid_limit(m, i):
-        return ((m.charging_signal[i] + m.discharging_signal[i]) * evse_max_power
-                + m.building_load[i] - m.pv[i] <= p_trafo)
+    def soc_violation(m, i):
+        if i == len(df) - 1:
+            return m.soc_violation[i] == 0
+        if m.ev_availability[i] == 1 and m.ev_availability[i+1] == 0:
+            x0, k = 0.29229767, 16.48461585  # Parameters from the fitted sigmoid function for the reward function
+            #return m.soc_violation[i] == -500 / (1 + pyo.exp(-k * (env.ev_conf.target_soc - m.soc[i] - x0))) + 1
+            return m.soc_violation[i] == -1000*(env.ev_conf.target_soc - m.soc[i])
+        else:
+            return m.soc_violation[i] == 0
+
+    def overloading_penalty(m, i):
+        if i == len(df) - 1:
+            return m.soc_violation[i] == 0
+        else:
+            load = (m.charging_signal[i] + m.discharging_signal[i]) * evse_max_power + m.building_load[i] - m.pv[i]
+            rel_loading = load/p_trafo
+            x0, k = 1.33298382, 15.77350877  # Parameters from the fitted piecewise sigmoid function for the overloading penalty function
+            #penalty = -700 / (1 + pyo.exp(-k * (rel_loading - x0)))
+            penalty = -1000*(rel_loading - 1)
+            return m.overloading_violation[i] == penalty
+
+    # def grid_limit(m, i):
+    #     return ((m.charging_signal[i] + m.discharging_signal[i]) * evse_max_power
+    #             + m.building_load[i] - m.pv[i] <= p_trafo)
 
     def mutual_exclusivity_charging(m, i):
         return m.charging_signal[i] <= m.positive_action[i]
@@ -160,6 +183,8 @@ if __name__ == "__main__":
     def soc_rules(m, i):
         #last time step
         if i == len(df)-1:
+            #return pyo.Constraint.Feasible
+
             return (m.soc[i+1]
                     == m.soc[i] + (m.charging_signal[i]*charging_eff + m.discharging_signal[i])
                     * evse_max_power * 1 / time_steps_per_hour / battery_capacity)
@@ -167,17 +192,21 @@ if __name__ == "__main__":
         # new arrival
         elif (m.ev_availability[i] == 0) and (m.ev_availability[i+1] == 1):
             return m.soc[i+1] == soc_on_return[i+1]
-
+        #
         # departure in next time step
         elif (m.ev_availability[i] == 1) and (m.ev_availability[i+1] == 0):
-            return m.soc[i] == env.ev_conf.target_soc
+            return m.soc[i] >= 0.1
 
         else:
             return pyo.Constraint.Feasible
 
+    def target_soc_limit(m, i):
+        return m.soc[i] <= env.ev_conf.target_soc
+
     def charging_dynamics(m, i):
         #last time step
         if i == len(df)-1:
+            #return pyo.Constraint.Feasible
             return (m.soc[i+1]
                     == m.soc[i] + (m.charging_signal[i]*charging_eff + m.discharging_signal[i])
                     * evse_max_power * 1 / time_steps_per_hour / battery_capacity)
@@ -208,7 +237,7 @@ if __name__ == "__main__":
 
     # constraints
     model.cs1 = pyo.Constraint(rule=first_soc)
-    model.cs2 = pyo.Constraint(model.timestep, rule=grid_limit)
+    #model.cs2 = pyo.Constraint(model.timestep, rule=grid_limit)
     model.cs3 = pyo.Constraint(model.timestep, rule=max_charging_limit)
     model.cs4 = pyo.Constraint(model.timestep, rule=max_discharging_limit)
     model.cs5 = pyo.Constraint(model.timestep, rule=soc_rules)
@@ -219,12 +248,15 @@ if __name__ == "__main__":
     model.cs11 = pyo.Constraint(model.timestep, rule=no_discharge_when_no_car)
     model.cs12 = pyo.Constraint(model.timestep, rule=pv_use)
     model.cs13 = pyo.Constraint(model.timestep, rule=pv_avail)
+    model.cs14 = pyo.Constraint(model.timestep, rule=soc_violation)
+    model.cs15 = pyo.Constraint(model.timestep, rule=overloading_penalty)
 
     timestep_set = pyo.RangeSet(0, len(df)-1)
 
     def obj_fun(m):
-        return (sum([((m.charging_signal[i] * evse_max_power - m.used_pv[i]) / time_steps_per_hour) * m.price[i] +
-                     ((m.discharging_signal[i] * evse_max_power * discharging_eff) / time_steps_per_hour) * m.tariff[i]
+        return (sum([(((m.charging_signal[i] * evse_max_power - m.used_pv[i]) / time_steps_per_hour) * m.price[i] +
+                     ((m.discharging_signal[i] * evse_max_power * discharging_eff) / time_steps_per_hour) * m.tariff[i])
+                     * env.score_conf.price_multiplier - m.soc_violation[i] - m.overloading_violation[i]
                      for i in m.timestep]))
 
     model.obj = pyo.Objective(rule=obj_fun, sense=pyo.minimize)
