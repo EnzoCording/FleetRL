@@ -24,15 +24,13 @@ if __name__ == "__main__":
     n_evs = 1
     n_envs = 1
     time_steps_per_hour = 4
-    use_case: str = "ut"  # for file name
+    use_case: str = "ct"  # for file name
     scenario: Literal["arb", "real"] = "arb"
 
     # environment arguments
-    env_kwargs = {"schedule_name": "ut_sched_single_eval.csv",
-                  "building_name": "load_ut.csv",
-                  "price_name": "spot_2021_new.csv",
-                  "tariff_name": "spot_2021_new_tariff.csv",
-                  "use_case": "ut",
+    env_kwargs = {"schedule_name": "ct_sched_single_eval.csv",
+                  "building_name": "load_ct.csv",
+                  "use_case": "ct",
                   "include_building": True,
                   "include_pv": True,
                   "time_picker": "static",
@@ -54,10 +52,15 @@ if __name__ == "__main__":
         env_kwargs["spot_markup"] = 10
         env_kwargs["spot_mul"] = 1.5
         env_kwargs["feed_in_ded"] = 0.25
+        env_kwargs["price_name"] = "spot_2021_new.csv"
+        env_kwargs["tariff_name"] = "fixed_feed_in.csv"
+
     elif scenario == "arb":
         env_kwargs["spot_markup"] = 0
         env_kwargs["spot_mul"] = 1
         env_kwargs["feed_in_ded"] = 0
+        env_kwargs["price_name"] = "spot_2021_new.csv"
+        env_kwargs["tariff_name"] = "spot_2021_new_tariff.csv"
 
     lin_vec_env = make_vec_env(FleetEnv,
                                n_envs=n_envs,
@@ -88,12 +91,8 @@ if __name__ == "__main__":
     ev_data = df["There"]
     building_data = df["load"]  # building load in kW
 
-    if scenario == "arb":
-        price_data = np.multiply(np.add(df["DELU"], env.ev_conf.fixed_markup), env.ev_conf.variable_multiplier) / 1000
-        tariff_data = np.multiply(df["tariff"], 1-env.ev_conf.feed_in_deduction) / 1000
-    elif scenario == "real":
-        price_data = np.multiply(np.add(df["DELU"], 0), 1) / 1000  # price in EUR/kWh
-        tariff_data = np.multiply(np.add(df["DELU"], 0), 1) / 1000  # price in EUR/kWh
+    price_data = np.multiply(np.add(df["DELU"], env.ev_conf.fixed_markup), env.ev_conf.variable_multiplier) / 1000
+    tariff_data = np.multiply(df["tariff"], 1-env.ev_conf.feed_in_deduction) / 1000
 
     pv_data = df["pv"]  # pv power in kW
     soc_on_return = df["SOC_on_return"]
@@ -157,7 +156,7 @@ if __name__ == "__main__":
         else:
             return pyo.Constraint.Feasible
 
-    def soc_rules(m, i):
+    def soc_rule_on_return(m, i):
         #last time step
         if i == len(df)-1:
             return (m.soc[i+1]
@@ -167,6 +166,16 @@ if __name__ == "__main__":
         # new arrival
         elif (m.ev_availability[i] == 0) and (m.ev_availability[i+1] == 1):
             return m.soc[i+1] == soc_on_return[i+1]
+
+        else:
+            return pyo.Constraint.Feasible
+
+    def soc_rule_on_departure(m, i):
+        #last time step
+        if i == len(df)-1:
+            return (m.soc[i+1]
+                    == m.soc[i] + (m.charging_signal[i]*charging_eff + m.discharging_signal[i])
+                    * evse_max_power * 1 / time_steps_per_hour / battery_capacity)
 
         # departure in next time step
         elif (m.ev_availability[i] == 1) and (m.ev_availability[i+1] == 0):
@@ -206,12 +215,22 @@ if __name__ == "__main__":
     def first_soc(m):
         return m.soc[0] == init_soc
 
+    def no_departure_abuse(m, i):
+        if i == len(df) - 1:
+            return pyo.Constraint.Feasible
+        if (m.ev_availability[i] == 0) and (m.ev_availability[i-1]) == 1:
+            return m.discharging_signal[i] == 0
+        elif (m.ev_availability[i] == 1) and (m.ev_availability[i+1]) == 0:
+            return m.discharging_signal[i] == 0
+        else:
+            return pyo.Constraint.Feasible
+
     # constraints
     model.cs1 = pyo.Constraint(rule=first_soc)
-    model.cs2 = pyo.Constraint(model.timestep, rule=grid_limit)
-    model.cs3 = pyo.Constraint(model.timestep, rule=max_charging_limit)
-    model.cs4 = pyo.Constraint(model.timestep, rule=max_discharging_limit)
-    model.cs5 = pyo.Constraint(model.timestep, rule=soc_rules)
+    # model.cs2 = pyo.Constraint(model.timestep, rule=grid_limit)
+    # model.cs3 = pyo.Constraint(model.timestep, rule=max_charging_limit)
+    # model.cs4 = pyo.Constraint(model.timestep, rule=max_discharging_limit)
+    model.cs5 = pyo.Constraint(model.timestep, rule=soc_rule_on_return)
     model.cs6 = pyo.Constraint(model.timestep, rule=charging_dynamics)
     model.cs8 = pyo.Constraint(model.timestep, rule=mutual_exclusivity_charging)
     model.cs9 = pyo.Constraint(model.timestep, rule=mutual_exclusivity_discharging)
@@ -219,6 +238,9 @@ if __name__ == "__main__":
     model.cs11 = pyo.Constraint(model.timestep, rule=no_discharge_when_no_car)
     model.cs12 = pyo.Constraint(model.timestep, rule=pv_use)
     model.cs13 = pyo.Constraint(model.timestep, rule=pv_avail)
+    model.cs14 = pyo.Constraint(model.timestep, rule=no_departure_abuse)
+    model.cs15 = pyo.Constraint(model.timestep, rule=soc_rule_on_departure)
+
 
     timestep_set = pyo.RangeSet(0, len(df)-1)
 
@@ -285,4 +307,3 @@ if __name__ == "__main__":
     plt.ylim([-max * 1.2, max * 1.2])
 
     plt.show()
-
