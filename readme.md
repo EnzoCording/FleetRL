@@ -38,3 +38,5 @@ fleet_environment:
 load_calculation:
 - Calculates violations of building load
 - Builds pandapower grid and calculates transformer loading, as well as phase angle
+
+[MIT License (LICENSE)]
