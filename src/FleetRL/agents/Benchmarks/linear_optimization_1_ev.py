@@ -156,7 +156,7 @@ if __name__ == "__main__":
         else:
             return pyo.Constraint.Feasible
 
-    def soc_rule_on_return(m, i):
+    def soc_rules(m, i):
         #last time step
         if i == len(df)-1:
             return (m.soc[i+1]
@@ -166,16 +166,6 @@ if __name__ == "__main__":
         # new arrival
         elif (m.ev_availability[i] == 0) and (m.ev_availability[i+1] == 1):
             return m.soc[i+1] == soc_on_return[i+1]
-
-        else:
-            return pyo.Constraint.Feasible
-
-    def soc_rule_on_departure(m, i):
-        #last time step
-        if i == len(df)-1:
-            return (m.soc[i+1]
-                    == m.soc[i] + (m.charging_signal[i]*charging_eff + m.discharging_signal[i])
-                    * evse_max_power * 1 / time_steps_per_hour / battery_capacity)
 
         # departure in next time step
         elif (m.ev_availability[i] == 1) and (m.ev_availability[i+1] == 0):
@@ -227,10 +217,10 @@ if __name__ == "__main__":
 
     # constraints
     model.cs1 = pyo.Constraint(rule=first_soc)
-    # model.cs2 = pyo.Constraint(model.timestep, rule=grid_limit)
-    # model.cs3 = pyo.Constraint(model.timestep, rule=max_charging_limit)
-    # model.cs4 = pyo.Constraint(model.timestep, rule=max_discharging_limit)
-    model.cs5 = pyo.Constraint(model.timestep, rule=soc_rule_on_return)
+    model.cs2 = pyo.Constraint(model.timestep, rule=grid_limit)
+    model.cs3 = pyo.Constraint(model.timestep, rule=max_charging_limit)
+    model.cs4 = pyo.Constraint(model.timestep, rule=max_discharging_limit)
+    model.cs5 = pyo.Constraint(model.timestep, rule=soc_rules)
     model.cs6 = pyo.Constraint(model.timestep, rule=charging_dynamics)
     model.cs8 = pyo.Constraint(model.timestep, rule=mutual_exclusivity_charging)
     model.cs9 = pyo.Constraint(model.timestep, rule=mutual_exclusivity_discharging)
@@ -239,8 +229,6 @@ if __name__ == "__main__":
     model.cs12 = pyo.Constraint(model.timestep, rule=pv_use)
     model.cs13 = pyo.Constraint(model.timestep, rule=pv_avail)
     model.cs14 = pyo.Constraint(model.timestep, rule=no_departure_abuse)
-    model.cs15 = pyo.Constraint(model.timestep, rule=soc_rule_on_departure)
-
 
     timestep_set = pyo.RangeSet(0, len(df)-1)
 

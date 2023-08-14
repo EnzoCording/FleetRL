@@ -30,8 +30,6 @@ if __name__ == "__main__":
     # environment arguments
     env_kwargs = {"schedule_name": "5_lmd_eval.csv",
                   "building_name": "load_lmd.csv",
-                  "price_name": "spot_2021_new.csv",
-                  "tariff_name": "spot_2021_new_tariff.csv",
                   "use_case": "lmd",
                   "include_building": True,
                   "include_pv": True,
@@ -54,10 +52,14 @@ if __name__ == "__main__":
         env_kwargs["spot_markup"] = 10
         env_kwargs["spot_mul"] = 1.5
         env_kwargs["feed_in_ded"] = 0.25
+        env_kwargs["price_name"] = "spot_2021_new_tariff.csv"
+        env_kwargs["tariff_name"] = "fixed_feed_in.csv"
     elif scenario == "arb":
         env_kwargs["spot_markup"] = 0
         env_kwargs["spot_mul"] = 1
         env_kwargs["feed_in_ded"] = 0
+        env_kwargs["price_name"] = "spot_2021_new.csv"
+        env_kwargs["tariff_name"] = "spot_2021_new.csv"
 
     lin_vec_env = make_vec_env(FleetEnv,
                                n_envs=n_envs,
@@ -205,6 +207,16 @@ if __name__ == "__main__":
 
     def first_soc(m, i, ev):
         return m.soc[0, ev] == init_soc
+
+    def no_departure_abuse(m, i, ev):
+        if i == length_time_load_pv - 1:
+            return pyo.Constraint.Feasible
+        if (m.ev_availability[i, ev] == 0) and (m.ev_availability[i-1, ev]) == 1:
+            return m.discharging_signal[i, ev] == 0
+        elif (m.ev_availability[i, ev] == 1) and (m.ev_availability[i+1, ev]) == 0:
+            return m.discharging_signal[i, ev] == 0
+        else:
+            return pyo.Constraint.Feasible
 
     # constraints
     model.cs1 = pyo.Constraint(model.timestep, model.ev_id, rule=first_soc)

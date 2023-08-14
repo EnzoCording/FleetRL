@@ -42,6 +42,7 @@ from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerato
 
 
 class FleetEnv(gym.Env):
+
     """
     FleetRL: Reinforcement Learning environment for commercial vehicle fleets.
     Author: Enzo Alexander Cording - https://github.com/EnzoCording

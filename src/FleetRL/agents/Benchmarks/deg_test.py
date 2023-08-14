@@ -231,12 +231,22 @@
 import pandas as pd
 from FleetRL.utils.battery_degradation.compare_methods import Comparison
 
-soc_lin_ct_arb = pd.read_csv("/home/enzo/Downloads/soc_lin_arb_ut_updated.csv")
-soc_rl_ct_arb = pd.read_csv("/home/enzo/Downloads/soc_rl_arb_ut_updated.csv")
-soc_lin_ct_real = pd.read_csv("/home/enzo/Downloads/soc_lin_real_ut_updated.csv")
-soc_rl_ct_real = pd.read_csv("/home/enzo/Downloads/soc_rl_real_ut_updated.csv")
+soc_lin_ct_arb = pd.read_csv("./v2/soc_lin_ct_arb_v2_cleaned.csv")
+soc_rl_ct_arb = pd.read_csv("./v2/soc_rl_ct_arb_v2_cleaned.csv")
+soc_lin_ct_real = pd.read_csv("./v2/soc_lin_ct_real_v2_cleaned.csv")
+soc_rl_ct_real = pd.read_csv("./v2/soc_rl_ct_real_v2_cleaned.csv")
 
-soc_dfs = [soc_rl_ct_arb, soc_lin_ct_arb, soc_rl_ct_real, soc_lin_ct_real]
+soc_lin_lmd_arb = pd.read_csv("./v2/soc_lin_lmd_arb_v2_cleaned.csv")
+soc_rl_lmd_arb = pd.read_csv("./v2/soc_rl_lmd_arb_v2_cleaned.csv")
+soc_lin_lmd_real = pd.read_csv("./v2/soc_lin_lmd_real_v2_cleaned.csv")
+soc_rl_lmd_real = pd.read_csv("./v2/soc_rl_lmd_real_v2_cleaned.csv")
+
+soc_lin_ut_arb = pd.read_csv("./v2/soc_lin_ut_arb_v2_cleaned.csv")
+soc_rl_ut_arb = pd.read_csv("./v2/soc_rl_ut_arb_v2_cleaned.csv")
+soc_lin_ut_real = pd.read_csv("./v2/soc_lin_ut_real_v2_cleaned.csv")
+soc_rl_ut_real = pd.read_csv("./v2/soc_rl_ut_real_v2_cleaned.csv")
+
+soc_dfs = [soc_rl_lmd_arb, soc_lin_lmd_arb, soc_rl_lmd_real, soc_lin_lmd_real]
 m=0
 for df in soc_dfs:
     for i in range(len(df)):

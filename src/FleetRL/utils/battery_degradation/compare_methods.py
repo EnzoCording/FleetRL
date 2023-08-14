@@ -101,7 +101,7 @@ class Comparison:
             ax[i].grid(alpha=0.2)
             ax[i].set_ylim([0.8,1])
             ax[i].set_xlim([0,10])
-            ax[i].legend(["RL-based charging", "LP-based charging"])
+            ax[i].legend(["RL", "LP"])
             ax[i].set_xticks(range(11))
             ax[i].set_ylabel("State of Health")
             ax[i].set_xlabel("Years")
@@ -117,11 +117,11 @@ class Comparison:
         # plt.ylabel("State of Health")
         # plt.xlabel("Years")
         ax[0].set_title("Arbitrage")
-        ax[1].set_title("Realistic")
+        ax[1].set_title("Tariff")
         ax[1].get_legend().remove()
         plt.tight_layout()
         if save:
-            plt.savefig("sei_rl_lin_ut_v2.pdf")
+            plt.savefig("sei_rl_lin_lmd_v3.pdf")
         plt.show()
 
     def rainflow_sei(self, soc_log):
