@@ -39,6 +39,9 @@ load_calculation:
 - Calculates violations of building load
 - Builds pandapower grid and calculates transformer loading, as well as phase angle
 
+Citation:
+Please reference this project if you find it useful for your research.
+
 [License](LICENSE)
 
 The MIT License (MIT) Copyright (c) 2023, Enzo Alexander Cording - https://github.com/EnzoCording/FleetRL
