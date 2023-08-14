@@ -1,3 +1,5 @@
+Note: I am currently finishing my thesis. Once its done, I will make a tutorial, document everything properly, as well as clean up any unnecessary files.
+
 This framework provides a realistic Reinforcement Learning
 environment for EV charging and is focused on commercial vehicle
 fleets.
