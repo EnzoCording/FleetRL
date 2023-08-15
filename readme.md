@@ -18,16 +18,9 @@ It includes the following features:
 
 <img width="600" src="https://github.com/EnzoCording/FleetRL/blob/master/FleetRL_overview.jpg">
 
-Right now the following is working:
-- Step function charges EVs
-- Calculates cost based on spot market
-- Checks for SOC and grid violations
-- Returns next soc and time left at the charger
-
 data_processing:
-- Loads schedules from emobpy output
+- Loads schedules
 - Computes important metrics such as soc on arrival and time_left
-- Use of pd.merge_asof() to significantly speed up the data processing
 
 fleet_environment:
 - The implementation of the gym Env class for FleetRL
@@ -35,10 +28,6 @@ fleet_environment:
 
 load_calculation:
 - Calculates violations of building load
-- Builds pandapower grid and calculates transformer loading, as well as phase angle
-
-Citation:
-Please reference this project if you find it useful for your research.
 
 [License](LICENSE)
 
