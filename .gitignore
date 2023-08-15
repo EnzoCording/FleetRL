@@ -157,22 +157,22 @@ cython_debug/
 
 src/FleetRL/Input_Files/
 src/FleetRL/Output_Files/*
-src/FleetRL/agents/RL/logs/*
-src/FleetRL/agents/RL/trained/*
-src/FleetRL/agents/RL/FleetRl_tensorboard/*
-src/FleetRL/agents/RL/FleetRl_tensorboard_1/*
-src/FleetRL/agents/RL/FleetRl_tensorboard_single/*
-src/FleetRL/agents/RL/tb_log/*
-src/FleetRL/agents/RL/Models/*
+src/FleetRL/RL_agents/logs/*
+src/FleetRL/RL_agents/trained/*
+src/FleetRL/RL_agents/FleetRl_tensorboard/*
+src/FleetRL/RL_agents/FleetRl_tensorboard_1/*
+src/FleetRL/RL_agents/FleetRl_tensorboard_single/*
+src/FleetRL/RL_agents/tb_log/*
+src/FleetRL/RL_agents/Models/*
 ./trained/*
-src/FleetRL/agents/RL/hyperparameter_tuning/tb_log/*
-src/FleetRL/agents/RL/hyperparameter_tuning/tb_log_hp/*
-src/FleetRL/agents/RL/agent_training/tmp/*
-src/FleetRL/agents/RL/agent_training/misc_models/*
-src/FleetRL/agents/RL/trained_agents/*
-src/FleetRL/agents/RL/agent_training/tblog/*
-src/FleetRL/agents/RL/agent_training/tb_log/*
-src/FleetRL/agents/RL/agent_training/tb_log_hp/*
+src/FleetRL/RL_agents/hyperparameter_tuning/tb_log/*
+src/FleetRL/RL_agents/hyperparameter_tuning/tb_log_hp/*
+src/FleetRL/RL_agents/agent_training/tmp/*
+src/FleetRL/RL_agents/agent_training/misc_models/*
+src/FleetRL/RL_agents/trained_agents/*
+src/FleetRL/RL_agents/agent_training/tblog/*
+src/FleetRL/RL_agents/agent_training/tb_log/*
+src/FleetRL/RL_agents/agent_training/tb_log_hp/*
 extensive_requirements.in
 extensive_requirements.txt
 /extensive_requirements.txt
@@ -183,4 +183,4 @@ src/FleetRL/Final_Inputs/ut_sched_25.csv
 src/FleetRL/Final_Inputs/big schedules/*
 src/FleetRL/fleet_env/tblog/*
 src/FleetRL/Extra/*
-src/FleetRL/agents/Benchmarks/logs/*
+src/FleetRL/Benchmarks/logs/*

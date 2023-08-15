@@ -10,7 +10,7 @@ It includes the following features:
 - Schedule generator
 - 3 different use-cases of EV fleets included
 
-<img width="600" src="https://github.com/EnzoCording/FleetRL/blob/master/Thesis%20-%20MDP%20graphical.jpg">
+<img width="600" src="https://github.com/EnzoCording/FleetRL/blob/master/FleetRL_overview.jpg">
 
 Right now the following is working:
 - Step function charges EVs

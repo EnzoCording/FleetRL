@@ -731,7 +731,7 @@ class FleetEnv(gym.Env):
                 self.episode.soc_deg[car] = self.episode.soc[car]
 
         # if the finish time is reached, set done to True
-        # The RL agent then resets the environment
+        # The RL_agents agent then resets the environment
         if self.episode.time == self.episode.finish_time:
             self.episode.done = True
             if self.calc_deg:
