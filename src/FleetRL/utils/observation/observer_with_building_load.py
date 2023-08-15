@@ -80,7 +80,7 @@ class ObserverWithBuildingLoad(Observer):
         evse_power = load_calc.evse_max_power * np.ones(1)
 
         grid_cap = load_calc.grid_connection * np.ones(1)
-        avail_grid_cap = (grid_cap - building_load[0] + pv[0]) * np.ones(1)
+        avail_grid_cap = (grid_cap - building_load[0]) * np.ones(1)
         num_cars = db["ID"].max() + 1
         possible_avg_action_per_car = min(avail_grid_cap / (num_cars * evse_power), 1) * np.ones(1)
 
