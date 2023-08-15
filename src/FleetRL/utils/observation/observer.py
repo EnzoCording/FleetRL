@@ -22,6 +22,7 @@ class Observer:
         :param ev_conf: EV config needed for batt capacity and other params
         :param load_calc: Load calc module needed for grid connection and other params
         :param aux: Include auxiliary information that might help the agent to learn the problem
+        :param target_soc: A list of target soc values, one for each car
         :return: Returns a list of np arrays that make up different parts of the observation.
         """
 

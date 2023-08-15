@@ -24,7 +24,7 @@ class ObserverWithBoth(Observer):
         :param load_calc: Load calc module, used for grid connection, etc.
         :param aux: Flag to include extra information on the problem or not. Can help with training
         :param target_soc: List for the current target SOC of each car
-        :return: List of numpy arrays with different parts of the observation
+        :return: Dict of lists with different parts of the observation
 
         # define the starting and ending time via lookahead, np.where returns the index in the dataframe
         # add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)
@@ -94,11 +94,11 @@ class ObserverWithBoth(Observer):
         month_sin = np.sin(2 * np.pi * time.month/12)
         month_cos = np.cos(2 * np.pi * time.month/12)
 
-        week_sin = np.sin(2 * np.pi * time.weekday() / 6)
-        week_cos = np.cos(2 * np.pi * time.weekday() / 6)
+        week_sin = np.sin(2 * np.pi * time.weekday() / 7)
+        week_cos = np.cos(2 * np.pi * time.weekday() / 7)
 
-        hour_sin = np.sin(2 * np.pi * time.hour / 23)
-        hour_cos = np.cos(2 * np.pi * time.hour / 23)
+        hour_sin = np.sin(2 * np.pi * time.hour / 24)
+        hour_cos = np.cos(2 * np.pi * time.hour / 24)
 
         obs = {
             "soc": list(soc),  # state of charge

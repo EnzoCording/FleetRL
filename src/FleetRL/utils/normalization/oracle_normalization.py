@@ -47,8 +47,38 @@ class OracleNormalization(Normalization):
         if self.price_flag:
             input_obs["price"] = ((input_obs["price"] - self.min_price) / (self.max_price - self.min_price))
             input_obs["tariff"] = ((input_obs["tariff"] - self.min_tariff) / (self.max_tariff - self.min_tariff))
+
         if not self.price_flag:
             output_obs = np.array(self.flatten_obs(input_obs), dtype=np.float32)
+            if self.aux:
+                input_obs["there"] = (input_obs["there"] / 1)  # there
+                input_obs["target_soc"] = (input_obs["target_soc"] / self.max_soc)  # target soc
+                input_obs["charging_left"] = (input_obs["charging_left"] / self.max_soc)  # charging left
+                input_obs["hours_needed"] = (input_obs["hours_needed"] / self.max_hours_needed)  # hours needed
+                input_obs["laxity"] = (input_obs["laxity"] / self.max_laxity)  # laxity
+                input_obs["evse_power"] = (input_obs["evse_power"] / self.max_evse)  # evse power
+                output_obs = np.array(self.flatten_obs(input_obs), dtype=np.float32)
+
+        elif not self.building_flag and not self.pv_flag:
+            output_obs = np.concatenate(
+                (input_obs["soc"], input_obs["hours_left"], input_obs["price"],
+                 input_obs["tariff"]), dtype=np.float32)
+            if self.aux:
+                input_obs["there"] = (input_obs["there"] / 1)  # there
+                input_obs["target_soc"] = (input_obs["target_soc"] / self.max_soc)  # target soc
+                input_obs["charging_left"] = (input_obs["charging_left"] / self.max_soc)  # charging left
+                input_obs["hours_needed"] = (input_obs["hours_needed"] / self.max_hours_needed)  # hours needed
+                input_obs["laxity"] = (input_obs["laxity"] / self.max_laxity)  # laxity
+                input_obs["evse_power"] = (input_obs["evse_power"] / self.max_evse)  # evse power
+                # input obs of month, week and hour sin/cos don't need to be normalized
+                output_obs = np.array(self.flatten_obs(input_obs), dtype=np.float32)
+
+        elif self.building_flag and not self.pv_flag:
+            input_obs["building_load"] = (input_obs["building_load"] / self.max_building)
+            output_obs = np.concatenate(
+                (input_obs["soc"], input_obs["hours_left"], input_obs["price"],
+                 input_obs["tariff"], input_obs["building_load"]
+                 ), dtype=np.float32)
 
             if self.aux:
                 input_obs["there"] = (input_obs["there"] / 1)  # there
@@ -57,69 +87,32 @@ class OracleNormalization(Normalization):
                 input_obs["hours_needed"] = (input_obs["hours_needed"] / self.max_hours_needed)  # hours needed
                 input_obs["laxity"] = (input_obs["laxity"] / self.max_laxity)  # laxity
                 input_obs["evse_power"] = (input_obs["evse_power"] / self.max_evse)  # evse power
-
+                input_obs["grid_cap"] = (input_obs[11] / self.max_grid)  # grid connection
+                input_obs["avail_grid_cap"] = (input_obs["avail_grid_cap"] / self.max_grid)  # available grid
+                input_obs["possible_avg_action"] = (input_obs["possible_avg_action"] / 1)  # possible avg action per car
+                # input obs of month, week and hour sin/cos don't need to be normalized
                 output_obs = np.array(self.flatten_obs(input_obs), dtype=np.float32)
 
-        elif not self.building_flag and not self.pv_flag:
-            output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2]), dtype=np.float32)
-
-            if self.aux:
-                input_obs[3] = np.array(input_obs[3] / 1)  # there
-                input_obs[4] = np.array(input_obs[4] / self.max_soc)  # target soc
-                input_obs[5] = np.array(input_obs[5] / self.max_soc)  # charging left
-                input_obs[6] = np.array(input_obs[6] / self.max_hours_needed)  # hours needed
-                input_obs[7] = np.array(input_obs[7] / self.max_laxity)  # laxity
-                input_obs[8] = np.array(input_obs[8] / self.max_evse)  # evse power
-
-                output_obs = np.concatenate(
-                    (input_obs[0], input_obs[1], input_obs[2],
-                     input_obs[3], input_obs[4], input_obs[5],
-                     input_obs[6], input_obs[7], input_obs[8]
-                     ), dtype=np.float32)
-
-        elif self.building_flag and not self.pv_flag:
-            input_obs[3] = np.array(input_obs[3] / self.max_building)
-            output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2], input_obs[3]), dtype=np.float32)
-
-            if self.aux:
-                input_obs[4] = np.array(input_obs[4] / 1)  # there
-                input_obs[5] = np.array(input_obs[5] / self.max_soc)  # target soc
-                input_obs[6] = np.array(input_obs[6] / self.max_soc)  # charging left
-                input_obs[7] = np.array(input_obs[7] / self.max_hours_needed)  # hours needed
-                input_obs[8] = np.array(input_obs[8] / self.max_laxity)  # laxity
-                input_obs[9] = np.array(input_obs[9] / self.max_evse)  # evse power
-                input_obs[10] = np.array(input_obs[10] / self.max_grid)  # grid connection
-                input_obs[11] = np.array(input_obs[11] / self.max_grid)  # available grid
-                input_obs[12] = np.array(input_obs[12] / 1)  # possible avg action per car
-
-                output_obs = np.concatenate(
-                    (input_obs[0], input_obs[1], input_obs[2], input_obs[3], input_obs[4],
-                     input_obs[5], input_obs[6], input_obs[7], input_obs[8],
-                     input_obs[9], input_obs[10], input_obs[11], input_obs[12]
-                     ), dtype=np.float32)
-
         elif not self.building_flag and self.pv_flag:
-            input_obs[3] = np.array(input_obs[3] / self.max_pv)
-            output_obs = np.concatenate((input_obs[0], input_obs[1], input_obs[2], input_obs[3]), dtype=np.float32)
+            input_obs["building_load"] = (input_obs["building_load"] / self.max_building)
+            output_obs = np.concatenate(
+                (input_obs["soc"], input_obs["hours_left"], input_obs["price"],
+                 input_obs["tariff"], input_obs["pv"]
+                 ), dtype=np.float32)
 
             if self.aux:
-                input_obs[4] = np.array(input_obs[4] / 1)  # there
-                input_obs[5] = np.array(input_obs[5] / self.max_soc)  # target soc
-                input_obs[6] = np.array(input_obs[6] / self.max_soc)  # charging left
-                input_obs[7] = np.array(input_obs[7] / self.max_hours_needed)  # hours needed
-                input_obs[8] = np.array(input_obs[8] / self.max_laxity)  # laxity
-                input_obs[9] = np.array(input_obs[9] / self.max_evse)  # evse power
-
-                output_obs = np.concatenate(
-                    (input_obs[0], input_obs[1], input_obs[2], input_obs[3],
-                     input_obs[4], input_obs[5], input_obs[6],
-                     input_obs[7], input_obs[8], input_obs[9]
-                     ), dtype=np.float32)
+                input_obs["there"] = (input_obs["there"] / 1)  # there
+                input_obs["target_soc"] = (input_obs["target_soc"] / self.max_soc)  # target soc
+                input_obs["charging_left"] = (input_obs["charging_left"] / self.max_soc)  # charging left
+                input_obs["hours_needed"] = (input_obs["hours_needed"] / self.max_hours_needed)  # hours needed
+                input_obs["laxity"] = (input_obs["laxity"] / self.max_laxity)  # laxity
+                input_obs["evse_power"] = (input_obs["evse_power"] / self.max_evse)  # evse power
+                # input obs of month, week and hour sin/cos don't need to be normalized
+                output_obs = np.array(self.flatten_obs(input_obs), dtype=np.float32)
 
         elif self.building_flag and self.pv_flag:
             input_obs["building_load"] = (input_obs["building_load"] / self.max_building)
             input_obs["pv"] = (input_obs["pv"] / self.max_pv)
-
             output_obs = np.concatenate(
                 (input_obs["soc"], input_obs["hours_left"], input_obs["price"],
                  input_obs["tariff"], input_obs["building_load"], input_obs["pv"]
@@ -136,7 +129,6 @@ class OracleNormalization(Normalization):
                 input_obs["avail_grid_cap"] = (input_obs["avail_grid_cap"] / self.max_grid)  # available grid
                 input_obs["possible_avg_action"] = (input_obs["possible_avg_action"] / 1)  # possible avg action per car
                 # input obs of month, week and hour sin/cos don't need to be normalized
-
                 output_obs = np.array(self.flatten_obs(input_obs), dtype=np.float32)
 
         else:

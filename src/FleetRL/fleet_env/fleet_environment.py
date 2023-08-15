@@ -47,6 +47,7 @@ class FleetEnv(gym.Env):
     FleetRL: Reinforcement Learning environment for commercial vehicle fleets.
     Author: Enzo Alexander Cording - https://github.com/EnzoCording
     Master's thesis project, MSc Sustainable Energy Engineering @ KTH
+    License: MIT
 
     This framework is built on the gymnasium core API and inherits from it.
     __init__, reset, and step are implemented, calling other modules and functions where needed.
@@ -95,7 +96,8 @@ class FleetEnv(gym.Env):
                  spot_markup: float=None,
                  spot_mul: float=None,
                  feed_in_ded: float=None,
-                 feed_in_tariff: float=None
+                 feed_in_tariff: float=None,
+                 seed: int = None
                  ):
 
         """
@@ -124,6 +126,10 @@ class FleetEnv(gym.Env):
 
         # call __init__() of parent class to ensure inheritance chain
         super().__init__()
+
+        # setting seed
+        self.seed = seed
+        np.random.seed(self.seed)
 
         # Loading configs
         self.time_conf = TimeConfig()
@@ -162,7 +168,7 @@ class FleetEnv(gym.Env):
         else:
             self.pv_name = building_name
 
-        # Specify company type
+        # Specify company type and associated battery size in kWh
         if use_case == "ct":
             self.company = CompanyType.Caretaker
             self.schedule_type = ScheduleType.Caretaker
@@ -189,9 +195,10 @@ class FleetEnv(gym.Env):
                                                       starting_date=gen_start_date,
                                                       ending_date=gen_end_date,
                                                       vehicle_id=i,
-                                                      seed=i,
+                                                      seed=self.seed+i,
                                                       save_schedule=False)
                 gen_sched.append(self.schedule_gen.generate_schedule())
+
             complete_schedule = pd.concat(gen_sched)
             if not gen_name.endswith(".csv"):
                 gen_name = gen_name + ".csv"
@@ -210,7 +217,7 @@ class FleetEnv(gym.Env):
             self.ev_conf.feed_in_tariff = feed_in_tariff
 
         # scaling price conf with battery capacity. Each use-case has different battery sizes, so a full charge
-        # would have different penalty ranges with different battery capacities. Normalized to LMD (60 kWh)
+        # would have different penalty ranges with different battery capacities. Normalized to max capacity (60 kWh)
         self.score_conf.price_multiplier = self.score_conf.price_multiplier * (60.0 / self.ev_conf.init_battery_cap)
 
         # Changing parameters, if specified
@@ -606,11 +613,8 @@ class FleetEnv(gym.Env):
                                                                                  self.db,
                                                                                  current_load, current_pv)
         relative_loading = overload_amount / self.load_calculation.grid_connection + 1
-        # percentage of trafo overloading is squared and multiplied by a scaling factor, clipped to max value
+        # overload_penalty is calculated from a sigmoid function in score_conf
         if overloaded_flag:
-            # overload_penalty = (self.score_conf.penalty_overloading
-            #                     * ((overload_amount / self.load_calculation.grid_connection) ** 2))
-            # overload_penalty = max(overload_penalty, self.score_conf.clip_overloading)
             overload_penalty = self.score_conf.overloading_penalty(relative_loading)
             reward += overload_penalty
             self.episode.penalty_record += overload_penalty
@@ -667,7 +671,7 @@ class FleetEnv(gym.Env):
 
                     # caretaker, other operation times, check for violation
                     elif self.target_soc[car] - self.episode.soc[car] > self.eps:
-                        # penalty for not fulfilling charging requirement, square difference, scale and clip
+                        # current_soc_pen is calculated from a sigmoid function in score_conf
                         soc_missing = self.target_soc[car] - self.episode.soc[car]
                         cum_soc_missing += soc_missing
                         #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
@@ -684,7 +688,7 @@ class FleetEnv(gym.Env):
 
                 # other companies: if charging requirement wasn't met (with some tolerance eps)
                 elif self.target_soc[car] - self.episode.soc[car] > self.eps:
-                    # penalty for not fulfilling charging requirement, square difference, scale and clip
+                    # current_soc_pen is calculated from a sigmoid function in score_conf
                     soc_missing = self.target_soc[car] - self.episode.soc[car]
                     cum_soc_missing += soc_missing
                     #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
