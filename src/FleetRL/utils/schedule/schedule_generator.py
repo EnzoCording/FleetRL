@@ -6,7 +6,7 @@ import datetime as dt
 import time
 import os
 
-from FleetRL.utils.schedule_generator.schedule_config import ScheduleConfig, ScheduleType
+from FleetRL.utils.schedule.schedule_config import ScheduleConfig, ScheduleType
 
 class ScheduleGenerator:
 

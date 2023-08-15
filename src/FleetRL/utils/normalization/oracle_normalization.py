@@ -32,7 +32,8 @@ class OracleNormalization(Normalization):
             self.max_pv = max(db["pv"])
         if self.aux:
             self.max_soc = ev_conf.target_soc
-            self.max_hours_needed = (ev_conf.target_soc * ev_conf.init_battery_cap)/(load_calc.evse_max_power * ev_conf.charging_eff)
+            self.max_hours_needed = ((ev_conf.target_soc * ev_conf.init_battery_cap)
+                                     /(load_calc.evse_max_power * ev_conf.charging_eff))
             self.max_laxity = 5
             self.max_evse = load_calc.evse_max_power
             self.max_grid = load_calc.grid_connection

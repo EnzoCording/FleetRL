@@ -1,7 +1,7 @@
 import pandas as pd
 
 from FleetRL.fleet_env.fleet_environment import FleetEnv
-from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType
+from FleetRL.utils.schedule.schedule_generator import ScheduleGenerator, ScheduleType
 
 # initiate FleetEnv instance to access its modules
 env = FleetEnv()

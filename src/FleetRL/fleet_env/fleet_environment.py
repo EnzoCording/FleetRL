@@ -38,7 +38,7 @@ from FleetRL.utils.battery_degradation.log_data_deg import LogDataDeg
 
 from FleetRL.utils.data_logger.data_logger import DataLogger
 
-from FleetRL.utils.schedule_generator.schedule_generator import ScheduleGenerator, ScheduleType
+from FleetRL.utils.schedule.schedule_generator import ScheduleGenerator, ScheduleType
 
 
 class FleetEnv(gym.Env):
@@ -66,10 +66,10 @@ class FleetEnv(gym.Env):
 
     def __init__(self,
                  use_case: Literal["ct", "ut", "lmd"],
-                 schedule_name: str,
                  building_name: str,
                  price_name: str,
                  tariff_name: str,
+                 schedule_name: str = "lmd_sched_single.csv",
                  pv_name: str = None,
                  include_building: bool = True,
                  include_pv: bool = True,
@@ -187,23 +187,27 @@ class FleetEnv(gym.Env):
         # adjust this if schedules need to be generated
         if self.generate_schedule:
             gen_sched = []
+            if self.seed is not None:
+                gen_seed = self.seed
+            else:
+                gen_seed = 0
             print("Generating schedules... This may take a while.")
-            for i in gen_n_evs:
+            for i in range(gen_n_evs):
                 self.schedule_gen = ScheduleGenerator(file_comment=gen_name,
                                                       schedule_dir=self.path_name,
                                                       schedule_type=self.schedule_type,
                                                       starting_date=gen_start_date,
                                                       ending_date=gen_end_date,
                                                       vehicle_id=i,
-                                                      seed=self.seed+i,
+                                                      seed=gen_seed + i,
                                                       save_schedule=False)
                 gen_sched.append(self.schedule_gen.generate_schedule())
 
             complete_schedule = pd.concat(gen_sched)
             if not gen_name.endswith(".csv"):
                 gen_name = gen_name + ".csv"
-            complete_schedule.to_csv(gen_name)
-            print(f"Schedule generation complete. File name: {gen_name}")
+            complete_schedule.to_csv(self.path_name + gen_name)
+            print(f"Schedule generation complete. Saved in Inputs path. File name: {gen_name}")
             self.schedule_name = gen_name
 
         # Changing markups if specified
