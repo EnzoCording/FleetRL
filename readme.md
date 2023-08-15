@@ -1,4 +1,5 @@
-Note: I am currently finishing my thesis. Once its done, I will make a tutorial, document everything properly, as well as clean up any unnecessary files.
+Note: I am currently finishing my thesis. Once it is done, I will make a tutorial, document everything properly, as well as clean up any unnecessary files.
+For now, try the complete_pipeline notebook - it can generate new schedules and train agents with a few lines of code.
 
 This framework provides a realistic Reinforcement Learning
 environment for EV charging and is focused on commercial vehicle
