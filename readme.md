@@ -14,6 +14,7 @@ It includes the following features:
 - PV data from MERRA-2 dataset
 - Schedule generator
 - 3 different use-cases of EV fleets included
+- Non-linear battery degradation model
 
 <img width="600" src="https://github.com/EnzoCording/FleetRL/blob/master/FleetRL_overview.jpg">
 
