@@ -1,6 +1,8 @@
 Note: I am currently finishing my thesis. Once it is done, I will make a tutorial, document everything properly, as well as clean up any unnecessary files.
 For now, try the complete_pipeline notebook - it can generate new schedules and train agents with a few lines of code.
 
+Please view the license below.
+
 This framework provides a realistic Reinforcement Learning
 environment for EV charging and is focused on commercial vehicle
 fleets.
@@ -39,4 +41,6 @@ Please reference this project if you find it useful for your research.
 
 [License](LICENSE)
 
+No custom license is added to this repository until the thesis has been published.
+Until then, the copyright remains solely with the author - please contact for any further questions.
 Copyright (c) 2023, Enzo Alexander Cording - https://github.com/EnzoCording/FleetRL
