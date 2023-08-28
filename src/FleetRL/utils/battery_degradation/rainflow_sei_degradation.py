@@ -14,6 +14,8 @@ class RainflowSeiDegradation(BatteryDegradation):
         # https://ieeexplore.ieee.org/document/7488267
 
         self.num_cars = num_cars
+
+        # Counter for debugging, counts adjustments of DoD inside SOH calculations
         self.adj_counter = 0
 
         # initial state of health of the battery
@@ -80,6 +82,20 @@ class RainflowSeiDegradation(BatteryDegradation):
 
     def calculate_degradation(self, soc_log: list, charging_power: float, time_conf: TimeConfig, temp: float) -> np.array:
 
+        """
+        Calculates degradation. SOC from environment is converted to the necessary format for rainflow counting.
+        Every time step, this function is called with a new soc_log entry. The rainflow library calculates the
+        resulting cycle counts, which do not grow identically with soc_log entries. Rainflow results are used for
+        the SOH calculations. If a new rainflow result entry appears, a calculation iteration is conducted. For
+        calculation, the second most recent rainflow result is used.
+
+        :param soc_log: SOC list for each time step t: t1:[soc_car1, soc_car2, ...], t2:[soc_car1, soc_car2,...]
+        :param charging_power: kW of the charger
+        :param time_conf: Time config instance from the environment
+        :param temp: Temperature (default at 25°C)
+        :return: Numpy array of degradation for each vehicle [deg_1, deg_2, ...]
+        """
+
         # compute sorted soc list based on the log records of the episode so far
         # go from: t1:[soc_car1, soc_car2, ...], t2:[soc_car1, soc_car2,...]
         # to this: car 1: [soc_t1, soc_t2, ...], car 2: [soc_t1, soc_t2, ...]
@@ -99,7 +115,6 @@ class RainflowSeiDegradation(BatteryDegradation):
         # calculate rainflow list and store it somewhere
         # check its length and see if it increased by one
         # if it increased, calculate with the previous entry, otherwise pass
-        # I need the 0.5 / 1.0, the start and end, the average, the DoD
 
         # len(sorted_soc_list) gives the number of cars
         for i in range(self.num_cars):

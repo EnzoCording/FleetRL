@@ -21,7 +21,8 @@ class ScoreConfig:
     # Define the soc_violation_penalty function using the parameters of the fitted sigmoid function for the reward function
     def soc_violation_penalty(missing_soc):
         x0, k = 0.29229767, 16.48461585  # Parameters from the fitted sigmoid function for the reward function
-        return -500 / (1 + np.exp(-k * (missing_soc - x0))) + 1
+        penalty = -500 / (1 + np.exp(-k * (missing_soc - x0))) + 1
+        return penalty
 
     @staticmethod
     # Define the overloading_penalty function using the parameters of the fitted piecewise sigmoid function for the overloading penalty function

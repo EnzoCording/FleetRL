@@ -6,6 +6,12 @@ class EmpiricalDegradation(BatteryDegradation):
 
     def __init__(self, init_soh: float, num_cars: int):
 
+        """
+        Initialising the Degradation instance
+        :param init_soh: Initial state of health, assumed same for each EV
+        :param num_cars: How many EVs are being optimized
+        """
+
         # http://queenbattery.com.cn/our-products/677-lg-e63-376v-63ah-li-po-li-polymer-battery-cell.html?search_query=lg+e63&results=1
         # read off the graphs in section 4: cycle and calendar aging
 
