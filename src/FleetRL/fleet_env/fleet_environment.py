@@ -47,7 +47,7 @@ class FleetEnv(gym.Env):
     FleetRL: Reinforcement Learning environment for commercial vehicle fleets.
     Author: Enzo Alexander Cording - https://github.com/EnzoCording
     Master's thesis project, MSc Sustainable Energy Engineering @ KTH
-    License: MIT
+    Copyright (c) 2023, Enzo Cording
 
     This framework is built on the gymnasium core API and inherits from it.
     __init__, reset, and step are implemented, calling other modules and functions where needed.
