@@ -155,33 +155,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-#src/FleetRL/Input_Files/
-#src/FleetRL/Output_Files/*
-#src/FleetRL/RL_agents/logs/*
-#src/FleetRL/RL_agents/trained/*
-#src/FleetRL/RL_agents/FleetRl_tensorboard/*
-#src/FleetRL/RL_agents/FleetRl_tensorboard_1/*
-#src/FleetRL/RL_agents/FleetRl_tensorboard_single/*
-#src/FleetRL/RL_agents/tb_log/*
-#src/FleetRL/RL_agents/Models/*
-#./trained/*
-#src/FleetRL/RL_agents/hyperparameter_tuning/tb_log/*
-#src/FleetRL/RL_agents/hyperparameter_tuning/tb_log_hp/*
-#src/FleetRL/RL_agents/agent_training/tmp/*
-#src/FleetRL/RL_agents/agent_training/misc_models/*
-#src/FleetRL/RL_agents/trained_agents/*
-#src/FleetRL/RL_agents/agent_training/tblog/*
-#src/FleetRL/RL_agents/agent_training/tb_log/*
-#src/FleetRL/RL_agents/agent_training/tb_log_hp/*
-#extensive_requirements.in
-#extensive_requirements.txt
-#/extensive_requirements.txt
-#/extensive_requirements.in
-src/FleetRL/Final_Inputs/lmd_sched_50.csv
-src/FleetRL/Final_Inputs/ct_sched_30.csv
-src/FleetRL/Final_Inputs/ut_sched_25.csv
 src/FleetRL/Final_Inputs/big schedules/*
-#src/FleetRL/fleet_env/tblog/*
-#src/FleetRL/Extra/*
 src/FleetRL/Benchmarks/logs/*
 src/FleetRL/Internal_Files/*
