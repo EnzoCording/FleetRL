@@ -183,5 +183,5 @@ src/FleetRL/Final_Inputs/ut_sched_25.csv
 src/FleetRL/Final_Inputs/big schedules/*
 #src/FleetRL/fleet_env/tblog/*
 #src/FleetRL/Extra/*
-#src/FleetRL/Benchmarks/logs/*
+src/FleetRL/Benchmarks/logs/*
 src/FleetRL/Internal_Files/*
