@@ -46,7 +46,7 @@ class FleetEnv(gym.Env):
     """
     FleetRL: Reinforcement Learning environment for commercial vehicle fleets.
     Author: Enzo Alexander Cording - https://github.com/EnzoCording
-    Master's thesis project, MSc Sustainable Energy Engineering @ KTH
+    Master's thesis project, M.Sc. Sustainable Energy Engineering @ KTH
     Copyright (c) 2023, Enzo Cording
 
     This framework is built on the gymnasium core API and inherits from it.
@@ -76,6 +76,7 @@ class FleetEnv(gym.Env):
                  include_price: bool = True,
                  time_picker: Literal["static", "random", "eval"] = "random",
                  target_soc: float = 0.85,
+                 max_batt_cap_in_all_use_cases = 60,
                  init_soh: float = 1.0,
                  deg_emp: bool = False,
                  ignore_price_reward=False,
@@ -96,7 +97,6 @@ class FleetEnv(gym.Env):
                  spot_markup: float=None,
                  spot_mul: float=None,
                  feed_in_ded: float=None,
-                 feed_in_tariff: float=None,
                  seed: int = None
                  ):
 
@@ -109,6 +109,7 @@ class FleetEnv(gym.Env):
         :param include_price: Flag to include price or not
         :param time_picker: Specify whether to pick time "static", "random" or "eval" (train vs validation set)
         :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
+        :param max_batt_cap_in_all_use_cases: The largest battery size to be considered in the model
         :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
         :param deg_emp: Flag to use empirical degradation. Default False
         :param ignore_price_reward: Flag to ignore price reward
@@ -122,6 +123,15 @@ class FleetEnv(gym.Env):
         :param normalize_in_env: Conduct normalization in environment
         :param use_case: String to specify the use-case
         :param aux: Flag to include auxiliary information in the model
+        :param gen_schedule: Flag to generate schedule or not
+        :param gen_start_date: Start date of the schedule
+        :param gen_end_date: End date of the schedule
+        :param gen_name: File name of the schedule
+        :param gen_n_evs: How many EVs a schedule should be generated for
+        :param spot_markup: markup on the spot price: new_price = spot + X ct/kWh
+        :param spot_mul: Multiplied on the price: New price = (spot + markup) * (1+X)
+        :param feed_in_ded: Deduction of the feed-in tariff: new_feed_in = (1-X) * feed_in
+        :param seed: seed for random number generators
         """
 
         # call __init__() of parent class to ensure inheritance chain
@@ -198,7 +208,7 @@ class FleetEnv(gym.Env):
                                                       schedule_type=self.schedule_type,
                                                       starting_date=gen_start_date,
                                                       ending_date=gen_end_date,
-                                                      vehicle_id=i,
+                                                      vehicle_id=f"{i}",
                                                       seed=gen_seed + i,
                                                       save_schedule=False)
                 gen_sched.append(self.schedule_gen.generate_schedule())
@@ -217,12 +227,12 @@ class FleetEnv(gym.Env):
             self.ev_conf.variable_multiplier = spot_mul
         if feed_in_ded is not None:
             self.ev_conf.feed_in_deduction = feed_in_ded
-        if feed_in_tariff is not None:
-            self.ev_conf.feed_in_tariff = feed_in_tariff
 
         # scaling price conf with battery capacity. Each use-case has different battery sizes, so a full charge
         # would have different penalty ranges with different battery capacities. Normalized to max capacity (60 kWh)
-        self.score_conf.price_multiplier = self.score_conf.price_multiplier * (60.0 / self.ev_conf.init_battery_cap)
+        # if different use-cases are compared, change 60 to the highest battery capacity in kWh
+        self.score_conf.price_multiplier = (self.score_conf.price_multiplier
+                                            * (max_batt_cap_in_all_use_cases / self.ev_conf.init_battery_cap))
 
         # Changing parameters, if specified
         self.time_conf.episode_length = episode_length
