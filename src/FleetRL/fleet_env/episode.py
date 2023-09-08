@@ -6,13 +6,17 @@ from FleetRL.fleet_env.config.time_config import TimeConfig
 
 class Episode:
 
+    """
+    The Episode class holds all / most of the values that are episode-specific
+    """
+
     def __init__(self, time_conf: TimeConfig):
 
-        self.time_conf = time_conf
+        self.time_conf = time_conf  # time config object
 
         self.time: pd.Timestamp = None  # information of current time of the model
-        self.start_time: pd.Timestamp = None
-        self.finish_time: pd.Timestamp = None
+        self.start_time: pd.Timestamp = None  # starting date of the model (year needs to be the same as the schedule's)
+        self.finish_time: pd.Timestamp = None  # ending date of the model (year needs to be the same as the schedule's)
 
         self.battery_cap: list = None  # battery capacity - changes with degradation
         self.soc: list = None  # State of charge of the battery

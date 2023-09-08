@@ -1,6 +1,12 @@
 import numpy as np
 
 class ScoreConfig:
+    """
+    The Score Config sets coefficients to calculate the reward function
+    - Multipliers: price_multiplier, penalty_invalid_action, penalty_overcharging, penalty_overloading
+    - Changing the multipliers to 0 leads to ignoring this aspect of the reward function
+    - The SOC violation and overloading are calculated using sigmoid functions
+    """
 
     def __init__(self):
         self.price_multiplier = 3.33

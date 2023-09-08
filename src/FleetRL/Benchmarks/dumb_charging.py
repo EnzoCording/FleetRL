@@ -12,7 +12,7 @@ from FleetRL.fleet_env.fleet_environment import FleetEnv
 if __name__ == "__main__":
 
     # define parameters here for easier change
-    n_steps = 480
+    n_steps = 8600
     n_episodes = 1
     n_evs = 1
     n_envs = 1

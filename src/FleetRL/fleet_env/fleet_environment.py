@@ -51,17 +51,20 @@ class FleetEnv(gym.Env):
 
     This framework is built on the gymnasium core API and inherits from it.
     __init__, reset, and step are implemented, calling other modules and functions where needed.
-    Base-derived class architecture is implemented wherever needed, and the code is structured in
-    a modular manner to enable improvements, or changes in the model.
+    Base-derived class architecture is implemented, and the code is structured in
+    a modular manner to enable improvements or changes in the model.
 
-    Only publicly available data or own-generated data has been used to implement this model.
+    Only publicly available data or own-generated data has been used in this implementation.
 
     The agent only sees information coming from the chargers: SOC, how long the vehicle is still plugged in, etc.
-    However, this framework matches the number of chargers with the number of cars to reduce complexity in modelling.
+    However, this framework matches the number of chargers with the number of cars to reduce complexity.
     If more cars than chargers should be modelled, an allocation algorithm is necessary.
     What is more, battery degradation is modelled in this environment. In this case, the information of the car is
     required (instead of the charger). Modelling is facilitated by matching cars and chargers one-to-one.
-    Therefore, throughout the code, car and ev_charger might be used interchangeably as indices.
+    Therefore, throughout the code, "car" and "ev_charger" might be used interchangeably as indices.
+
+    Note that this does not present a simplification from the agent perspective because the agent does only handles
+    the SOC and time left at the charger, regardless of whether the vehicle is matching the charger one-to-one or not.
     """
 
     def __init__(self,
@@ -74,7 +77,7 @@ class FleetEnv(gym.Env):
                  include_building: bool = True,
                  include_pv: bool = True,
                  include_price: bool = True,
-                 time_picker: Literal["static", "random", "eval"] = "random",
+                 time_picker_name: Literal["static", "random", "eval"] = "random",
                  target_soc: float = 0.85,
                  max_batt_cap_in_all_use_cases = 60,
                  init_soh: float = 1.0,
@@ -107,7 +110,7 @@ class FleetEnv(gym.Env):
         :param include_building: Flag to include building or not
         :param include_pv: Flag to include pv or not
         :param include_price: Flag to include price or not
-        :param time_picker: Specify whether to pick time "static", "random" or "eval" (train vs validation set)
+        :param time_picker_name: Specify whether to pick time "static", "random" or "eval" (train vs validation set)
         :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
         :param max_batt_cap_in_all_use_cases: The largest battery size to be considered in the model
         :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
@@ -164,6 +167,10 @@ class FleetEnv(gym.Env):
         # generating own schedules or importing them
         self.generate_schedule = gen_schedule
         self.schedule_name = schedule_name
+        self.gen_name = gen_name
+        self.gen_start_date = gen_start_date
+        self.gen_end_date = gen_end_date
+        self.gen_n_evs = gen_n_evs
 
         # Price databases
         self.spot_name = price_name
@@ -194,31 +201,9 @@ class FleetEnv(gym.Env):
         else:
             raise TypeError("Company not recognised.")
 
-        # adjust this if schedules need to be generated
+        # Automatic schedule generation if specified
         if self.generate_schedule:
-            gen_sched = []
-            if self.seed is not None:
-                gen_seed = self.seed
-            else:
-                gen_seed = 0
-            print("Generating schedules... This may take a while.")
-            for i in range(gen_n_evs):
-                self.schedule_gen = ScheduleGenerator(file_comment=gen_name,
-                                                      schedule_dir=self.path_name,
-                                                      schedule_type=self.schedule_type,
-                                                      starting_date=gen_start_date,
-                                                      ending_date=gen_end_date,
-                                                      vehicle_id=f"{i}",
-                                                      seed=gen_seed + i,
-                                                      save_schedule=False)
-                gen_sched.append(self.schedule_gen.generate_schedule())
-
-            complete_schedule = pd.concat(gen_sched)
-            if not gen_name.endswith(".csv"):
-                gen_name = gen_name + ".csv"
-            complete_schedule.to_csv(self.path_name + gen_name)
-            print(f"Schedule generation complete. Saved in Inputs path. File name: {gen_name}")
-            self.schedule_name = gen_name
+            self.auto_gen()
 
         # Changing markups if specified
         if spot_markup is not None:
@@ -258,37 +243,11 @@ class FleetEnv(gym.Env):
         # Class simulating EV charging
         self.ev_charger: EvCharger = EvCharger(self.ev_conf)
 
-        # Load time picker module
-        if time_picker == "static":
-            # when an episode starts, this class picks the same starting time
-            self.time_picker: TimePicker = StaticTimePicker()
-        elif time_picker == "eval":
-            # picks a random starting times from test set (nov - dez)
-            self.time_picker: TimePicker = EvalTimePicker(self.time_conf.episode_length)
-        elif time_picker =="random":
-            # picks random starting times from training set (jan - oct)
-            self.time_picker: TimePicker = RandomTimePicker()
-        else:
-            # must choose between static, eval or random
-            raise TypeError("Time picker type not recognised")
+        # Choose time picker based on input string time_picker_name
+        self.time_picker = self.choose_time_picker(time_picker_name)
 
         # Choose the right observer module based on the environment settings
-        # All observations are made in the observer class
-        # not even price: only soc and time left
-        if not self.include_price:
-            self.observer: Observer = ObserverSocTimeOnly()
-        # only price
-        elif not self.include_building_load and not self.include_pv:
-            self.observer: Observer = ObserverPriceOnly()
-        # price and building load
-        elif self.include_building_load and not self.include_pv:
-            self.observer: Observer = ObserverWithBuildingLoad()
-        # price and pv
-        elif not self.include_building_load and self.include_pv:
-            self.observer: Observer = ObserverWithPV()
-        # price, building load and pv
-        elif self.include_building_load and self.include_pv:
-            self.observer: Observer = ObserverWithBoth()
+        self.observer = self.choose_observer()
 
         # Instantiating episode object
         # Episode object contains all episode-specific information
@@ -319,28 +278,11 @@ class FleetEnv(gym.Env):
         # get the total database
         self.db = self.data_loader.db
 
-        # make an adjustment for caretakers: the afternoon tour SOC on arrival should be calculated with the
-        # afternoon target SOC. This is set to 0.65 in this case
         if use_case == "ct":
-            afternoon_trips = self.db.loc[((self.db["date"].dt.hour >= 0) & (self.db["date"].dt.hour <= 10))
-                                          | ((self.db["date"].dt.hour >= 15) & (self.db["date"].dt.hour <= 23))]
-
-            self.db.loc[((self.db["date"].dt.hour >= 0) & (self.db["date"].dt.hour <= 10))
-                        | ((self.db["date"].dt.hour >= 15) & (self.db["date"].dt.hour <= 23)), "SOC_on_return"]\
-                = (self.ev_conf.target_soc_lunch
-                   - afternoon_trips["last_trip_total_consumption"].div(self.ev_conf.init_battery_cap))
-
-            self.db.loc[self.db["There"] == 0, "SOC_on_return"] = 0
+            self.adjust_caretaker_lunch_soc()
 
         # first ID is 0
         self.num_cars = self.db["ID"].max() + 1
-
-        '''
-        # Maximum building load is required to determine grid connection if value is not known.
-        # Grid connection is sized at 1.1 times the maximum building load, or such that the charging
-        # of 50% of EVs at full capacity causes a grid overloading.
-        # This can be changed in the load calculation module, e.g. replacing it with a fixed value.
-        '''
 
         # Target SoC - Vehicles should always leave with this SoC
         self.target_soc = np.ones(self.num_cars) * self.ev_conf.target_soc
@@ -351,6 +293,13 @@ class FleetEnv(gym.Env):
             max_load = 0  # building load not considered in that case
 
         # Instantiate load calculation with the necessary information
+        '''
+        Note:
+        # Maximum building load is required to determine grid connection if value is not known.
+        # Grid connection is sized at 1.1 times the maximum building load, or such that the charging
+        # of 50% of EVs at full capacity causes a grid overloading.
+        # This can be changed in the load calculation module, e.g. replacing it with a fixed value.
+        '''
         self.load_calculation = LoadCalculation(self.company, num_cars=self.num_cars, max_load=max_load)
 
         # choosing degradation methodology: empirical linear or non-linear mathematical model
@@ -382,92 +331,8 @@ class FleetEnv(gym.Env):
         else:
             self.normalizer: Normalization = UnitNormalization()
 
-        '''
-        # set boundaries of the observation space, detects if normalized or not.
-        # If aux flag is true, additional information enlarges the observation space.
-        # The following code goes through all possible environment setups.
-        # Depending on the setup, the dimensions differ and every case is handled differently.
-        '''
-
-        if not self.include_price:
-            dim = 2 * self.num_cars  # soc and time left
-            if self.aux_flag:
-                dim += self.num_cars  # there
-                dim += self.num_cars  # target soc
-                dim += self.num_cars  # charging left
-                dim += self.num_cars  # hours needed
-                dim += self.num_cars  # laxity
-                dim += 1  # evse power
-                dim += 6  # month, week, hour sin/cos
-            low_obs, high_obs = self.normalizer.make_boundaries(dim)
-
-        elif not self.include_building_load and not self.include_pv:
-            dim = 2 * self.num_cars + (self.time_conf.price_lookahead + 1) * 2
-            if self.aux_flag:
-                dim += self.num_cars  # there
-                dim += self.num_cars  # target soc
-                dim += self.num_cars  # charging left
-                dim += self.num_cars  # hours needed
-                dim += self.num_cars  # laxity
-                dim += 1  # evse power
-                dim += 6  # month, week, hour sin/cos
-            low_obs, high_obs = self.normalizer.make_boundaries(dim)
-
-        elif self.include_building_load and not self.include_pv:
-            dim = (2 * self.num_cars
-                   + (self.time_conf.price_lookahead + 1) * 2
-                   + self.time_conf.bl_pv_lookahead + 1
-                   )
-            if self.aux_flag:
-                dim += self.num_cars  # there
-                dim += self.num_cars  # target soc
-                dim += self.num_cars  # charging left
-                dim += self.num_cars  # hours needed
-                dim += self.num_cars  # laxity
-                dim += 1  # evse power
-                dim += 1  # grid cap
-                dim += 1  # avail grid cap for charging
-                dim += 1  # possible avg action per car
-                dim += 6  # month, week, hour sin/co
-            low_obs, high_obs = self.normalizer.make_boundaries(dim)
-
-        elif not self.include_building_load and self.include_pv:
-            dim = (2 * self.num_cars
-                   + (self.time_conf.price_lookahead + 1) * 2
-                   + self.time_conf.bl_pv_lookahead + 1
-                   )
-            if self.aux_flag:
-                dim += self.num_cars  # there
-                dim += self.num_cars  # target soc
-                dim += self.num_cars  # charging left
-                dim += self.num_cars  # hours needed
-                dim += self.num_cars  # laxity
-                dim += 1  # evse power
-                dim += 6  # month, week, hour sin/cos
-            low_obs, high_obs = self.normalizer.make_boundaries(dim)
-
-        elif self.include_building_load and self.include_pv:
-            dim = (2 * self.num_cars  # soc and time left
-                   + (self.time_conf.price_lookahead + 1) * 2  # price and tariff
-                   + 2 * (self.time_conf.bl_pv_lookahead + 1)  # pv and building load
-                   )
-            if self.aux_flag:
-                dim += self.num_cars  # there
-                dim += self.num_cars  # target soc
-                dim += self.num_cars  # charging left
-                dim += self.num_cars  # hours needed
-                dim += self.num_cars  # laxity
-                dim += 1  # evse power
-                dim += 1  # grid cap
-                dim += 1  # avail grid cap for charging
-                dim += 1  # possible avg action per car
-                dim += 6  # month, week, hour sin/cos
-            low_obs, high_obs = self.normalizer.make_boundaries(dim)
-
-        else:
-            low_obs = None
-            high_obs = None
-            raise ValueError("Problem with environment setup. Check building and pv flags.")
+        # choose dimensions and bounds depending on settings
+        low_obs, high_obs = self.detect_dim_and_bounds()
 
         self.observation_space = gym.spaces.Box(
             low=low_obs,
@@ -872,3 +737,202 @@ class FleetEnv(gym.Env):
                                     target_soc=self.target_soc)
 
         return np.divide(obs["hours_needed"], np.add(obs["hours_left"], 0.001))
+
+    def choose_time_picker(self, time_picker):
+        """
+        Chooses the right time picker based on the specified in input string.
+        Static: Always the same time is picked to start an episode
+        Random: Start an episode randomly from the training set
+        Eval: Start an episode randomly from the validation set
+        :param time_picker: (string), specifies which time picker to choose: "static", "eval", "random"
+        :return: tp (TimePicker) -> time picker object
+        """
+
+        # Load time picker module
+        if time_picker == "static":
+            # when an episode starts, this class picks the same starting time
+            tp: TimePicker = StaticTimePicker()
+        elif time_picker == "eval":
+            # picks a random starting times from test set (nov - dez)
+            tp: TimePicker = EvalTimePicker(self.time_conf.episode_length)
+        elif time_picker == "random":
+            # picks random starting times from training set (jan - oct)
+            tp: TimePicker = RandomTimePicker()
+        else:
+            # must choose between static, eval or random
+            raise TypeError("Time picker type not recognised")
+
+        return tp
+
+    def choose_observer(self):
+        """
+        This function chooses the right observer, depending on whether to include price, building, PV, etc.
+        :return: obs (Observer) -> The observer module to choose
+        """
+
+        # All observations are made in the observer class
+        # not even price: only soc and time left
+        if not self.include_price:
+            obs: Observer = ObserverSocTimeOnly()
+        # only price
+        elif not self.include_building_load and not self.include_pv:
+            obs: Observer = ObserverPriceOnly()
+        # price and building load
+        elif self.include_building_load and not self.include_pv:
+            obs: Observer = ObserverWithBuildingLoad()
+        # price and pv
+        elif not self.include_building_load and self.include_pv:
+            obs: Observer = ObserverWithPV()
+        # price, building load and pv
+        elif self.include_building_load and self.include_pv:
+            obs: Observer = ObserverWithBoth()
+        else:
+            raise TypeError("Observer configuration not found. Recheck flags.")
+
+        return obs
+
+    def detect_dim_and_bounds(self):
+
+        """
+        This function chooses the right dimension of the observation space based on the chosen configuration.
+        Each increase of dim is explained below. The low_obs and high_obs are built in the normalizer object,
+        using the dim value that was calculated in this function.
+
+        - set boundaries of the observation space, detects if normalized or not.
+        - If aux flag is true, additional information enlarges the observation space.
+        - The following code goes through all possible environment setups.
+        - Depending on the setup, the dimensions differ and every case is handled differently.
+
+        :return: low_obs and high_obs: tuple[float, float] | tuple[np.ndarray, np.ndarray] -> used for gym.Spaces
+        """
+
+        if not self.include_price:
+            dim = 2 * self.num_cars  # soc and time left for each EV
+            if self.aux_flag:
+                dim += self.num_cars  # there
+                dim += self.num_cars  # target soc
+                dim += self.num_cars  # charging left
+                dim += self.num_cars  # hours needed
+                dim += self.num_cars  # laxity
+                dim += 1  # evse power
+                dim += 6  # month, week, hour sin/cos
+            low_obs, high_obs = self.normalizer.make_boundaries(dim)
+
+        elif not self.include_building_load and not self.include_pv:
+            dim = 2 * self.num_cars + (self.time_conf.price_lookahead + 1) * 2
+            if self.aux_flag:
+                dim += self.num_cars  # there
+                dim += self.num_cars  # target soc
+                dim += self.num_cars  # charging left
+                dim += self.num_cars  # hours needed
+                dim += self.num_cars  # laxity
+                dim += 1  # evse power
+                dim += 6  # month, week, hour sin/cos
+            low_obs, high_obs = self.normalizer.make_boundaries(dim)
+
+        elif self.include_building_load and not self.include_pv:
+            dim = (2 * self.num_cars
+                   + (self.time_conf.price_lookahead + 1) * 2
+                   + self.time_conf.bl_pv_lookahead + 1
+                   )
+            if self.aux_flag:
+                dim += self.num_cars  # there
+                dim += self.num_cars  # target soc
+                dim += self.num_cars  # charging left
+                dim += self.num_cars  # hours needed
+                dim += self.num_cars  # laxity
+                dim += 1  # evse power
+                dim += 1  # grid cap
+                dim += 1  # avail grid cap for charging
+                dim += 1  # possible avg action per car
+                dim += 6  # month, week, hour sin/co
+            low_obs, high_obs = self.normalizer.make_boundaries(dim)
+
+        elif not self.include_building_load and self.include_pv:
+            dim = (2 * self.num_cars
+                   + (self.time_conf.price_lookahead + 1) * 2
+                   + self.time_conf.bl_pv_lookahead + 1
+                   )
+            if self.aux_flag:
+                dim += self.num_cars  # there
+                dim += self.num_cars  # target soc
+                dim += self.num_cars  # charging left
+                dim += self.num_cars  # hours needed
+                dim += self.num_cars  # laxity
+                dim += 1  # evse power
+                dim += 6  # month, week, hour sin/cos
+            low_obs, high_obs = self.normalizer.make_boundaries(dim)
+
+        elif self.include_building_load and self.include_pv:
+            dim = (2 * self.num_cars  # soc and time left
+                   + (self.time_conf.price_lookahead + 1) * 2  # price and tariff
+                   + 2 * (self.time_conf.bl_pv_lookahead + 1)  # pv and building load
+                   )
+            if self.aux_flag:
+                dim += self.num_cars  # there
+                dim += self.num_cars  # target soc
+                dim += self.num_cars  # charging left
+                dim += self.num_cars  # hours needed
+                dim += self.num_cars  # laxity
+                dim += 1  # evse power
+                dim += 1  # grid cap
+                dim += 1  # avail grid cap for charging
+                dim += 1  # possible avg action per car
+                dim += 6  # month, week, hour sin/cos
+            low_obs, high_obs = self.normalizer.make_boundaries(dim)
+
+        else:
+            low_obs = None
+            high_obs = None
+            raise ValueError("Problem with environment setup. Check building and pv flags.")
+
+        return low_obs, high_obs
+
+    def adjust_caretaker_lunch_soc(self):
+        """
+
+        :return:
+        """
+        # make an adjustment for caretakers: the afternoon tour SOC on arrival should be calculated with the
+        # afternoon target SOC. This is set to 0.65 in this case
+        afternoon_trips = self.db.loc[((self.db["date"].dt.hour >= 0) & (self.db["date"].dt.hour <= 10))
+                                      | ((self.db["date"].dt.hour >= 15) & (self.db["date"].dt.hour <= 23))]
+
+        self.db.loc[((self.db["date"].dt.hour >= 0) & (self.db["date"].dt.hour <= 10))
+                    | ((self.db["date"].dt.hour >= 15) & (self.db["date"].dt.hour <= 23)), "SOC_on_return"] \
+            = (self.ev_conf.target_soc_lunch
+               - afternoon_trips["last_trip_total_consumption"].div(self.ev_conf.init_battery_cap))
+
+        self.db.loc[self.db["There"] == 0, "SOC_on_return"] = 0
+
+    def auto_gen(self):
+        """
+        This function automatically generates schedules as specified.
+        Uses the ScheduleGenerator module.
+        Note: this can take up to 1-3 hours, depending on the number of vehicles.
+
+        :return: None -> The schedule is generated and placed in the input folder
+        """
+        gen_sched = []
+        if self.seed is not None:
+            gen_seed = self.seed
+        else:
+            gen_seed = 0
+        print("Generating schedules... This may take a while.")
+        for i in range(self.gen_n_evs):
+            self.schedule_gen = ScheduleGenerator(file_comment=self.gen_name,
+                                                  schedule_dir=self.path_name,
+                                                  schedule_type=self.schedule_type,
+                                                  starting_date=self.gen_start_date,
+                                                  ending_date=self.gen_end_date,
+                                                  vehicle_id=f"{i}",
+                                                  seed=gen_seed + i,
+                                                  save_schedule=False)
+            gen_sched.append(self.schedule_gen.generate_schedule())
+
+        complete_schedule = pd.concat(gen_sched)
+        if not self.gen_name.endswith(".csv"):
+            self.gen_name = self.gen_name + ".csv"
+        complete_schedule.to_csv(self.path_name + self.gen_name)
+        print(f"Schedule generation complete. Saved in Inputs path. File name: {self.gen_name}")
+        self.schedule_name = self.gen_name

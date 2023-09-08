@@ -14,9 +14,8 @@ from FleetRL.fleet_env.fleet_environment import FleetEnv
 
 if __name__ == "__main__":
 
-
     # define parameters here for easier change
-    n_steps = 86
+    n_steps = 8600
     n_episodes = 1
     n_evs = 1
     n_envs = 1
@@ -64,7 +63,7 @@ if __name__ == "__main__":
                    tariff_name=env_kwargs["tariff_name"],
                    price_name=env_kwargs["price_name"],
                    episode_length=n_steps,
-                   time_picker=env_kwargs["time_picker"],
+                   time_picker_name=env_kwargs["time_picker"],
                    building_name=env_kwargs["building_name"])
 
     episode_length = n_steps
@@ -109,4 +108,3 @@ if __name__ == "__main__":
     plt.ylim([-max * 1.2, max * 1.2])
 
     plt.show()
-
