@@ -11,12 +11,32 @@ from FleetRL.fleet_env.config.time_config import TimeConfig
 # the schedule is imported from emobpy and manipulated so that the output data is in the right format
 
 class DataLoader:
+    """
+    The DataLoader class handles the csv import and pre-processing of the timeseries information.
+    Optimized pandas functions such as merge_asof are used to significantly speed up processing compared to loops.
+    Cython could further improve this initial processing step. It only happens once when instantiating env objects.
+    """
 
     def __init__(self, path_name, schedule_name,
                  spot_name, tariff_name,
                  building_name, pv_name,
                  time_conf: TimeConfig, ev_conf: EvConfig,
                  target_soc, building_flag, pv_flag):
+
+        """
+        Initial information that is required for loading data
+        :param path_name: string pointing to the parent directory of input files
+        :param schedule_name: string of the schedule csv, e.g. "1_LMD.csv"
+        :param spot_name: string of the spot price csv
+        :param tariff_name: string of the feed-in tariff csv
+        :param building_name: building load csv
+        :param pv_name: pv data csv
+        :param time_conf: time config object
+        :param ev_conf: ev config object
+        :param target_soc: target soc
+        :param building_flag: include/load building load flag
+        :param pv_flag: include/load pv flag
+        """
 
         # save the time_conf within DataLoader as well because it is used in some functions
         self.time_conf = time_conf
@@ -39,6 +59,7 @@ class DataLoader:
         # resetting the index to a numerical value
         self.schedule.index = range(len(self.schedule))
 
+        # compute / preprocess from loaded schedule
         self.compute_from_schedule(ev_conf, time_conf, target_soc)
 
         # create a date range with the chosen frequency
@@ -49,6 +70,7 @@ class DataLoader:
                                                 freq=time_conf.freq
                                                 )
 
+        # load csv files
         self.spot_price = DataLoader.load_prices(path_name, spot_name, self.date_range)
         self.tariff = DataLoader.load_feed_in(path_name, tariff_name, self.date_range)
 
@@ -88,11 +110,12 @@ class DataLoader:
 
     def compute_from_schedule(self, ev_conf, time_conf, target_soc):
         """
-        # >>> test_EV = EV()
-        # >>> test_EV.get_total_consumption().sum().round(1)
-        # 147.8
+        This function pre-processes the input data and adds additional rows to the file.
+        There flag, time left at charger, soc on return, consumption, etc.
+
+        Use of merge_asof and vectorized operations for performance gains
     
-        :return:
+        :return: None
         """
         # new column with flag if EV is there or not
         self.schedule["There"] = (np.array(self.schedule["PowerRating_kW"] != 0, dtype=int))
@@ -184,15 +207,22 @@ class DataLoader:
 
         # create SOC column and populate with zeros
         # calculate SOC on return, assuming the previous trip charged to the target soc
-        # TODO this could be changed in the future to make it more complex
+        # maybe this could be changed in the future to make it more complex (future SOC depends on previous SOC)
 
         self.schedule["SOC_on_return"] = target_soc - self.schedule["last_trip_total_consumption"].div(
             ev_conf.init_battery_cap)
-        # TODO could be set to -1
         self.schedule.loc[self.schedule["There"] == 0, "SOC_on_return"] = 0
 
     @staticmethod
     def load_prices_original(path_name, spot_name, date_range):
+        """
+        Load prices from csv
+        :param path_name: Parent directory string
+        :param spot_name: file name with .csv ending
+        :param date_range: pd.date_range which was defined from the "date" column in the EV schedules. Note that the
+        EV schedule dates therefore dictate the model's timeframe.
+        :return: spot price dataframe
+        """
         # load csv
         spot = pd.read_csv(path_name + spot_name, delimiter=";", decimal=",")
 
@@ -219,6 +249,14 @@ class DataLoader:
 
     @staticmethod
     def load_prices(path_name, spot_name, date_range):
+        """
+        Load prices from csv
+        :param path_name: Parent directory string
+        :param spot_name: file name with .csv ending
+        :param date_range: pd.date_range which was defined from the "date" column in the EV schedules. Note that the
+        EV schedule dates therefore dictate the model's timeframe.
+        :return: spot price dataframe
+        """
         # load csv
         spot = pd.read_csv(path_name + spot_name, delimiter=";", decimal=",", parse_dates=["date"])
 
@@ -243,6 +281,14 @@ class DataLoader:
 
     @staticmethod
     def load_feed_in(path_name, tariff_name, date_range):
+        """
+        Load feedin from csv
+        :param path_name: Parent directory string
+        :param tariff_name: file name with .csv ending
+        :param date_range: pd.date_range which was defined from the "date" column in the EV schedules. Note that the
+        EV schedule dates therefore dictate the model's timeframe.
+        :return: tariff dataframe
+        """
         # load csv
         df = pd.read_csv(path_name + tariff_name, delimiter=";", decimal=",", parse_dates=["date"])
 
@@ -257,6 +303,16 @@ class DataLoader:
 
     @staticmethod
     def load_building_load(path_name, file_name, date_range):
+
+        """
+        Load building load from csv
+        :param path_name: Parent directory string
+        :param file_name: file name with .csv ending
+        :param date_range: pd.date_range which was defined from the "date" column in the EV schedules. Note that the
+        EV schedule dates therefore dictate the model's timeframe.
+        :return: load dataframe
+        """
+
         b_load = pd.read_csv(path_name + file_name, delimiter=",", parse_dates=["date"])
         # b_load["date"] = pd.to_datetime(b_load["date"], format="mixed")
 
@@ -272,6 +328,14 @@ class DataLoader:
 
     @staticmethod
     def load_pv(path_name, pv_name, date_range):
+        """
+        Load pv from csv
+        :param path_name: Parent directory string
+        :param pv_name: file name with .csv ending
+        :param date_range: pd.date_range which was defined from the "date" column in the EV schedules. Note that the
+        EV schedule dates therefore dictate the model's timeframe.
+        :return: pv dataframe
+        """
         pv = pd.read_csv(path_name + pv_name, delimiter=",", decimal=",", parse_dates=["date"])
         # pv["date"] = pd.to_datetime(pv["date"], format="mixed")
 
@@ -287,13 +351,19 @@ class DataLoader:
 
     @staticmethod
     def shape_price_reward(db: pd.DataFrame, ev_conf: EvConfig):
+        """
+        - de-trend prices, so they can be used as a reward function
+        - agent should not be penalised more if the general price level is higher
+        - instead, the agent should just focus on price fluctuations and exploit them
+        - computing average for whole year, split data into monthly chunks
+        - offset monthly chunks, such that the monthly average = annual average
+        - this corrects for absolute price increases, but leaves fluctuations intact
 
-        # de-trend prices, so they can be used as a reward function
-        # agent should not be penalised more if the general price level is higher
-        # instead, the agent should just focus on price fluctuations and exploit them
-        # computing average for whole year, split data into monthly chunks
-        # offset monthly chunks, such that the monthly average = annual average
-        # this corrects for absolute price increases, but leaves fluctuations intact
+        :param db: database with schedules, pv, prices, load, dataframe
+        :param ev_conf: ev config object
+        :return: db with updated, de-trended prices
+        """
+
         price = db["DELU"].dropna()
         price = price.add(ev_conf.fixed_markup)
         price = price.mul(ev_conf.variable_multiplier)
@@ -324,4 +394,3 @@ class DataLoader:
         db = pd.concat((db, result["tariff_reward_curve"]), axis=1)
 
         return db
-

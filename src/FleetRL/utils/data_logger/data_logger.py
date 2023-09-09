@@ -3,11 +3,20 @@ import numpy as np
 import copy
 
 class DataLogger:
+    """
+    Logs data to allow for postprocessing, graphs, etc.
+    The log is a dataframe, where each row can be a float or an array.
+    Deepcopy to avoid risk of mutability (logs pointing back to changing variables)
+    """
     def __init__(self, episode_length):
+        """
+        Initialising default values
+        :param episode_length: Length of the episode in hours
+        """
         self.log: pd.DataFrame = pd.DataFrame()
         self.entry = None
-        self.episode_count: int = 1
-        self.episode_length = episode_length  # counter if several episodes are evaluated
+        self.episode_count: int = 1  # counter if several episodes are evaluated
+        self.episode_length = episode_length
 
     def log_data(self, time: pd.Timestamp,
                  obs: np.ndarray,
@@ -20,6 +29,23 @@ class DataLogger:
                  degradation: float,
                  charge_log: np.ndarray,
                  soh: np.ndarray):
+        """
+        While the env object is the same, the episode counter will recognise different episodes.
+        A dict is created with the required values, and then appended to the log dataframe
+
+        :param time: Current timestamp
+        :param obs: Observation array
+        :param action: Action array
+        :param reward: Reward float
+        :param cashflow: in EUR
+        :param penalty: penalty float
+        :param grid: Grid connection in kW
+        :param soc_v: Amount of SOC violated in # of batteries
+        :param degradation: Degradation in that timestep
+        :param charge_log: How much energy flowed into the batteries in kWh
+        :param soh: Current SoH, array
+        :return: None
+        """
 
         self.episode_count = len(self.log) // self.episode_length + 1
 

@@ -8,12 +8,11 @@ class EmpiricalDegradation(BatteryDegradation):
 
         """
         Initialising the Degradation instance
+        - http://queenbattery.com.cn/our-products/677-lg-e63-376v-63ah-li-po-li-polymer-battery-cell.html?search_query=lg+e63&results=1
+        - read off the graphs in section 4: cycle and calendar aging
         :param init_soh: Initial state of health, assumed same for each EV
         :param num_cars: How many EVs are being optimized
         """
-
-        # http://queenbattery.com.cn/our-products/677-lg-e63-376v-63ah-li-po-li-polymer-battery-cell.html?search_query=lg+e63&results=1
-        # read off the graphs in section 4: cycle and calendar aging
 
         self.cycle_loss_11 = 0.000125  # Cycle loss per full cycle (100% DoD discharge and charge) at 11 kW
         self.cycle_loss_22 = 0.000125  # Cycle loss per full cycle (100% DoD discharge and charge) at 11 kW
@@ -28,10 +27,21 @@ class EmpiricalDegradation(BatteryDegradation):
         self.soh = np.ones(self.num_cars) * self.init_soh
 
     def calculate_degradation(self, soc_log: list, charging_power: float, time_conf: TimeConfig, temp: float) -> np.array:
-        # find out the most recent entries in the soc list
-        # get old and new soc
-        # get average soc
-        # compute cycle and calendar based on avg soc and charging power
+        """
+        Similar to non-linear SEI, the most recent event is taken, and the linear-based degradation is calculated.
+        No rainflow counting, thus degradation is computed for each time step.
+
+        - find out the most recent entries in the soc list
+        - get old and new soc
+        - get average soc
+        - compute cycle and calendar based on avg soc and charging power
+
+        :param soc_log: Historical log of SOC
+        :param charging_power: EVSE power in kW
+        :param time_conf: time config object
+        :param temp: temperature
+        :return: Degradation, float
+        """
 
         # compute sorted soc list based on the log records of the episode so far
         # go from: t1:[soc_car1, soc_car2, ...], t2:[soc_car1, soc_car2,...]

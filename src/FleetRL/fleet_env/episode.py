@@ -11,6 +11,10 @@ class Episode:
     """
 
     def __init__(self, time_conf: TimeConfig):
+        """
+        Instantiating variables with default values.
+        :param time_conf: Time config object
+        """
 
         self.time_conf = time_conf  # time config object
 

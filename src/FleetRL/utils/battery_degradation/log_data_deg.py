@@ -3,6 +3,9 @@ import time
 import copy
 
 class LogDataDeg:
+    """
+    Data Logger for degradation purposes. Deepcopy to avoid mutability
+    """
     def __init__(self, episode):
         self.log: list = []
         self.soc_log = []

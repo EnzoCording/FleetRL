@@ -3,7 +3,6 @@ import gymnasium as gym
 import numpy as np
 import pandas as pd
 from typing import Literal
-import copy
 
 from FleetRL.fleet_env.config.ev_config import EvConfig
 from FleetRL.fleet_env.config.score_config import ScoreConfig
@@ -454,7 +453,16 @@ class FleetEnv(gym.Env):
 
     def step(self, actions: np.array) -> tuple[np.array, float, bool, bool, dict]:
         """
-        :param actions: Actions parsed by the agent
+        The main logic of the EV charging problem is orchestrated in the step function.
+        Input: Action on charging power for each EV
+        Output: Next state, reward
+
+        Intermediate processes: EV charging model, battery degradation, cost calculation, building load, penalties, etc.
+
+        The step function runs as long as the done flag is False. Different functions and modules are called in this
+        function to reduce the complexity and to distribute the tasks of the model.
+
+        :param actions: Actions parsed by the agent, from -1 to 1, representing % of kW of the EVSE
         :return: Tuple containing next observation, reward, done, truncated and info dictionary
         """
 
@@ -690,6 +698,13 @@ class FleetEnv(gym.Env):
         return None
 
     def print(self, action):
+        """
+        The print function can provide useful information of the environment dynamics and the agent's actions.
+        Can slow down FPS due to the printing at each timestep
+
+        :param action: Action of the agent
+        :return: None -> Just prints information if specified
+        """
         print(f"Timestep: {self.episode.time}")
         if self.include_price:
             print(f"Total price with fees: {np.round(self.episode.price[0] / 1000, 3)} €/kWh")
@@ -711,24 +726,54 @@ class FleetEnv(gym.Env):
 
     # functions that can be called through vec_envs via env_method()
     def get_log(self):
-        # return log dataframe
+        """
+        This function can be called through SB3 vectorized environments via VecEnv.env_method("get_log")[0]
+        The zero index is required so only the first element -> the DataFrame is extracted
+
+        :return: Log dataframe
+        """
         return self.data_logger.log
 
     def is_done(self):
+        """
+        VecEnv.env_method("is_done")[0]
+        :return: Flag is episode is done, bool
+        """
         # return if episode is done
         return self.episode.done
 
     def get_start_time(self):
+        """
+        VecEnv.env_method("get_start_time")[0]
+        :return: pd.TimeStamp
+        """
         return self.episode.start_time
 
     def set_start_time(self, start_time: str):
+        """
+        VecEnv.env_method("set_start_time", [f"{start_time}"])
+        Must parse the function and argument of start_time
+        :param start_time: string of pd.TimeStamp / date
+        :return: None
+        """
         self.episode.start_time = start_time
         return None
 
     def get_time(self):
+        """
+        VecEnv.env_method("get_time")[0]
+        :return: pd.TimeStamp: current timestamp
+        """
         return self.episode.time
 
     def get_dist_factor(self):
+        """
+        This function returns the distribution/laxity factor: how much time needed vs. how much time left at charger
+        If factor is 0.1, the dist agent would only charge with 10% of the EVSE capacity.
+        Call via env_method("get_dist_factor")[0] if using an SB3 Vectorized Environment
+        :return: dist/laxity factor, float
+        """
+
         obs = self.observer.get_obs(self.db,
                                     self.time_conf.price_lookahead,
                                     self.time_conf.bl_pv_lookahead,
@@ -892,8 +937,9 @@ class FleetEnv(gym.Env):
 
     def adjust_caretaker_lunch_soc(self):
         """
-
-        :return:
+        The caretaker target SOC can be set lower during the lunch break to avoid unfair penalties occurring. This is
+        because the break is not long enough to charge until 0.85 target SOC.
+        :return: None -> sets the target SOC during lunch break hours to 0.65 by default
         """
         # make an adjustment for caretakers: the afternoon tour SOC on arrival should be calculated with the
         # afternoon target SOC. This is set to 0.65 in this case

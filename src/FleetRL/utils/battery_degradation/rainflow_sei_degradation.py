@@ -8,10 +8,18 @@ from FleetRL.fleet_env.config.time_config import TimeConfig
 
 class RainflowSeiDegradation(BatteryDegradation):
 
-    def __init__(self, init_soh: float, num_cars: int):
+    """
+    Non-linear battery degradation model, Xu et al.
+    - Source: Modeling of Lithium-Ion Battery Degradation for Cell Life Assessment
+    - https://ieeexplore.ieee.org/document/7488267
+    """
 
-        # Source: Modeling of Lithium-Ion Battery Degradation for Cell Life Assessment
-        # https://ieeexplore.ieee.org/document/7488267
+    def __init__(self, init_soh: float, num_cars: int):
+        """
+        Initialise necessary parameters, default params, etc.
+        :param init_soh: New batteries or used? Assumed same for all EVs
+        :param num_cars: Number of vehicles
+        """
 
         self.num_cars = num_cars
 
