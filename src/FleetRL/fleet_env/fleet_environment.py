@@ -293,13 +293,13 @@ class FleetEnv(gym.Env):
             max_load = 0  # building load not considered in that case
 
         # Instantiate load calculation with the necessary information
-        '''
+        """
         Note:
-        # Maximum building load is required to determine grid connection if value is not known.
-        # Grid connection is sized at 1.1 times the maximum building load, or such that the charging
-        # of 50% of EVs at full capacity causes a grid overloading.
-        # This can be changed in the load calculation module, e.g. replacing it with a fixed value.
-        '''
+        - Maximum building load is required to determine grid connection if value is not known.
+        - Grid connection is sized at 1.1 times the maximum building load, or such that the charging
+        - of 50% of EVs at full capacity causes a grid overloading.
+        - This can be changed in the load calculation module, e.g. replacing it with a fixed value.
+        """
         self.load_calculation = LoadCalculation(self.company, num_cars=self.num_cars, max_load=max_load)
 
         # choosing degradation methodology: empirical linear or non-linear mathematical model
@@ -312,13 +312,13 @@ class FleetEnv(gym.Env):
         if self.include_price:
             self.db = DataLoader.shape_price_reward(self.db, self.ev_conf)
 
-        '''
-        # Normalizing observations (Oracle) or just concatenating (Unit)
-        # Oracle is normalizing with the maximum values, that are assumed to be known
-        # Unit doesn't normalize, but just concatenates, and parses data in the right format
-        # Auxiliary flag is parsed, to include additional information or not
-        # NB: If auxiliary data is changed, the observers, normalizers and dimensions have to be updated
-        '''
+        """
+        - Normalizing observations (Oracle) or just concatenating (Unit)
+        - Oracle is normalizing with the maximum values, that are assumed to be known
+        - Unit doesn't normalize, but just concatenates, and parses data in the right format
+        - Auxiliary flag is parsed, to include additional information or not
+        - NB: If auxiliary data is changed, the observers, normalizers and dimensions have to be updated
+        """
 
         if self.normalize_in_env:
             self.normalizer: Normalization = OracleNormalization(self.db,
@@ -339,6 +339,7 @@ class FleetEnv(gym.Env):
             high=high_obs,
             dtype=np.float32)
 
+        # the action space is also continuous: -1 and 1 being the bounds (-100% to 100% of the EVSE kW power rating)
         self.action_space = gym.spaces.Box(
             low=-1,
             high=1,
@@ -392,8 +393,11 @@ class FleetEnv(gym.Env):
             self.episode.price = obs["price"]
             self.episode.tariff = obs["tariff"]
 
-        ''' if time is insufficient due to unfavourable start date (for example loading an empty car with 15 min
-        time left), soc is set in such a way that the agent always has a chance to fulfil the objective'''
+        """
+        if time is insufficient due to unfavourable start date (for example loading an empty car with 15 min
+        time left), soc is set in such a way that the agent always has a chance to fulfil the objective
+        """
+
         for car in range(self.num_cars):
             p_avail = min([self.ev_conf.obc_max_power, self.load_calculation.evse_max_power])
             time_needed = (self.target_soc[car] - self.episode.soc[car]) * self.episode.battery_cap[car] / p_avail
@@ -626,8 +630,6 @@ class FleetEnv(gym.Env):
         # append to the reward history
         self.episode.cumulative_reward += reward
         self.episode.reward_history.append((self.episode.time, self.episode.cumulative_reward))
-
-        # TODO: Here could be a saving function that saves the results of the episode
 
         if self.print_reward:
             print(f"Reward signal: {round(reward, 3)}")

@@ -1,6 +1,5 @@
-import pandas as pd
-
 class TimeConfig:
+
     """
     The Time config sets parameters for the episode and MDP dynamics.
     - end_cutoff: Default at 60. The last two months are not regarding in the training observations
