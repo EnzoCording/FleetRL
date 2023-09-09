@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FleetRL.utils.observation.observer_bl_pv &mdash; FleetRL 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            FleetRL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">FleetRL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">FleetRL.utils.observation.observer_bl_pv</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for FleetRL.utils.observation.observer_bl_pv</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.utils.observation.observer</span> <span class="kn">import</span> <span class="n">Observer</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.load_calculation.load_calculation</span> <span class="kn">import</span> <span class="n">LoadCalculation</span>
+<span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.ev_config</span> <span class="kn">import</span> <span class="n">EvConfig</span>
+
+<div class="viewcode-block" id="ObserverWithBoth">
+<a class="viewcode-back" href="../../../../FleetRL.utils.observation.html#FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth">[docs]</a>
+<span class="k">class</span> <span class="nc">ObserverWithBoth</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
+<div class="viewcode-block" id="ObserverWithBoth.get_obs">
+<a class="viewcode-back" href="../../../../FleetRL.utils.observation.html#FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth.get_obs">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+                <span class="n">price_lookahead</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="n">bl_pv_lookahead</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+                <span class="n">time</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">,</span>
+                <span class="n">ev_conf</span><span class="p">:</span> <span class="n">EvConfig</span><span class="p">,</span>
+                <span class="n">load_calc</span><span class="p">:</span> <span class="n">LoadCalculation</span><span class="p">,</span>
+                <span class="n">aux</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+                <span class="n">target_soc</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param db: Database from env</span>
+<span class="sd">        :param price_lookahead: Lookahead in hours for price</span>
+<span class="sd">        :param bl_pv_lookahead: Lookahead in hours for PV and building</span>
+<span class="sd">        :param time: Current time</span>
+<span class="sd">        :param ev_conf: EV config data, used for battery capacity, etc.</span>
+<span class="sd">        :param load_calc: Load calc module, used for grid connection, etc.</span>
+<span class="sd">        :param aux: Flag to include extra information on the problem or not. Can help with training</span>
+<span class="sd">        :param target_soc: List for the current target SOC of each car</span>
+<span class="sd">        :return: Dict of lists with different parts of the observation</span>
+
+<span class="sd">        # define the starting and ending time via lookahead, np.where returns the index in the dataframe</span>
+<span class="sd">        # add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)</span>
+<span class="sd">        # get data of price and date from the specific indices</span>
+<span class="sd">        # resample data to only include one value per hour (the others are duplicates)</span>
+<span class="sd">        # only take into account the current value, and the specified hours of lookahead</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># soc and time left always present in environment</span>
+        <span class="n">soc</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">db</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">time</span><span class="p">),</span> <span class="s1">&#39;SOC_on_return&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">hours_left</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">db</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">time</span><span class="p">),</span> <span class="s1">&#39;time_left&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="c1"># variables to hold observation data</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">tariff</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">building_load</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">pv</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+        <span class="c1"># define the starting and ending time via lookahead, np.where returns the index in the dataframe</span>
+        <span class="n">price_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)</span>
+        <span class="n">price_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="n">price_lookahead</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">)))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># get data of price and date from the specific indices</span>
+        <span class="n">price</span><span class="p">[</span><span class="s2">&quot;DELU&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="s2">&quot;DELU&quot;</span><span class="p">][</span><span class="n">price_start</span><span class="p">:</span> <span class="n">price_end</span><span class="p">]</span>
+        <span class="n">price</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">][</span><span class="n">price_start</span><span class="p">:</span> <span class="n">price_end</span><span class="p">]</span>
+        <span class="n">tariff</span><span class="p">[</span><span class="s2">&quot;tariff&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="s2">&quot;tariff&quot;</span><span class="p">][</span><span class="n">price_start</span><span class="p">:</span> <span class="n">price_end</span><span class="p">]</span>
+        <span class="n">tariff</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">][</span><span class="n">price_start</span><span class="p">:</span> <span class="n">price_end</span><span class="p">]</span>
+        <span class="c1"># resample data to only include one value per hour (the others are duplicates)</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="n">price</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s2">&quot;DELU&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">tariff</span> <span class="o">=</span> <span class="n">tariff</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s2">&quot;tariff&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="c1"># only take into account the current value, and the specified hours of lookahead</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">price</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">price_lookahead</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">fixed_markup</span><span class="p">),</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">variable_multiplier</span><span class="p">)</span>
+        <span class="n">tariff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">tariff</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">price_lookahead</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="o">-</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">feed_in_deduction</span><span class="p">)</span>
+
+        <span class="n">bl_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">bl_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="n">bl_pv_lookahead</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">)))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">building_load</span><span class="p">[</span><span class="s2">&quot;load&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="s2">&quot;load&quot;</span><span class="p">][</span><span class="n">bl_start</span><span class="p">:</span> <span class="n">bl_end</span><span class="p">]</span>
+        <span class="n">building_load</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">][</span><span class="n">bl_start</span><span class="p">:</span> <span class="n">bl_end</span><span class="p">]</span>
+        <span class="n">building_load</span> <span class="o">=</span> <span class="n">building_load</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s2">&quot;load&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">building_load</span> <span class="o">=</span> <span class="n">building_load</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">bl_pv_lookahead</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">pv_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pv_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="n">bl_pv_lookahead</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">)))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pv</span><span class="p">[</span><span class="s2">&quot;pv&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="s2">&quot;pv&quot;</span><span class="p">][</span><span class="n">pv_start</span><span class="p">:</span> <span class="n">pv_end</span><span class="p">]</span>
+        <span class="n">pv</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">][</span><span class="n">pv_start</span><span class="p">:</span> <span class="n">pv_end</span><span class="p">]</span>
+        <span class="n">pv</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s2">&quot;pv&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">pv</span> <span class="o">=</span> <span class="n">pv</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">bl_pv_lookahead</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1">###</span>
+        <span class="c1"># Auxiliary observations that might make it easier for the agent</span>
+        <span class="c1"># target soc</span>
+        <span class="n">there</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">==</span><span class="n">time</span><span class="p">,</span> <span class="s2">&quot;There&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">target_soc</span> <span class="o">=</span> <span class="n">target_soc</span> <span class="o">*</span> <span class="n">there</span>
+        <span class="c1"># maybe need to typecast to list</span>
+        <span class="n">charging_left</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">target_soc</span><span class="p">,</span> <span class="n">soc</span><span class="p">)</span>
+        <span class="n">hours_needed</span> <span class="o">=</span> <span class="n">charging_left</span> <span class="o">*</span> <span class="n">load_calc</span><span class="o">.</span><span class="n">batt_cap</span> <span class="o">/</span> <span class="p">(</span><span class="n">load_calc</span><span class="o">.</span><span class="n">evse_max_power</span> <span class="o">*</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">charging_eff</span><span class="p">)</span>
+        <span class="n">laxity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">hours_left</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hours_needed</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">there</span>
+        <span class="n">laxity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">laxity</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="c1"># could also be a vector</span>
+        <span class="n">evse_power</span> <span class="o">=</span> <span class="n">load_calc</span><span class="o">.</span><span class="n">evse_max_power</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">grid_cap</span> <span class="o">=</span> <span class="n">load_calc</span><span class="o">.</span><span class="n">grid_connection</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">avail_grid_cap</span> <span class="o">=</span> <span class="p">(</span><span class="n">grid_cap</span> <span class="o">-</span> <span class="n">building_load</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">pv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">num_cars</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">possible_avg_action_per_car</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">avail_grid_cap</span> <span class="o">/</span> <span class="p">(</span><span class="n">num_cars</span> <span class="o">*</span> <span class="n">evse_power</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">month_sin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">month</span><span class="o">/</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">month_cos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">month</span><span class="o">/</span><span class="mi">12</span><span class="p">)</span>
+
+        <span class="n">week_sin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span> <span class="o">/</span> <span class="mi">7</span><span class="p">)</span>
+        <span class="n">week_cos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span> <span class="o">/</span> <span class="mi">7</span><span class="p">)</span>
+
+        <span class="n">hour_sin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">hour</span> <span class="o">/</span> <span class="mi">24</span><span class="p">)</span>
+        <span class="n">hour_cos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">hour</span> <span class="o">/</span> <span class="mi">24</span><span class="p">)</span>
+
+        <span class="n">obs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;soc&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">soc</span><span class="p">),</span>  <span class="c1"># state of charge</span>
+            <span class="s2">&quot;hours_left&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">hours_left</span><span class="p">),</span>  <span class="c1"># hours left at the charger</span>
+            <span class="s2">&quot;price&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">price</span><span class="p">),</span>  <span class="c1"># price for charging</span>
+            <span class="s2">&quot;tariff&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">tariff</span><span class="p">),</span>  <span class="c1"># price received when discharging</span>
+            <span class="s2">&quot;building_load&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">building_load</span><span class="p">),</span>  <span class="c1"># building load in kW</span>
+            <span class="s2">&quot;pv&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">pv</span><span class="p">),</span>  <span class="c1"># pv power in kW</span>
+            <span class="s2">&quot;there&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">there</span><span class="p">),</span>  <span class="c1"># boolean, is the car i there or not</span>
+            <span class="s2">&quot;target_soc&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">target_soc</span><span class="p">),</span>  <span class="c1"># target soc of car i</span>
+            <span class="s2">&quot;charging_left&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">charging_left</span><span class="p">),</span>  <span class="c1"># charging % left</span>
+            <span class="s2">&quot;hours_needed&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">hours_needed</span><span class="p">),</span>  <span class="c1"># hours needed to get to target soc</span>
+            <span class="s2">&quot;laxity&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">laxity</span><span class="p">),</span>  <span class="c1"># laxity factor</span>
+            <span class="s2">&quot;evse_power&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">evse_power</span><span class="p">),</span>  <span class="c1"># evse power in kW</span>
+            <span class="s2">&quot;grid_cap&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">grid_cap</span><span class="p">),</span>  <span class="c1"># grid capacity</span>
+            <span class="s2">&quot;avail_grid_cap&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">avail_grid_cap</span><span class="p">),</span>  <span class="c1"># available grid capacity</span>
+            <span class="s2">&quot;possible_avg_action&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">possible_avg_action_per_car</span><span class="p">),</span>  <span class="c1"># possible avg action without overloading</span>
+            <span class="s2">&quot;month_sin&quot;</span><span class="p">:</span> <span class="n">month_sin</span><span class="p">,</span>  <span class="c1"># month in sin, and so on</span>
+            <span class="s2">&quot;month_cos&quot;</span><span class="p">:</span> <span class="n">month_cos</span><span class="p">,</span>
+            <span class="s2">&quot;week_sin&quot;</span><span class="p">:</span> <span class="n">week_sin</span><span class="p">,</span>
+            <span class="s2">&quot;week_cos&quot;</span><span class="p">:</span> <span class="n">week_cos</span><span class="p">,</span>
+            <span class="s2">&quot;hour_sin&quot;</span><span class="p">:</span> <span class="n">hour_sin</span><span class="p">,</span>
+            <span class="s2">&quot;hour_cos&quot;</span><span class="p">:</span> <span class="n">hour_cos</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">aux</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">obs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;soc&quot;</span><span class="p">,</span> <span class="s2">&quot;hours_left&quot;</span><span class="p">,</span> <span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="s2">&quot;tariff&quot;</span><span class="p">,</span> <span class="s2">&quot;building_load&quot;</span><span class="p">,</span> <span class="s2">&quot;pv&quot;</span><span class="p">]}</span></div>
+
+
+<div class="viewcode-block" id="ObserverWithBoth.get_trip_len">
+<a class="viewcode-back" href="../../../../FleetRL.utils.observation.html#FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth.get_trip_len">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_trip_len</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">car</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param db: from the env</span>
+<span class="sd">        :param car: car ID</span>
+<span class="sd">        :param time: current timestamp</span>
+<span class="sd">        :return: length of trip in hours as a float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">trip_len</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">car</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">time</span><span class="p">),</span> <span class="s2">&quot;last_trip_total_length_hours&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="k">return</span> <span class="n">trip_len</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Enzo Alexander Cording.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

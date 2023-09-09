@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FleetRL.utils.ev_charging.ev_charger &mdash; FleetRL 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            FleetRL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">FleetRL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">FleetRL.utils.ev_charging.ev_charger</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for FleetRL.utils.ev_charging.ev_charger</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.ev_config</span> <span class="kn">import</span> <span class="n">EvConfig</span>
+<span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.score_config</span> <span class="kn">import</span> <span class="n">ScoreConfig</span>
+<span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.time_config</span> <span class="kn">import</span> <span class="n">TimeConfig</span>
+<span class="kn">from</span> <span class="nn">FleetRL.fleet_env.episode</span> <span class="kn">import</span> <span class="n">Episode</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.load_calculation.load_calculation</span> <span class="kn">import</span> <span class="n">LoadCalculation</span>
+
+
+<div class="viewcode-block" id="EvCharger">
+<a class="viewcode-back" href="../../../../FleetRL.utils.ev_charging.html#FleetRL.utils.ev_charging.ev_charger.EvCharger">[docs]</a>
+<span class="k">class</span> <span class="nc">EvCharger</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev_conf</span><span class="p">:</span> <span class="n">EvConfig</span><span class="p">):</span>
+        <span class="c1"># Price analysis: https://www.bdew.de/media/documents/230215_BDEW-Strompreisanalyse_Februar_2023_15.02.2023.pdf</span>
+        <span class="c1"># Average spot price for 2020 was ~3.2 ct/kWh and ~4 ct/kWh if looking at peak times only</span>
+        <span class="c1"># --&gt; 50% are fees --&gt; spot price is multiplied by factor of 1.5 and offset by +1</span>
+        <span class="c1"># this accounts for fees even when prices are negative or zero, but also scales with price levels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spot_multiplier</span> <span class="o">=</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">variable_multiplier</span>  <span class="c1"># no unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spot_offset</span> <span class="o">=</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">fixed_markup</span> <span class="o">/</span> <span class="mi">1000</span>  <span class="c1"># from €/MWh to €/kWh</span>
+
+        <span class="c1"># If energy is injected to the grid, it can be treated like solar feed-in from households</span>
+        <span class="c1"># https://echtsolar.de/einspeiseverguetung/#t-1677761733663</span>
+        <span class="c1"># Fees for handling of 25% are assumed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handling_fees</span> <span class="o">=</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">feed_in_deduction</span>  <span class="c1"># %</span>
+
+
+
+<div class="viewcode-block" id="EvCharger.charge">
+<a class="viewcode-back" href="../../../../FleetRL.utils.ev_charging.html#FleetRL.utils.ev_charging.ev_charger.EvCharger.charge">[docs]</a>
+    <span class="k">def</span> <span class="nf">charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">db</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+               <span class="n">num_cars</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+               <span class="n">actions</span><span class="p">,</span>
+               <span class="n">episode</span><span class="p">:</span> <span class="n">Episode</span><span class="p">,</span>
+               <span class="n">load_calculation</span><span class="p">:</span> <span class="n">LoadCalculation</span><span class="p">,</span>
+               <span class="n">ev_conf</span><span class="p">:</span> <span class="n">EvConfig</span><span class="p">,</span>
+               <span class="n">time_conf</span><span class="p">:</span> <span class="n">TimeConfig</span><span class="p">,</span>
+               <span class="n">score_conf</span><span class="p">:</span> <span class="n">ScoreConfig</span><span class="p">,</span>
+               <span class="n">print_updates</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+               <span class="n">target_soc</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param db: The schedule database of the EVs</span>
+<span class="sd">        :param num_cars: Number of cars in the model</span>
+<span class="sd">        :param actions: Actions taken by the agent</span>
+<span class="sd">        :param episode: Episode object with its parameters and functions</span>
+<span class="sd">        :param load_calculation: Load calc object with its parameters and functions</span>
+<span class="sd">        :param ev_conf: Config of the EVs</span>
+<span class="sd">        :param time_conf: Time configuration</span>
+<span class="sd">        :param score_conf: Score and penalty configuration</span>
+<span class="sd">        :param print_updates: Bool whether to print statements or not (maybe lower fps)</span>
+<span class="sd">        :param target_soc: target soc for each car</span>
+<span class="sd">        :return: soc, next soc, the reward and the monetary value (cashflow)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># reset next_soc, cost and revenue</span>
+        <span class="n">episode</span><span class="o">.</span><span class="n">next_soc</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">episode</span><span class="o">.</span><span class="n">charging_cost</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">episode</span><span class="o">.</span><span class="n">discharging_revenue</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">episode</span><span class="o">.</span><span class="n">total_charging_energy</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># reset penalty counters</span>
+        <span class="n">invalid_action_penalty</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">overcharging_penalty</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># reset energy values and log</span>
+        <span class="n">charge_log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">charging_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">discharging_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="n">charging_reward</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">discharging_reward</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="c1"># go through the cars and calculate the actual deliverable power based on action and constraints</span>
+        <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cars</span><span class="p">):</span>
+
+            <span class="c1"># variable to check if car is plugged in or not</span>
+            <span class="n">there</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">car</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">),</span> <span class="s2">&quot;There&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># max possible power in kW depends on the onboard charger equipment and the charging station</span>
+            <span class="n">possible_power</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">obc_max_power</span><span class="p">,</span> <span class="n">load_calculation</span><span class="o">.</span><span class="n">evse_max_power</span><span class="p">])</span>
+            <span class="c1"># car is charging</span>
+            <span class="k">if</span> <span class="n">actions</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># the charging energy depends on the maximum chargeable energy and the desired charging amount</span>
+                <span class="n">ev_total_energy_demand</span> <span class="o">=</span> <span class="p">(</span><span class="n">target_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">-</span> <span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">])</span> <span class="o">*</span> <span class="n">episode</span><span class="o">.</span><span class="n">battery_cap</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>  <span class="c1"># total energy demand in kWh</span>
+                <span class="n">demanded_charge</span> <span class="o">=</span> <span class="n">possible_power</span> <span class="o">*</span> <span class="n">actions</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">*</span> <span class="n">time_conf</span><span class="o">.</span><span class="n">dt</span>  <span class="c1"># demanded energy in kWh by the agent</span>
+
+                <span class="c1"># if the agent wants to charge more than the battery can hold</span>
+                <span class="k">if</span> <span class="n">demanded_charge</span> <span class="o">*</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">charging_eff</span> <span class="o">&gt;</span> <span class="n">ev_total_energy_demand</span><span class="p">:</span>
+                    <span class="n">current_oc_pen</span> <span class="o">=</span> <span class="n">score_conf</span><span class="o">.</span><span class="n">penalty_overcharging</span> <span class="o">*</span> <span class="p">(</span><span class="n">demanded_charge</span> <span class="o">-</span> <span class="n">ev_total_energy_demand</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+                    <span class="n">current_oc_pen</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">current_oc_pen</span><span class="p">,</span> <span class="n">score_conf</span><span class="o">.</span><span class="n">clip_overcharging</span><span class="p">)</span>
+                    <span class="n">overcharging_penalty</span> <span class="o">+=</span> <span class="n">current_oc_pen</span>
+                    <span class="k">if</span> <span class="n">print_updates</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overcharged, penalty of: </span><span class="si">{</span><span class="n">current_oc_pen</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="c1"># if the car is there, allocate charging energy to the battery in kWh</span>
+                <span class="k">if</span> <span class="n">there</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">charging_energy</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ev_total_energy_demand</span> <span class="o">/</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">charging_eff</span><span class="p">,</span> <span class="n">demanded_charge</span><span class="p">)</span>
+
+                <span class="c1"># the car is not there, no charging</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">charging_energy</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="c1"># if agent gives an action even if no car is there, give a small penalty</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">actions</span><span class="p">[</span><span class="n">car</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+                        <span class="n">current_inv_pen</span> <span class="o">=</span> <span class="n">score_conf</span><span class="o">.</span><span class="n">penalty_invalid_action</span> <span class="o">*</span> <span class="p">(</span><span class="n">actions</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                        <span class="n">invalid_action_penalty</span> <span class="o">+=</span> <span class="n">current_inv_pen</span>
+                        <span class="k">if</span> <span class="n">print_updates</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid action, penalty given: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">current_inv_pen</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+                <span class="c1"># next soc is calculated based on charging energy</span>
+                <span class="n">episode</span><span class="o">.</span><span class="n">next_soc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">+</span> <span class="n">charging_energy</span> <span class="o">*</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">charging_eff</span> <span class="o">/</span> <span class="n">episode</span><span class="o">.</span><span class="n">battery_cap</span><span class="p">[</span><span class="n">car</span><span class="p">])</span>
+
+                <span class="c1"># get pv energy and subtract from charging energy needed from the grid</span>
+                <span class="c1"># assuming pv is equally distributed to the connected cars</span>
+                <span class="c1"># try except because pv is sometimes deactivated</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">current_pv_energy</span> <span class="o">=</span> <span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="s2">&quot;pv&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">time_conf</span><span class="o">.</span><span class="n">dt</span>  <span class="c1"># in kWh</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="n">current_pv_energy</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># kWh</span>
+                <span class="n">connected_cars</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">),</span> <span class="s2">&quot;There&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="c1"># for the case that no car is connected, to avoid division by 0</span>
+                <span class="n">connected_cars</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">connected_cars</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># energy drawn from grid after deducting pv self-consumption</span>
+                <span class="n">grid_energy_demand</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">charging_energy</span> <span class="o">-</span> <span class="p">(</span><span class="n">current_pv_energy</span> <span class="o">/</span> <span class="n">connected_cars</span><span class="p">))</span>  <span class="c1"># kWh</span>
+
+                <span class="c1"># get current spot price, div by 1000 to go from €/MWh to €/kWh</span>
+                <span class="n">current_spot</span> <span class="o">=</span> <span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="s2">&quot;DELU&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">1000.0</span>
+
+                <span class="c1"># calculate charging cost for this ev and add it to the total charging cost of the step</span>
+                <span class="n">episode</span><span class="o">.</span><span class="n">charging_cost</span> <span class="o">+=</span> <span class="p">(</span><span class="n">grid_energy_demand</span> <span class="o">*</span> <span class="p">(</span><span class="n">current_spot</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">spot_offset</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">spot_multiplier</span><span class="p">)</span>
+
+                <span class="c1"># save the total charging energy in a variable</span>
+                <span class="n">episode</span><span class="o">.</span><span class="n">total_charging_energy</span> <span class="o">+=</span> <span class="n">charging_energy</span>
+
+                <span class="n">charging_reward</span> <span class="o">+=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">score_conf</span><span class="o">.</span><span class="n">price_multiplier</span>
+                                   <span class="o">*</span> <span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">==</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="s2">&quot;price_reward_curve&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1000</span>
+                                   <span class="o">*</span> <span class="n">grid_energy_demand</span><span class="p">)</span>
+
+            <span class="c1"># car is discharging - v2g is currently modelled as energy arbitrage on the day ahead spot market</span>
+            <span class="k">elif</span> <span class="n">actions</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># check how much energy is left in the battery and how much discharge is desired</span>
+                <span class="n">ev_total_energy_left</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">*</span> <span class="n">episode</span><span class="o">.</span><span class="n">battery_cap</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>  <span class="c1"># amount of energy left in the battery in kWh</span>
+                <span class="n">demanded_discharge</span> <span class="o">=</span> <span class="n">possible_power</span> <span class="o">*</span> <span class="n">actions</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">*</span> <span class="n">time_conf</span><span class="o">.</span><span class="n">dt</span>  <span class="c1"># demanded discharge in kWh by agent</span>
+
+                <span class="c1"># energy discharge command bigger than what is left in the battery</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">demanded_discharge</span> <span class="o">*</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">discharging_eff</span> <span class="o">&lt;</span> <span class="n">ev_total_energy_left</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">there</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">current_oc_pen</span> <span class="o">=</span> <span class="n">score_conf</span><span class="o">.</span><span class="n">penalty_overcharging</span> <span class="o">*</span> <span class="p">(</span><span class="n">ev_total_energy_left</span> <span class="o">-</span> <span class="n">demanded_discharge</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+                    <span class="n">overcharging_penalty</span> <span class="o">+=</span> <span class="n">current_oc_pen</span>
+                    <span class="k">if</span> <span class="n">print_updates</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overcharged, penalty of: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">current_oc_pen</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="c1"># if the car is there get the actual discharging energy</span>
+                <span class="k">if</span> <span class="n">there</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">discharging_energy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ev_total_energy_left</span><span class="p">,</span> <span class="n">demanded_discharge</span><span class="p">)</span>  <span class="c1"># max because values are negative, kWh</span>
+
+                <span class="c1"># car is not there, discharging energy is 0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">discharging_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+                    <span class="c1"># if discharge command is sent even if no car is there</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">actions</span><span class="p">[</span><span class="n">car</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+                        <span class="n">current_inv_pen</span> <span class="o">=</span> <span class="n">score_conf</span><span class="o">.</span><span class="n">penalty_invalid_action</span> <span class="o">*</span> <span class="p">(</span><span class="n">actions</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                        <span class="n">invalid_action_penalty</span> <span class="o">+=</span> <span class="n">current_inv_pen</span>
+                        <span class="k">if</span> <span class="n">print_updates</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid action, penalty given: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">current_inv_pen</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+                <span class="c1"># calculate next soc</span>
+                <span class="c1"># efficiency not taken into account here -&gt; but you get out less (see below)</span>
+                <span class="n">episode</span><span class="o">.</span><span class="n">next_soc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">+</span> <span class="n">discharging_energy</span> <span class="o">/</span> <span class="n">episode</span><span class="o">.</span><span class="n">battery_cap</span><span class="p">[</span><span class="n">car</span><span class="p">])</span>
+
+                <span class="c1"># Discharged energy renumerated at PV feed-in minus 30%</span>
+                <span class="c1"># Efficiency taken into account here</span>
+
+                <span class="n">current_tariff</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="s2">&quot;tariff&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">episode</span><span class="o">.</span><span class="n">discharging_revenue</span> <span class="o">+=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">discharging_energy</span>
+                                                <span class="o">*</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">discharging_eff</span>
+                                                <span class="o">*</span> <span class="n">current_tariff</span> <span class="o">/</span> <span class="mi">1000</span>
+                                                <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">handling_fees</span><span class="p">))</span>  <span class="c1"># €</span>
+
+                <span class="c1"># save the total charging energy in a self variable</span>
+                <span class="n">episode</span><span class="o">.</span><span class="n">total_charging_energy</span> <span class="o">+=</span> <span class="n">discharging_energy</span>
+
+                <span class="n">discharging_reward</span> <span class="o">+=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">score_conf</span><span class="o">.</span><span class="n">price_multiplier</span>
+                                      <span class="o">*</span> <span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">==</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="s2">&quot;tariff_reward_curve&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1000</span>
+                                      <span class="o">*</span> <span class="n">discharging_energy</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The parsed action value was not recognised&quot;</span><span class="p">)</span>
+
+            <span class="c1"># append total charging energy of the car to the charge log, used in post-processing</span>
+            <span class="n">charge_log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">charge_log</span><span class="p">,</span> <span class="n">charging_energy</span> <span class="o">+</span> <span class="n">discharging_energy</span><span class="p">)</span>
+
+            <span class="c1"># Throw an error if SOC is actually negative</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">],</span> <span class="mi">5</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">],</span> <span class="mi">5</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SOC negative: </span><span class="si">{</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot;Date: </span><span class="si">{</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="si">}</span><span class="s2">&quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot;Action: </span><span class="si">{</span><span class="n">actions</span><span class="si">}</span><span class="s2">&quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot;Capacity: </span><span class="si">{</span><span class="n">episode</span><span class="o">.</span><span class="n">battery_cap</span><span class="p">[</span><span class="n">car</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Round off numeric inaccuracies (values in the range -1.0e-16 can happen otherwise and cause errors)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># calculate net cashflow based on cost and revenue</span>
+        <span class="n">cashflow</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">episode</span><span class="o">.</span><span class="n">charging_cost</span> <span class="o">+</span> <span class="n">episode</span><span class="o">.</span><span class="n">discharging_revenue</span>
+
+        <span class="c1"># reward is a function of cashflow and penalties</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="n">charging_reward</span> <span class="o">+</span> <span class="n">discharging_reward</span> <span class="o">+</span> <span class="n">invalid_action_penalty</span> <span class="o">+</span> <span class="n">overcharging_penalty</span>
+
+        <span class="c1"># return soc, next soc and the value of reward (remove the index)</span>
+        <span class="k">return</span> <span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">,</span> <span class="n">episode</span><span class="o">.</span><span class="n">next_soc</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">reward</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">cashflow</span><span class="p">),</span> <span class="n">charge_log</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Enzo Alexander Cording.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

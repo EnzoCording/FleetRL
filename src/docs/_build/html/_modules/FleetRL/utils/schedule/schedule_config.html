@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FleetRL.utils.schedule.schedule_config &mdash; FleetRL 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            FleetRL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">FleetRL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">FleetRL.utils.schedule.schedule_config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for FleetRL.utils.schedule.schedule_config</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+
+<div class="viewcode-block" id="ScheduleType">
+<a class="viewcode-back" href="../../../../FleetRL.utils.schedule.html#FleetRL.utils.schedule.schedule_config.ScheduleType">[docs]</a>
+<span class="k">class</span> <span class="nc">ScheduleType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">Delivery</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Caretaker</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Utility</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+<div class="viewcode-block" id="ScheduleConfig">
+<a class="viewcode-back" href="../../../../FleetRL.utils.schedule.html#FleetRL.utils.schedule.schedule_config.ScheduleConfig">[docs]</a>
+<span class="k">class</span> <span class="nc">ScheduleConfig</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schedule_type</span><span class="p">:</span> <span class="n">ScheduleType</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">schedule_type</span> <span class="o">==</span> <span class="n">schedule_type</span><span class="o">.</span><span class="n">Delivery</span><span class="p">:</span>
+            <span class="c1"># Benz eVito: https://www.mercedes-benz.de/vans/models/evito/panel-van/overview.html</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_mean_wd</span> <span class="o">=</span> <span class="mi">7</span>  <span class="c1"># mean departure time weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_dev_wd</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># std deviation departure time weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_mean_wd</span> <span class="o">=</span> <span class="mi">19</span>  <span class="c1"># mean return time weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_dev_wd</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># std deviation return time weekday</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_mean_we</span> <span class="o">=</span> <span class="mi">9</span>  <span class="c1"># mean departure time weekend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_dev_we</span> <span class="o">=</span> <span class="mf">1.5</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_mean_we</span> <span class="o">=</span> <span class="mi">17</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_dev_we</span> <span class="o">=</span> <span class="mf">1.5</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">avg_distance_wd</span> <span class="o">=</span> <span class="mi">150</span>  <span class="c1"># mean distance travelled weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dev_distance_wd</span> <span class="o">=</span> <span class="mi">25</span>  <span class="c1"># std deviation distance weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">avg_distance_we</span> <span class="o">=</span> <span class="mi">75</span>  <span class="c1"># mean distance weekend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dev_distance_we</span> <span class="o">=</span> <span class="mi">25</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_distance</span> <span class="o">=</span> <span class="mi">20</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_distance</span> <span class="o">=</span> <span class="mi">280</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_mean</span> <span class="o">=</span> <span class="mf">0.213</span>  <span class="c1"># Average consumption in kWh/km of Benz e-Vito</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_std</span> <span class="o">=</span> <span class="mf">0.167463672468669</span>  <span class="c1"># Standard deviation of consumption in kWh/km</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_min</span> <span class="o">=</span> <span class="mf">0.0994</span>  <span class="c1"># Minimum value of consumption, used as a floor for consumption levels</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_max</span> <span class="o">=</span> <span class="mf">0.453</span>  <span class="c1"># Maximum consumption, ceiling of consumption levels</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">total_cons_clip</span> <span class="o">=</span> <span class="mi">50</span>  <span class="c1"># max kWh that a trip can use</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_dep</span> <span class="o">=</span> <span class="mi">3</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_dep</span> <span class="o">=</span> <span class="mi">11</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_return</span> <span class="o">=</span> <span class="mi">12</span>  <span class="c1"># Return hour must be bigger or equal to this value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_return_hour</span> <span class="o">=</span> <span class="mi">23</span>  <span class="c1"># Return hour must be smaller or equal to this value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">charging_power</span> <span class="o">=</span> <span class="mi">11</span>  <span class="c1"># Charging power in kW #TODO connect with company type</span>
+
+        <span class="k">if</span> <span class="n">schedule_type</span> <span class="o">==</span> <span class="n">schedule_type</span><span class="o">.</span><span class="n">Caretaker</span><span class="p">:</span>
+            <span class="c1"># Smart EQ: https://www.smart.mercedes-benz.com/de/de/modelle/smart-eq-fortwo-coupe</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_mean_wd</span> <span class="o">=</span> <span class="mi">6</span>  <span class="c1"># mean departure time weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_dev_wd</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># std deviation departure time weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_dep</span> <span class="o">=</span> <span class="mi">3</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_dep</span> <span class="o">=</span> <span class="mi">10</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause_beg_mean_wd</span> <span class="o">=</span> <span class="mi">12</span>  <span class="c1"># mean pause beginning weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause_beg_dev_wd</span> <span class="o">=</span> <span class="mf">0.25</span>  <span class="c1"># std dev pause beginning weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause_end_mean_wd</span> <span class="o">=</span> <span class="mf">13.5</span>  <span class="c1"># mean pause end weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause_end_dev_wd</span> <span class="o">=</span> <span class="mf">0.25</span>  <span class="c1"># std dev pause end weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_mean_wd</span> <span class="o">=</span> <span class="mi">19</span>  <span class="c1"># mean return time weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_dev_wd</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># std deviation return time weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_return_wd</span> <span class="o">=</span> <span class="mi">15</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_mean_we</span> <span class="o">=</span> <span class="mi">9</span>  <span class="c1"># mean departure time weekend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_dev_we</span> <span class="o">=</span> <span class="mf">1.5</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause_beg_mean_we</span> <span class="o">=</span> <span class="mi">12</span>  <span class="c1"># mean pause beginning weekend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause_beg_dev_we</span> <span class="o">=</span> <span class="mf">0.25</span>  <span class="c1"># std dev pause beginning weekend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause_end_mean_we</span> <span class="o">=</span> <span class="mi">13</span>  <span class="c1"># mean pause end weekend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause_end_dev_we</span> <span class="o">=</span> <span class="mf">0.25</span>  <span class="c1"># std dev pause end weekend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_mean_we</span> <span class="o">=</span> <span class="mi">15</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_dev_we</span> <span class="o">=</span> <span class="mf">1.5</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_return_we</span> <span class="o">=</span> <span class="mi">15</span>  <span class="c1"># Return hour must be bigger or equal to this value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_return_hour</span> <span class="o">=</span> <span class="mi">23</span>  <span class="c1"># Return hour must be smaller or equal to this value</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">prob_emergency</span> <span class="o">=</span> <span class="mf">0.02</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">avg_distance_wd</span> <span class="o">=</span> <span class="mi">30</span>  <span class="c1"># mean distance travelled weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dev_distance_wd</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># std deviation distance weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">avg_distance_we</span> <span class="o">=</span> <span class="mi">15</span>  <span class="c1"># mean distance weekend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dev_distance_we</span> <span class="o">=</span> <span class="mi">15</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_distance</span> <span class="o">=</span> <span class="mi">5</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_distance</span> <span class="o">=</span> <span class="mi">50</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">avg_distance_em</span> <span class="o">=</span> <span class="mi">15</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dev_distance_em</span> <span class="o">=</span> <span class="mi">5</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_em_distance</span> <span class="o">=</span> <span class="mi">5</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_mean</span> <span class="o">=</span> <span class="mf">0.17</span>  <span class="c1"># Average consumption in kWh/km of Smart EQ</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_std</span> <span class="o">=</span> <span class="mf">0.167463672468669</span>  <span class="c1"># Standard deviation of consumption in kWh/km</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_min</span> <span class="o">=</span> <span class="mf">0.0994</span>  <span class="c1"># Minimum value of consumption, used as a floor for consumption levels</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_max</span> <span class="o">=</span> <span class="mf">0.453</span>  <span class="c1"># Maximum consumption, ceiling of consumption levels</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">total_cons_clip</span> <span class="o">=</span> <span class="mf">13.5</span>  <span class="c1"># max kWh that a trip can use</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">total_cons_clip_afternoon</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># max kWh a trip can use in the afternoon</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">charging_power</span> <span class="o">=</span> <span class="mf">4.7</span>  <span class="c1"># kW</span>
+
+        <span class="k">if</span> <span class="n">schedule_type</span> <span class="o">==</span> <span class="n">schedule_type</span><span class="o">.</span><span class="n">Utility</span><span class="p">:</span>
+            <span class="c1"># Citroen e Berlingo: https://business.citroen.de/modellpalette/berlingo-kastenwagen.html</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_mean_wd</span> <span class="o">=</span> <span class="mi">7</span>  <span class="c1"># mean departure time weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_dev_wd</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># std deviation departure time weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_mean_wd</span> <span class="o">=</span> <span class="mi">19</span>  <span class="c1"># mean return time weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_dev_wd</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># std deviation return time weekday</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_mean_we</span> <span class="o">=</span> <span class="mi">9</span>  <span class="c1"># mean departure time weekend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dep_dev_we</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_mean_we</span> <span class="o">=</span> <span class="mi">16</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ret_dev_we</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_dep</span> <span class="o">=</span> <span class="mi">3</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_dep</span> <span class="o">=</span> <span class="mi">11</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_return_hour</span> <span class="o">=</span> <span class="mi">23</span>  <span class="c1"># Return hour must be smaller or equal to this value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_return</span> <span class="o">=</span> <span class="mi">12</span>  <span class="c1"># Return hour must be bigger or equal to this value</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">avg_distance_wd</span> <span class="o">=</span> <span class="mi">120</span>  <span class="c1"># mean distance travelled weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dev_distance_wd</span> <span class="o">=</span> <span class="mi">30</span>  <span class="c1"># std deviation distance weekday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">avg_distance_we</span> <span class="o">=</span> <span class="mi">80</span>  <span class="c1"># mean distance weekend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dev_distance_we</span> <span class="o">=</span> <span class="mi">25</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_distance</span> <span class="o">=</span> <span class="mi">20</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_distance</span> <span class="o">=</span> <span class="mi">220</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_mean</span> <span class="o">=</span> <span class="mf">0.224</span>  <span class="c1"># Average consumption in kWh/km of e-Berlingo Citroen</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_std</span> <span class="o">=</span> <span class="mf">0.167463672468669</span>  <span class="c1"># Standard deviation of consumption in kWh/km</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_min</span> <span class="o">=</span> <span class="mf">0.0994</span>  <span class="c1"># Minimum value of consumption, used as a floor for consumption levels</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">consumption_max</span> <span class="o">=</span> <span class="mf">0.453</span>  <span class="c1"># Maximum consumption, ceiling of consumption levels</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">total_cons_clip</span> <span class="o">=</span> <span class="mi">41</span>  <span class="c1"># max kWh that a trip can use</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">charging_power</span> <span class="o">=</span> <span class="mi">22</span>  <span class="c1"># kW</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The consumption std dev, min, max statistics are computed from the Emobpy German case and thus represent</span>
+<span class="sd">        driving behaviour and consumption of the German population. Source: https://zenodo.org/record/4514928</span>
+<span class="sd">        &#39;&#39;&#39;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Enzo Alexander Cording.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

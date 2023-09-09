@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FleetRL.fleet_env package &mdash; FleetRL 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="FleetRL.fleet_env.config package" href="FleetRL.fleet_env.config.html" />
+    <link rel="prev" title="FleetRL package" href="FleetRL.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            FleetRL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="FleetRL.html">FleetRL package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="FleetRL.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">FleetRL.fleet_env package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FleetRL.utils.html">FleetRL.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#fleetrl-main-module">FleetRL.main module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#module-FleetRL">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">FleetRL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
+          <li class="breadcrumb-item"><a href="FleetRL.html">FleetRL package</a></li>
+      <li class="breadcrumb-item active">FleetRL.fleet_env package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/FleetRL.fleet_env.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fleetrl-fleet-env-package">
+<h1>FleetRL.fleet_env package<a class="headerlink" href="#fleetrl-fleet-env-package" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.config.html">FleetRL.fleet_env.config package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config.ev_config">FleetRL.fleet_env.config.ev_config module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig"><code class="docutils literal notranslate"><span class="pre">EvConfig</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config.score_config">FleetRL.fleet_env.config.score_config module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig"><code class="docutils literal notranslate"><span class="pre">ScoreConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig.overloading_penalty"><code class="docutils literal notranslate"><span class="pre">ScoreConfig.overloading_penalty()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig.soc_violation_penalty"><code class="docutils literal notranslate"><span class="pre">ScoreConfig.soc_violation_penalty()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config.time_config">FleetRL.fleet_env.config.time_config module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig"><code class="docutils literal notranslate"><span class="pre">TimeConfig</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-FleetRL.fleet_env.episode">
+<span id="fleetrl-fleet-env-episode-module"></span><h2>FleetRL.fleet_env.episode module<a class="headerlink" href="#module-FleetRL.fleet_env.episode" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.episode.Episode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.fleet_env.episode.</span></span><span class="sig-name descname"><span class="pre">Episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig" title="FleetRL.fleet_env.config.time_config.TimeConfig"><span class="pre">TimeConfig</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/episode.html#Episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.episode.Episode" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The Episode class holds all / most of the values that are episode-specific</p>
+</dd></dl>
+
+</section>
+<section id="module-FleetRL.fleet_env.fleet_environment">
+<span id="fleetrl-fleet-env-fleet-environment-module"></span><h2>FleetRL.fleet_env.fleet_environment module<a class="headerlink" href="#module-FleetRL.fleet_env.fleet_environment" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.fleet_env.fleet_environment.</span></span><span class="sig-name descname"><span class="pre">FleetEnv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_case</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ct'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ut'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'lmd'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tariff_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schedule_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'lmd_sched_single.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_building</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_pv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_price</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_picker_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'static'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'random'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'eval'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'random'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batt_cap_in_all_use_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_soh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg_emp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_price_reward</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_overloading_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_invalid_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_overcharging_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episode_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculate_degradation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_in_env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_schedule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_n_evs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_markup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_mul</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feed_in_ded</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Env</span></code></p>
+<p>FleetRL: Reinforcement Learning environment for commercial vehicle fleets.
+Author: Enzo Alexander Cording - <a class="reference external" href="https://github.com/EnzoCording">https://github.com/EnzoCording</a>
+Master’s thesis project, M.Sc. Sustainable Energy Engineering &#64; KTH
+Copyright (c) 2023, Enzo Cording</p>
+<p>This framework is built on the gymnasium core API and inherits from it.
+__init__, reset, and step are implemented, calling other modules and functions where needed.
+Base-derived class architecture is implemented, and the code is structured in
+a modular manner to enable improvements or changes in the model.</p>
+<p>Only publicly available data or own-generated data has been used in this implementation.</p>
+<p>The agent only sees information coming from the chargers: SOC, how long the vehicle is still plugged in, etc.
+However, this framework matches the number of chargers with the number of cars to reduce complexity.
+If more cars than chargers should be modelled, an allocation algorithm is necessary.
+What is more, battery degradation is modelled in this environment. In this case, the information of the car is
+required (instead of the charger). Modelling is facilitated by matching cars and chargers one-to-one.
+Therefore, throughout the code, “car” and “ev_charger” might be used interchangeably as indices.</p>
+<p>Note that this does not present a simplification from the agent perspective because the agent does only handles
+the SOC and time left at the charger, regardless of whether the vehicle is matching the charger one-to-one or not.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.adjust_caretaker_lunch_soc">
+<span class="sig-name descname"><span class="pre">adjust_caretaker_lunch_soc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.adjust_caretaker_lunch_soc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.adjust_caretaker_lunch_soc" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.auto_gen">
+<span class="sig-name descname"><span class="pre">auto_gen</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.auto_gen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.auto_gen" title="Link to this definition"></a></dt>
+<dd><p>This function automatically generates schedules as specified.
+Uses the ScheduleGenerator module.
+Note: this can take up to 1-3 hours, depending on the number of vehicles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None -&gt; The schedule is generated and placed in the input folder</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.choose_observer">
+<span class="sig-name descname"><span class="pre">choose_observer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.choose_observer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.choose_observer" title="Link to this definition"></a></dt>
+<dd><p>This function chooses the right observer, depending on whether to include price, building, PV, etc.
+:return: obs (Observer) -&gt; The observer module to choose</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.choose_time_picker">
+<span class="sig-name descname"><span class="pre">choose_time_picker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_picker</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.choose_time_picker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.choose_time_picker" title="Link to this definition"></a></dt>
+<dd><p>Chooses the right time picker based on the specified in input string.
+Static: Always the same time is picked to start an episode
+Random: Start an episode randomly from the training set
+Eval: Start an episode randomly from the validation set
+:param time_picker: (string), specifies which time picker to choose: “static”, “eval”, “random”
+:return: tp (TimePicker) -&gt; time picker object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.close" title="Link to this definition"></a></dt>
+<dd><p>After the user has finished using the environment, close contains the code necessary to “clean up” the environment.</p>
+<p>This is critical for closing rendering windows, database or HTTP connections.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.detect_dim_and_bounds">
+<span class="sig-name descname"><span class="pre">detect_dim_and_bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.detect_dim_and_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.detect_dim_and_bounds" title="Link to this definition"></a></dt>
+<dd><p>This function chooses the right dimension of the observation space based on the chosen configuration.
+Each increase of dim is explained below. The low_obs and high_obs are built in the normalizer object,
+using the dim value that was calculated in this function.</p>
+<ul class="simple">
+<li><p>set boundaries of the observation space, detects if normalized or not.</p></li>
+<li><p>If aux flag is true, additional information enlarges the observation space.</p></li>
+<li><p>The following code goes through all possible environment setups.</p></li>
+<li><p>Depending on the setup, the dimensions differ and every case is handled differently.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>low_obs and high_obs: tuple[float, float] | tuple[np.ndarray, np.ndarray] -&gt; used for gym.Spaces</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.get_dist_factor">
+<span class="sig-name descname"><span class="pre">get_dist_factor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.get_dist_factor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.get_dist_factor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.get_log">
+<span class="sig-name descname"><span class="pre">get_log</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.get_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.get_log" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.get_start_time">
+<span class="sig-name descname"><span class="pre">get_start_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.get_start_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.get_start_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.get_time">
+<span class="sig-name descname"><span class="pre">get_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.get_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.get_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.is_done">
+<span class="sig-name descname"><span class="pre">is_done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.is_done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.is_done" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.print">
+<span class="sig-name descname"><span class="pre">print</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.print"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.print" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.render" title="Link to this definition"></a></dt>
+<dd><p>Compute the render frames as specified by <code class="xref py py-attr docutils literal notranslate"><span class="pre">render_mode</span></code> during the initialization of the environment.</p>
+<p>The environment’s <code class="xref py py-attr docutils literal notranslate"><span class="pre">metadata</span></code> render modes (<cite>env.metadata[“render_modes”]</cite>) should contain the possible
+ways to implement the render modes. In addition, list versions for most render modes is achieved through
+<cite>gymnasium.make</cite> which automatically applies a wrapper to collect rendered frames.</p>
+<dl class="simple">
+<dt>Note:</dt><dd><p>As the <code class="xref py py-attr docutils literal notranslate"><span class="pre">render_mode</span></code> is known during <code class="docutils literal notranslate"><span class="pre">__init__</span></code>, the objects used to render the environment state
+should be initialised in <code class="docutils literal notranslate"><span class="pre">__init__</span></code>.</p>
+</dd>
+</dl>
+<p>By convention, if the <code class="xref py py-attr docutils literal notranslate"><span class="pre">render_mode</span></code> is:</p>
+<ul class="simple">
+<li><p>None (default): no render is computed.</p></li>
+<li><p>“human”: The environment is continuously rendered in the current display or terminal, usually for human consumption.
+This rendering should occur during <a class="reference internal" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.step" title="FleetRL.fleet_env.fleet_environment.FleetEnv.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> and <a class="reference internal" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.render" title="FleetRL.fleet_env.fleet_environment.FleetEnv.render"><code class="xref py py-meth docutils literal notranslate"><span class="pre">render()</span></code></a> doesn’t need to be called. Returns <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p>“rgb_array”: Return a single frame representing the current state of the environment.
+A frame is a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> with shape <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y,</span> <span class="pre">3)</span></code> representing RGB values for an x-by-y pixel image.</p></li>
+<li><p>“ansi”: Return a strings (<code class="docutils literal notranslate"><span class="pre">str</span></code>) or <code class="docutils literal notranslate"><span class="pre">StringIO.StringIO</span></code> containing a terminal-style text representation
+for each time step. The text can include newlines and ANSI escape sequences (e.g. for colors).</p></li>
+<li><p>“rgb_array_list” and “ansi_list”: List based version of render modes are possible (except Human) through the
+wrapper, <code class="xref py py-class docutils literal notranslate"><span class="pre">gymnasium.wrappers.RenderCollection</span></code> that is automatically applied during <code class="docutils literal notranslate"><span class="pre">gymnasium.make(...,</span> <span class="pre">render_mode=&quot;rgb_array_list&quot;)</span></code>.
+The frames collected are popped after <a class="reference internal" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.render" title="FleetRL.fleet_env.fleet_environment.FleetEnv.render"><code class="xref py py-meth docutils literal notranslate"><span class="pre">render()</span></code></a> is called or <a class="reference internal" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.reset" title="FleetRL.fleet_env.fleet_environment.FleetEnv.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a>.</p></li>
+</ul>
+<dl class="simple">
+<dt>Note:</dt><dd><p>Make sure that your class’s <code class="xref py py-attr docutils literal notranslate"><span class="pre">metadata</span></code> <code class="docutils literal notranslate"><span class="pre">&quot;render_modes&quot;</span></code> key includes the list of supported modes.</p>
+</dd>
+</dl>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.25.0: </span>The render function was changed to no longer accept parameters, rather these parameters should be specified
+in the environment initialised, i.e., <code class="docutils literal notranslate"><span class="pre">gymnasium.make(&quot;CartPole-v1&quot;,</span> <span class="pre">render_mode=&quot;human&quot;)</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.reset" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Necessary for gym inheritance</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>First observation (either normalized or not) and an info dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.set_start_time">
+<span class="sig-name descname"><span class="pre">set_start_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.set_start_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.set_start_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.step" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>actions</strong> – Actions parsed by the agent</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple containing next observation, reward, done, truncated and info dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-FleetRL.fleet_env">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-FleetRL.fleet_env" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="FleetRL.html" class="btn btn-neutral float-left" title="FleetRL package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FleetRL.fleet_env.config.html" class="btn btn-neutral float-right" title="FleetRL.fleet_env.config package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Enzo Alexander Cording.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FleetRL.fleet_env.config.score_config &mdash; FleetRL 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            FleetRL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">FleetRL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">FleetRL.fleet_env.config.score_config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for FleetRL.fleet_env.config.score_config</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="ScoreConfig">
+<a class="viewcode-back" href="../../../../FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig">[docs]</a>
+<span class="k">class</span> <span class="nc">ScoreConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Score Config sets coefficients to calculate the reward function</span>
+<span class="sd">    - Multipliers: price_multiplier, penalty_invalid_action, penalty_overcharging, penalty_overloading</span>
+<span class="sd">    - Changing the multipliers to 0 leads to ignoring this aspect of the reward function</span>
+<span class="sd">    - The SOC violation and overloading are calculated using sigmoid functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">price_multiplier</span> <span class="o">=</span> <span class="mf">3.33</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">price_exponent</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fully_charged_reward</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1"># in cold weather trafo can operate &gt;100%</span>
+        <span class="c1"># TODO give overcharging/underloading penalty not only when the car departs, but</span>
+        <span class="c1"># also in realtime when the battery dips below or goes above the healthy range</span>
+        <span class="c1"># And maybe increase the penalty the farther the agent gets away from these boundaries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">penalty_invalid_action</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">penalty_overcharging</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.0055</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">penalty_overloading</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clip_overcharging</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.2</span>
+
+<div class="viewcode-block" id="ScoreConfig.soc_violation_penalty">
+<a class="viewcode-back" href="../../../../FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig.soc_violation_penalty">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="c1"># Define the soc_violation_penalty function using the parameters of the fitted sigmoid function for the reward function</span>
+    <span class="k">def</span> <span class="nf">soc_violation_penalty</span><span class="p">(</span><span class="n">missing_soc</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="mf">0.29229767</span><span class="p">,</span> <span class="mf">16.48461585</span>  <span class="c1"># Parameters from the fitted sigmoid function for the reward function</span>
+        <span class="n">penalty</span> <span class="o">=</span> <span class="o">-</span><span class="mi">500</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="n">missing_soc</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)))</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">penalty</span></div>
+
+
+    <span class="c1"># Define the overloading_penalty function using the parameters of the fitted piecewise sigmoid function for the overloading penalty function</span>
+<div class="viewcode-block" id="ScoreConfig.overloading_penalty">
+<a class="viewcode-back" href="../../../../FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig.overloading_penalty">[docs]</a>
+    <span class="k">def</span> <span class="nf">overloading_penalty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_loading</span><span class="p">):</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="mf">1.33298382</span><span class="p">,</span> <span class="mf">15.77350877</span>  <span class="c1"># Parameters from the fitted piecewise sigmoid function for the overloading penalty function</span>
+        <span class="n">penalty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">piecewise</span><span class="p">(</span><span class="n">rel_loading</span><span class="p">,</span> <span class="p">[</span><span class="n">rel_loading</span> <span class="o">&lt;</span> <span class="mf">1.1</span><span class="p">,</span> <span class="n">rel_loading</span> <span class="o">&gt;=</span> <span class="mf">1.1</span><span class="p">],</span>
+                               <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="mi">700</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)))])</span>
+        <span class="c1"># If penalty is an array with only one element, return that element</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">penalty</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">penalty</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">penalty</span> <span class="o">=</span> <span class="n">penalty</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">penalty</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">penalty_overloading</span></div>
+</div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Enzo Alexander Cording.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

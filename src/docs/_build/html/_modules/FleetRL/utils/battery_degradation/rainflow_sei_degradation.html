@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FleetRL.utils.battery_degradation.rainflow_sei_degradation &mdash; FleetRL 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            FleetRL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">FleetRL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">FleetRL.utils.battery_degradation.rainflow_sei_degradation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for FleetRL.utils.battery_degradation.rainflow_sei_degradation</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">rainflow</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.utils.battery_degradation.batt_deg</span> <span class="kn">import</span> <span class="n">BatteryDegradation</span>
+<span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.time_config</span> <span class="kn">import</span> <span class="n">TimeConfig</span>
+
+
+<div class="viewcode-block" id="RainflowSeiDegradation">
+<a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation">[docs]</a>
+<span class="k">class</span> <span class="nc">RainflowSeiDegradation</span><span class="p">(</span><span class="n">BatteryDegradation</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_soh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">num_cars</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+
+        <span class="c1"># Source: Modeling of Lithium-Ion Battery Degradation for Cell Life Assessment</span>
+        <span class="c1"># https://ieeexplore.ieee.org/document/7488267</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span> <span class="o">=</span> <span class="n">num_cars</span>
+
+        <span class="c1"># Counter for debugging, counts adjustments of DoD inside SOH calculations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adj_counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># initial state of health of the battery</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_soh</span> <span class="o">=</span> <span class="n">init_soh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_soh</span>
+
+        <span class="c1"># battery life, according to the paper notation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">soh</span>
+
+        <span class="c1"># non-linear degradation model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_sei</span> <span class="o">=</span> <span class="mf">5.75E-2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta_sei</span> <span class="o">=</span> <span class="mi">121</span>
+
+        <span class="c1"># DoD stress model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kd1</span> <span class="o">=</span> <span class="mf">1.4E5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kd2</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.01E-1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kd3</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.23E5</span>
+
+        <span class="c1"># SoC stress model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_sigma</span> <span class="o">=</span> <span class="mf">1.04</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_ref</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="c1"># Temperature stress model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_temp</span> <span class="o">=</span> <span class="mf">6.93E-2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_ref</span> <span class="o">=</span> <span class="mi">25</span>  <span class="c1"># °C</span>
+
+        <span class="c1"># Calendar aging model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_dt</span> <span class="o">=</span> <span class="mf">4.14E-10</span>  <span class="c1"># 1/s -&gt; per second</span>
+
+        <span class="c1"># rainflow list counter to check when to calculate next degradation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rainflow_length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">)</span>
+
+        <span class="c1"># Accumulated function value for fd for cycles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fd_cyc</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">)</span>
+
+        <span class="c1"># fd value for calendar aging, is overwritten every iteration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fd_cal</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">)</span>
+
+        <span class="c1"># Absolute capacity reduction of the last cycle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">degradation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RainflowSeiDegradation.stress_dod">
+<a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.stress_dod">[docs]</a>
+    <span class="k">def</span> <span class="nf">stress_dod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dod</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kd1</span> <span class="o">*</span> <span class="p">(</span><span class="n">dod</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">kd2</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">kd3</span><span class="p">)</span> <span class="o">**</span> <span class="o">-</span><span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="RainflowSeiDegradation.stress_soc">
+<a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.stress_soc">[docs]</a>
+    <span class="k">def</span> <span class="nf">stress_soc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">soc</span><span class="p">):</span> <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k_sigma</span> <span class="o">*</span> <span class="p">(</span><span class="n">soc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_ref</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="RainflowSeiDegradation.stress_temp">
+<a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.stress_temp">[docs]</a>
+    <span class="k">def</span> <span class="nf">stress_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temp</span><span class="p">):</span> <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k_temp</span> <span class="o">*</span> <span class="p">(</span><span class="n">temp</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp_ref</span><span class="p">)</span></div>
+
+                                                 <span class="o">*</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_ref</span> <span class="o">+</span> <span class="mf">273.15</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">temp</span> <span class="o">+</span> <span class="mf">273.15</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="RainflowSeiDegradation.stress_time">
+<a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.stress_time">[docs]</a>
+    <span class="k">def</span> <span class="nf">stress_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_dt</span> <span class="o">*</span> <span class="n">t</span></div>
+
+
+<div class="viewcode-block" id="RainflowSeiDegradation.deg_rate_cycle">
+<a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.deg_rate_cycle">[docs]</a>
+    <span class="k">def</span> <span class="nf">deg_rate_cycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dod</span><span class="p">,</span> <span class="n">avg_soc</span><span class="p">,</span> <span class="n">temp</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stress_dod</span><span class="p">(</span><span class="n">dod</span><span class="p">)</span></div>
+
+                                                          <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stress_soc</span><span class="p">(</span><span class="n">avg_soc</span><span class="p">)</span>
+                                                          <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stress_temp</span><span class="p">(</span><span class="n">temp</span><span class="p">))</span>
+
+<div class="viewcode-block" id="RainflowSeiDegradation.deg_rate_calendar">
+<a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.deg_rate_calendar">[docs]</a>
+    <span class="k">def</span> <span class="nf">deg_rate_calendar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">avg_soc</span><span class="p">,</span> <span class="n">temp</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stress_time</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div>
+
+                                                           <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stress_soc</span><span class="p">(</span><span class="n">avg_soc</span><span class="p">)</span>
+                                                           <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stress_temp</span><span class="p">(</span><span class="n">temp</span><span class="p">))</span>
+
+<div class="viewcode-block" id="RainflowSeiDegradation.l_with_sei">
+<a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.l_with_sei">[docs]</a>
+    <span class="k">def</span> <span class="nf">l_with_sei</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_sei</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">beta_sei</span> <span class="o">*</span> <span class="n">fd</span><span class="p">)</span></div>
+
+                                  <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_sei</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">fd</span><span class="p">))</span>
+
+<div class="viewcode-block" id="RainflowSeiDegradation.l_without_sei">
+<a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.l_without_sei">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">l_without_sei</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">fd</span><span class="p">):</span> <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">l</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">e</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">fd</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RainflowSeiDegradation.calculate_degradation">
+<a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.calculate_degradation">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_degradation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">soc_log</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">charging_power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">time_conf</span><span class="p">:</span> <span class="n">TimeConfig</span><span class="p">,</span> <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates degradation. SOC from environment is converted to the necessary format for rainflow counting.</span>
+<span class="sd">        Every time step, this function is called with a new soc_log entry. The rainflow library calculates the</span>
+<span class="sd">        resulting cycle counts, which do not grow identically with soc_log entries. Rainflow results are used for</span>
+<span class="sd">        the SOH calculations. If a new rainflow result entry appears, a calculation iteration is conducted. For</span>
+<span class="sd">        calculation, the second most recent rainflow result is used.</span>
+
+<span class="sd">        :param soc_log: SOC list for each time step t: t1:[soc_car1, soc_car2, ...], t2:[soc_car1, soc_car2,...]</span>
+<span class="sd">        :param charging_power: kW of the charger</span>
+<span class="sd">        :param time_conf: Time config instance from the environment</span>
+<span class="sd">        :param temp: Temperature (default at 25°C)</span>
+<span class="sd">        :return: Numpy array of degradation for each vehicle [deg_1, deg_2, ...]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># compute sorted soc list based on the log records of the episode so far</span>
+        <span class="c1"># go from: t1:[soc_car1, soc_car2, ...], t2:[soc_car1, soc_car2,...]</span>
+        <span class="c1"># to this: car 1: [soc_t1, soc_t2, ...], car 2: [soc_t1, soc_t2, ...]</span>
+
+        <span class="n">sorted_soc_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">):</span>
+
+            <span class="c1"># range(len(soc_log)) gives the number of time steps that the cars go through</span>
+            <span class="n">sorted_soc_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">soc_log</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">soc_log</span><span class="p">))])</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">sorted_soc_list</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># this is 0 in the beginning and then gets updated with the new degradation due to the current time step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">degradation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sorted_soc_list</span><span class="p">))</span>
+
+        <span class="c1"># calculate rainflow list and store it somewhere</span>
+        <span class="c1"># check its length and see if it increased by one</span>
+        <span class="c1"># if it increased, calculate with the previous entry, otherwise pass</span>
+
+        <span class="c1"># len(sorted_soc_list) gives the number of cars</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">):</span>
+
+            <span class="n">rainflow_result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Range&#39;</span><span class="p">,</span> <span class="s1">&#39;Mean&#39;</span><span class="p">,</span> <span class="s1">&#39;Count&#39;</span><span class="p">,</span> <span class="s1">&#39;Start&#39;</span><span class="p">,</span> <span class="s1">&#39;End&#39;</span><span class="p">])</span>
+
+            <span class="k">for</span> <span class="n">rng</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">i_start</span><span class="p">,</span> <span class="n">i_end</span> <span class="ow">in</span> <span class="n">rainflow</span><span class="o">.</span><span class="n">extract_cycles</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">sorted_soc_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">)):</span>
+                <span class="n">new_row</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                    <span class="p">{</span><span class="s1">&#39;Range&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">rng</span><span class="p">],</span> <span class="s1">&#39;Mean&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">mean</span><span class="p">],</span> <span class="s1">&#39;Count&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">count</span><span class="p">],</span> <span class="s1">&#39;Start&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">i_start</span><span class="p">],</span> <span class="s1">&#39;End&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">i_end</span><span class="p">]})</span>
+                <span class="n">rainflow_result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">rainflow_result</span><span class="p">,</span> <span class="n">new_row</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># battery age in seconds for calendar aging</span>
+            <span class="n">battery_age</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">rainflow_result</span><span class="p">[</span><span class="s2">&quot;End&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">time_conf</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="mi">3600</span>
+            <span class="c1"># mean soc over the lifetime for calendar aging</span>
+            <span class="n">mean_soc_cal</span> <span class="o">=</span> <span class="n">rainflow_result</span><span class="p">[</span><span class="s2">&quot;Mean&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+            <span class="c1"># check if a new entry appeared in the results of the rainflow counting</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rainflow_result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rainflow_length</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+
+                <span class="c1"># calculate degradation of the most recent rainflow entries</span>
+                <span class="n">last_complete_entries</span> <span class="o">=</span> <span class="n">rainflow_result</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rainflow_length</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span><span class="nb">len</span><span class="p">(</span><span class="n">rainflow_result</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+                <span class="c1"># dod is equal to the range</span>
+                <span class="n">dod</span> <span class="o">=</span> <span class="n">last_complete_entries</span><span class="p">[</span><span class="s2">&quot;Range&quot;</span><span class="p">]</span>
+
+                <span class="c1"># average soc is equal to the mean</span>
+                <span class="n">avg_soc</span> <span class="o">=</span> <span class="n">last_complete_entries</span><span class="p">[</span><span class="s2">&quot;Mean&quot;</span><span class="p">]</span>
+
+                <span class="c1"># severity is equal to count: either 0.5 or 1.0</span>
+                <span class="n">degradation_severity</span> <span class="o">=</span> <span class="n">last_complete_entries</span><span class="p">[</span><span class="s2">&quot;Count&quot;</span><span class="p">]</span>
+
+                <span class="c1"># self.deg_rate_total becomes negative for DoD &gt; 1</span>
+                <span class="c1"># the two checks below count how many times dod is adjusted and in severe cases stops the code</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dod</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">and</span> <span class="n">degradation_severity</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dod</span><span class="p">)]</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">adj_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Minor adjustment made to DoD for degradation calculation.&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dod</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dod should be checked. Split cycle into multiple cycles.&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Remove this Error if problem should be ignored.&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DoD too large.&quot;</span><span class="p">)</span>
+
+                <span class="c1"># half or full cycle, max of 1</span>
+                <span class="n">effective_dod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">dod</span> <span class="o">*</span> <span class="n">degradation_severity</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="c1"># check if new battery, otherwise ignore sei film formation</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_soh</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fd_cyc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deg_rate_cycle</span><span class="p">(</span><span class="n">effective_dod</span><span class="p">,</span> <span class="n">avg_soc</span><span class="p">,</span> <span class="n">temp</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fd_cal</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deg_rate_calendar</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">battery_age</span><span class="p">,</span> <span class="n">avg_soc</span><span class="o">=</span><span class="n">mean_soc_cal</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="n">temp</span><span class="p">)</span>
+                    <span class="n">new_l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_with_sei</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fd_cyc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fd_cal</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+                    <span class="c1"># check if l is negative, then something is wrong</span>
+                    <span class="k">if</span> <span class="n">new_l</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Life degradation is negative&quot;</span><span class="p">)</span>
+
+                <span class="c1"># if battery used, sei film formation is done and can be ignored</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fd_cyc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deg_rate_cycle</span><span class="p">(</span><span class="n">effective_dod</span><span class="p">,</span> <span class="n">avg_soc</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fd_cal</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deg_rate_calendar</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">battery_age</span><span class="p">,</span> <span class="n">avg_soc</span><span class="o">=</span><span class="n">mean_soc_cal</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="n">temp</span><span class="p">)</span>
+                    <span class="n">new_l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_without_sei</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">fd_cyc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fd_cal</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+                <span class="c1"># calculate degradation based on the change of l</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">degradation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_l</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="c1"># update lifetime variable</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_l</span>
+
+                <span class="c1"># set new rainflow_length for this car</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rainflow_length</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rainflow_result</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">degradation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">degradation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Degradation was negative: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">degradation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot;Recheck calcs if it happens often.&quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot;Previous entry: </span><span class="si">{</span><span class="n">rainflow_result</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot;Current entry: </span><span class="si">{</span><span class="n">last_complete_entries</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">soh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">degradation</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="c1"># check that the adding up of degradation is equivalent to the newest lifetime value calculated</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">soh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="mf">0.0001</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Degradation calculation is not correct&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">degradation</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Enzo Alexander Cording.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

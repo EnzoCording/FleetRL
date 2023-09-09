@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FleetRL.fleet_env.fleet_environment &mdash; FleetRL 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            FleetRL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">FleetRL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">FleetRL.fleet_env.fleet_environment</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for FleetRL.fleet_env.fleet_environment</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">gymnasium</span> <span class="k">as</span> <span class="nn">gym</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.ev_config</span> <span class="kn">import</span> <span class="n">EvConfig</span>
+<span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.score_config</span> <span class="kn">import</span> <span class="n">ScoreConfig</span>
+<span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.time_config</span> <span class="kn">import</span> <span class="n">TimeConfig</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.fleet_env.episode</span> <span class="kn">import</span> <span class="n">Episode</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.utils.data_processing.data_processing</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.ev_charging.ev_charger</span> <span class="kn">import</span> <span class="n">EvCharger</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.load_calculation.load_calculation</span> <span class="kn">import</span> <span class="n">LoadCalculation</span><span class="p">,</span> <span class="n">CompanyType</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.utils.normalization.normalization</span> <span class="kn">import</span> <span class="n">Normalization</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.normalization.oracle_normalization</span> <span class="kn">import</span> <span class="n">OracleNormalization</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.normalization.unit_normalization</span> <span class="kn">import</span> <span class="n">UnitNormalization</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.utils.observation.observer_with_building_load</span> <span class="kn">import</span> <span class="n">ObserverWithBuildingLoad</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.observation.observer_price_only</span> <span class="kn">import</span> <span class="n">ObserverPriceOnly</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.observation.observer</span> <span class="kn">import</span> <span class="n">Observer</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.observation.observer_with_pv</span> <span class="kn">import</span> <span class="n">ObserverWithPV</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.observation.observer_bl_pv</span> <span class="kn">import</span> <span class="n">ObserverWithBoth</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.observation.observer_soc_time_only</span> <span class="kn">import</span> <span class="n">ObserverSocTimeOnly</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.utils.time_picker.random_time_picker</span> <span class="kn">import</span> <span class="n">RandomTimePicker</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.time_picker.static_time_picker</span> <span class="kn">import</span> <span class="n">StaticTimePicker</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.time_picker.eval_time_picker</span> <span class="kn">import</span> <span class="n">EvalTimePicker</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.time_picker.time_picker</span> <span class="kn">import</span> <span class="n">TimePicker</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.utils.battery_degradation.batt_deg</span> <span class="kn">import</span> <span class="n">BatteryDegradation</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.battery_degradation.empirical_degradation</span> <span class="kn">import</span> <span class="n">EmpiricalDegradation</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.battery_degradation.rainflow_sei_degradation</span> <span class="kn">import</span> <span class="n">RainflowSeiDegradation</span>
+<span class="kn">from</span> <span class="nn">FleetRL.utils.battery_degradation.log_data_deg</span> <span class="kn">import</span> <span class="n">LogDataDeg</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.utils.data_logger.data_logger</span> <span class="kn">import</span> <span class="n">DataLogger</span>
+
+<span class="kn">from</span> <span class="nn">FleetRL.utils.schedule.schedule_generator</span> <span class="kn">import</span> <span class="n">ScheduleGenerator</span><span class="p">,</span> <span class="n">ScheduleType</span>
+
+
+<div class="viewcode-block" id="FleetEnv">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv">[docs]</a>
+<span class="k">class</span> <span class="nc">FleetEnv</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    FleetRL: Reinforcement Learning environment for commercial vehicle fleets.</span>
+<span class="sd">    Author: Enzo Alexander Cording - https://github.com/EnzoCording</span>
+<span class="sd">    Master&#39;s thesis project, M.Sc. Sustainable Energy Engineering @ KTH</span>
+<span class="sd">    Copyright (c) 2023, Enzo Cording</span>
+
+<span class="sd">    This framework is built on the gymnasium core API and inherits from it.</span>
+<span class="sd">    __init__, reset, and step are implemented, calling other modules and functions where needed.</span>
+<span class="sd">    Base-derived class architecture is implemented, and the code is structured in</span>
+<span class="sd">    a modular manner to enable improvements or changes in the model.</span>
+
+<span class="sd">    Only publicly available data or own-generated data has been used in this implementation.</span>
+
+<span class="sd">    The agent only sees information coming from the chargers: SOC, how long the vehicle is still plugged in, etc.</span>
+<span class="sd">    However, this framework matches the number of chargers with the number of cars to reduce complexity.</span>
+<span class="sd">    If more cars than chargers should be modelled, an allocation algorithm is necessary.</span>
+<span class="sd">    What is more, battery degradation is modelled in this environment. In this case, the information of the car is</span>
+<span class="sd">    required (instead of the charger). Modelling is facilitated by matching cars and chargers one-to-one.</span>
+<span class="sd">    Therefore, throughout the code, &quot;car&quot; and &quot;ev_charger&quot; might be used interchangeably as indices.</span>
+
+<span class="sd">    Note that this does not present a simplification from the agent perspective because the agent does only handles</span>
+<span class="sd">    the SOC and time left at the charger, regardless of whether the vehicle is matching the charger one-to-one or not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">use_case</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;ct&quot;</span><span class="p">,</span> <span class="s2">&quot;ut&quot;</span><span class="p">,</span> <span class="s2">&quot;lmd&quot;</span><span class="p">],</span>
+                 <span class="n">building_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">price_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">tariff_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">schedule_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;lmd_sched_single.csv&quot;</span><span class="p">,</span>
+                 <span class="n">pv_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">include_building</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">include_pv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">include_price</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">time_picker_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;static&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;eval&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span>
+                 <span class="n">target_soc</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.85</span><span class="p">,</span>
+                 <span class="n">max_batt_cap_in_all_use_cases</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
+                 <span class="n">init_soh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">deg_emp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">ignore_price_reward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">ignore_overloading_penalty</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">ignore_invalid_penalty</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">ignore_overcharging_penalty</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">episode_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">48</span><span class="p">,</span>
+                 <span class="n">log_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">calculate_degradation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                 <span class="n">normalize_in_env</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">aux</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">gen_schedule</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">gen_start_date</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">gen_end_date</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">gen_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">gen_n_evs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">spot_markup</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">spot_mul</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">feed_in_ded</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+                 <span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param schedule_name: String to specify file name of schedule</span>
+<span class="sd">        :param building_name: String to specify building load data, includes pv as well</span>
+<span class="sd">        :param pv_name: String to optionally specify own pv dataset</span>
+<span class="sd">        :param include_building: Flag to include building or not</span>
+<span class="sd">        :param include_pv: Flag to include pv or not</span>
+<span class="sd">        :param include_price: Flag to include price or not</span>
+<span class="sd">        :param time_picker_name: Specify whether to pick time &quot;static&quot;, &quot;random&quot; or &quot;eval&quot; (train vs validation set)</span>
+<span class="sd">        :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip</span>
+<span class="sd">        :param max_batt_cap_in_all_use_cases: The largest battery size to be considered in the model</span>
+<span class="sd">        :param init_soh: Initial state of health of batteries. SOH=1 -&gt; no degradation</span>
+<span class="sd">        :param deg_emp: Flag to use empirical degradation. Default False</span>
+<span class="sd">        :param ignore_price_reward: Flag to ignore price reward</span>
+<span class="sd">        :param ignore_overloading_penalty: Flag to ignore overloading penalty</span>
+<span class="sd">        :param ignore_invalid_penalty: Flag to ignore invalid action penalty</span>
+<span class="sd">        :param ignore_overcharging_penalty: Flag to ignore overcharging the battery penalty</span>
+<span class="sd">        :param episode_length: Length of episode in hours</span>
+<span class="sd">        :param log_data: Log SOC and SOH to csv files</span>
+<span class="sd">        :param calculate_degradation: Calculate degradation flag</span>
+<span class="sd">        :param verbose: Print statements</span>
+<span class="sd">        :param normalize_in_env: Conduct normalization in environment</span>
+<span class="sd">        :param use_case: String to specify the use-case</span>
+<span class="sd">        :param aux: Flag to include auxiliary information in the model</span>
+<span class="sd">        :param gen_schedule: Flag to generate schedule or not</span>
+<span class="sd">        :param gen_start_date: Start date of the schedule</span>
+<span class="sd">        :param gen_end_date: End date of the schedule</span>
+<span class="sd">        :param gen_name: File name of the schedule</span>
+<span class="sd">        :param gen_n_evs: How many EVs a schedule should be generated for</span>
+<span class="sd">        :param spot_markup: markup on the spot price: new_price = spot + X ct/kWh</span>
+<span class="sd">        :param spot_mul: Multiplied on the price: New price = (spot + markup) * (1+X)</span>
+<span class="sd">        :param feed_in_ded: Deduction of the feed-in tariff: new_feed_in = (1-X) * feed_in</span>
+<span class="sd">        :param seed: seed for random number generators</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># call __init__() of parent class to ensure inheritance chain</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># setting seed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="c1"># Loading configs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span> <span class="o">=</span> <span class="n">TimeConfig</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span> <span class="o">=</span> <span class="n">EvConfig</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span> <span class="o">=</span> <span class="n">ScoreConfig</span><span class="p">()</span>
+
+        <span class="c1"># Setting flags for the type of environment to build</span>
+        <span class="c1"># NOTE: observations are appended to the db in the order specified here</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span> <span class="o">=</span> <span class="n">include_price</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span> <span class="o">=</span> <span class="n">include_building</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span> <span class="o">=</span> <span class="n">include_pv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aux_flag</span> <span class="o">=</span> <span class="n">aux</span>  <span class="c1"># include auxiliary information</span>
+
+        <span class="c1"># conduct normalization of observations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize_in_env</span> <span class="o">=</span> <span class="n">normalize_in_env</span>
+
+        <span class="c1"># Setting paths and file names</span>
+        <span class="c1"># path for input files, needs to be the same for all inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/../Final_Inputs/&#39;</span>
+
+        <span class="c1"># EV schedule database</span>
+        <span class="c1"># generating own schedules or importing them</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_schedule</span> <span class="o">=</span> <span class="n">gen_schedule</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schedule_name</span> <span class="o">=</span> <span class="n">schedule_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gen_name</span> <span class="o">=</span> <span class="n">gen_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gen_start_date</span> <span class="o">=</span> <span class="n">gen_start_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gen_end_date</span> <span class="o">=</span> <span class="n">gen_end_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gen_n_evs</span> <span class="o">=</span> <span class="n">gen_n_evs</span>
+
+        <span class="c1"># Price databases</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spot_name</span> <span class="o">=</span> <span class="n">price_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tariff_name</span> <span class="o">=</span> <span class="n">tariff_name</span>
+
+        <span class="c1"># Building load database</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">building_name</span> <span class="o">=</span> <span class="n">building_name</span>
+
+        <span class="c1"># PV database is the same in this case</span>
+        <span class="k">if</span> <span class="n">pv_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pv_name</span> <span class="o">=</span> <span class="n">pv_name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pv_name</span> <span class="o">=</span> <span class="n">building_name</span>
+
+        <span class="c1"># Specify company type and associated battery size in kWh</span>
+        <span class="k">if</span> <span class="n">use_case</span> <span class="o">==</span> <span class="s2">&quot;ct&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">company</span> <span class="o">=</span> <span class="n">CompanyType</span><span class="o">.</span><span class="n">Caretaker</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schedule_type</span> <span class="o">=</span> <span class="n">ScheduleType</span><span class="o">.</span><span class="n">Caretaker</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">init_battery_cap</span> <span class="o">=</span> <span class="mf">16.7</span>
+        <span class="k">elif</span> <span class="n">use_case</span> <span class="o">==</span> <span class="s2">&quot;ut&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">company</span> <span class="o">=</span> <span class="n">CompanyType</span><span class="o">.</span><span class="n">Utility</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schedule_type</span> <span class="o">=</span> <span class="n">ScheduleType</span><span class="o">.</span><span class="n">Utility</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">init_battery_cap</span> <span class="o">=</span> <span class="mf">50.0</span>
+        <span class="k">elif</span> <span class="n">use_case</span> <span class="o">==</span> <span class="s2">&quot;lmd&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">company</span> <span class="o">=</span> <span class="n">CompanyType</span><span class="o">.</span><span class="n">Delivery</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schedule_type</span> <span class="o">=</span> <span class="n">ScheduleType</span><span class="o">.</span><span class="n">Delivery</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">init_battery_cap</span> <span class="o">=</span> <span class="mf">60.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Company not recognised.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Automatic schedule generation if specified</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_schedule</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">auto_gen</span><span class="p">()</span>
+
+        <span class="c1"># Changing markups if specified</span>
+        <span class="k">if</span> <span class="n">spot_markup</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">fixed_markup</span> <span class="o">=</span> <span class="n">spot_markup</span>
+        <span class="k">if</span> <span class="n">spot_mul</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">variable_multiplier</span> <span class="o">=</span> <span class="n">spot_mul</span>
+        <span class="k">if</span> <span class="n">feed_in_ded</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">feed_in_deduction</span> <span class="o">=</span> <span class="n">feed_in_ded</span>
+
+        <span class="c1"># scaling price conf with battery capacity. Each use-case has different battery sizes, so a full charge</span>
+        <span class="c1"># would have different penalty ranges with different battery capacities. Normalized to max capacity (60 kWh)</span>
+        <span class="c1"># if different use-cases are compared, change 60 to the highest battery capacity in kWh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">price_multiplier</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">price_multiplier</span>
+                                            <span class="o">*</span> <span class="p">(</span><span class="n">max_batt_cap_in_all_use_cases</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">init_battery_cap</span><span class="p">))</span>
+
+        <span class="c1"># Changing parameters, if specified</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">episode_length</span> <span class="o">=</span> <span class="n">episode_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">target_soc</span> <span class="o">=</span> <span class="n">target_soc</span>
+
+        <span class="c1"># Changing ScoreConfig, if specified</span>
+        <span class="k">if</span> <span class="n">ignore_price_reward</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">price_multiplier</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">ignore_overloading_penalty</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">penalty_overloading</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">ignore_invalid_penalty</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">penalty_invalid_action</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">ignore_overcharging_penalty</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">penalty_overcharging</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Set printing and logging parameters, false can increase training fps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_updates</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_reward</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_function</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_deg</span> <span class="o">=</span> <span class="n">calculate_degradation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_data</span> <span class="o">=</span> <span class="n">log_data</span>
+
+        <span class="c1"># Class simulating EV charging</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ev_charger</span><span class="p">:</span> <span class="n">EvCharger</span> <span class="o">=</span> <span class="n">EvCharger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="p">)</span>
+
+        <span class="c1"># Choose time picker based on input string time_picker_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_picker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">choose_time_picker</span><span class="p">(</span><span class="n">time_picker_name</span><span class="p">)</span>
+
+        <span class="c1"># Choose the right observer module based on the environment settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">choose_observer</span><span class="p">()</span>
+
+        <span class="c1"># Instantiating episode object</span>
+        <span class="c1"># Episode object contains all episode-specific information</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="p">:</span> <span class="n">Episode</span> <span class="o">=</span> <span class="n">Episode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="p">)</span>
+
+        <span class="c1"># Setting EV parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="mf">0.005</span>  <span class="c1"># allowed SOC deviation from target: 0.5%</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_soh</span> <span class="o">=</span> <span class="n">init_soh</span>  <span class="c1"># initial degree of battery degradation, assumed equal for all cars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_laxity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">min_laxity</span>  <span class="c1"># How much excess time the car should at least have to charge</span>
+
+        <span class="c1"># initiating variables inside __init__() that are needed for gym.Env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Necessary for gym env (Double check because new implementation doesn&#39;t need it)</span>
+
+        <span class="c1"># Loading the data logger for battery degradation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deg_data_logger</span><span class="p">:</span> <span class="n">LogDataDeg</span> <span class="o">=</span> <span class="n">LogDataDeg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="p">)</span>
+
+        <span class="c1"># Loading data logger for analysing results and everything else</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_logger</span><span class="p">:</span> <span class="n">DataLogger</span> <span class="o">=</span> <span class="n">DataLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">episode_length</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">time_steps_per_hour</span><span class="p">)</span>
+
+        <span class="c1"># Loading the inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_loader</span><span class="p">:</span> <span class="n">DataLoader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">schedule_name</span><span class="p">,</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">spot_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tariff_name</span><span class="p">,</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">building_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv_name</span><span class="p">,</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">target_soc</span><span class="p">,</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span>
+                                                  <span class="p">)</span>
+
+        <span class="c1"># get the total database</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_loader</span><span class="o">.</span><span class="n">db</span>
+
+        <span class="k">if</span> <span class="n">use_case</span> <span class="o">==</span> <span class="s2">&quot;ct&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adjust_caretaker_lunch_soc</span><span class="p">()</span>
+
+        <span class="c1"># first ID is 0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># Target SoC - Vehicles should always leave with this SoC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">target_soc</span>
+
+        <span class="k">if</span> <span class="n">include_building</span><span class="p">:</span>
+            <span class="n">max_load</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;load&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">max_load</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># building load not considered in that case</span>
+
+        <span class="c1"># Instantiate load calculation with the necessary information</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Note:</span>
+<span class="sd">        - Maximum building load is required to determine grid connection if value is not known.</span>
+<span class="sd">        - Grid connection is sized at 1.1 times the maximum building load, or such that the charging</span>
+<span class="sd">        - of 50% of EVs at full capacity causes a grid overloading.</span>
+<span class="sd">        - This can be changed in the load calculation module, e.g. replacing it with a fixed value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span> <span class="o">=</span> <span class="n">LoadCalculation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">company</span><span class="p">,</span> <span class="n">num_cars</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">,</span> <span class="n">max_load</span><span class="o">=</span><span class="n">max_load</span><span class="p">)</span>
+
+        <span class="c1"># choosing degradation methodology: empirical linear or non-linear mathematical model</span>
+        <span class="k">if</span> <span class="n">deg_emp</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">emp_deg</span><span class="p">:</span> <span class="n">BatteryDegradation</span> <span class="o">=</span> <span class="n">EmpiricalDegradation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_soh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sei_deg</span><span class="p">:</span> <span class="n">BatteryDegradation</span> <span class="o">=</span> <span class="n">RainflowSeiDegradation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_soh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">)</span>
+
+        <span class="c1"># de-trend prices to make them usable as agent rewards</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="o">.</span><span class="n">shape_price_reward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        - Normalizing observations (Oracle) or just concatenating (Unit)</span>
+<span class="sd">        - Oracle is normalizing with the maximum values, that are assumed to be known</span>
+<span class="sd">        - Unit doesn&#39;t normalize, but just concatenates, and parses data in the right format</span>
+<span class="sd">        - Auxiliary flag is parsed, to include additional information or not</span>
+<span class="sd">        - NB: If auxiliary data is changed, the observers, normalizers and dimensions have to be updated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_in_env</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span><span class="p">:</span> <span class="n">Normalization</span> <span class="o">=</span> <span class="n">OracleNormalization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span><span class="p">,</span>
+                                                                 <span class="n">aux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aux_flag</span><span class="p">,</span>
+                                                                 <span class="n">ev_conf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="p">,</span>
+                                                                 <span class="n">load_calc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span><span class="p">:</span> <span class="n">Normalization</span> <span class="o">=</span> <span class="n">UnitNormalization</span><span class="p">()</span>
+
+        <span class="c1"># choose dimensions and bounds depending on settings</span>
+        <span class="n">low_obs</span><span class="p">,</span> <span class="n">high_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_dim_and_bounds</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+            <span class="n">low</span><span class="o">=</span><span class="n">low_obs</span><span class="p">,</span>
+            <span class="n">high</span><span class="o">=</span><span class="n">high_obs</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="c1"># the action space is also continuous: -1 and 1 being the bounds (-100% to 100% of the EVSE kW power rating)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+            <span class="n">low</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FleetEnv.reset">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param kwargs: Necessary for gym inheritance</span>
+<span class="sd">        :return: First observation (either normalized or not) and an info dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># reset degradation logs for new episode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deg_data_logger</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deg_data_logger</span><span class="o">.</span><span class="n">soc_log</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># set done to False, since the episode just started</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># instantiate soh - depending on initial health settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_soh</span>
+
+        <span class="c1"># based on soh, instantiate battery capacity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">battery_cap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soh</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">init_battery_cap</span>
+
+        <span class="c1"># choose a start time based on the type of choice: same, random, deterministic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_picker</span><span class="o">.</span><span class="n">choose_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">freq</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">end_cutoff</span>
+                                                               <span class="p">)</span>
+
+        <span class="c1"># calculate the finish time based on the episode length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">finish_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">start_time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">episode_length</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">)</span>
+
+        <span class="c1"># set the model time to the start time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">start_time</span>
+
+        <span class="c1"># get observation from observer module</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observer</span><span class="o">.</span><span class="n">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">price_lookahead</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">bl_pv_lookahead</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                                    <span class="n">ev_conf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="p">,</span>
+                                    <span class="n">load_calc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span><span class="p">,</span>
+                                    <span class="n">aux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aux_flag</span><span class="p">,</span>
+                                    <span class="n">target_soc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">)</span>
+
+        <span class="c1"># get the first soc and hours_left observation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;soc&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;hours_left&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">price</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">tariff</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;tariff&quot;</span><span class="p">]</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        if time is insufficient due to unfavourable start date (for example loading an empty car with 15 min</span>
+<span class="sd">        time left), soc is set in such a way that the agent always has a chance to fulfil the objective</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">):</span>
+            <span class="n">p_avail</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">obc_max_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span><span class="o">.</span><span class="n">evse_max_power</span><span class="p">])</span>
+            <span class="n">time_needed</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">battery_cap</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">/</span> <span class="n">p_avail</span>
+
+            <span class="c1"># Gives some tolerance, check if hours_left &gt; 0 because car has to be plugged in</span>
+            <span class="c1"># Makes sure that enough laxity is present, in this case 50% is default</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">min_laxity</span> <span class="o">*</span> <span class="n">time_needed</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span><span class="p">[</span><span class="n">car</span><span class="p">]):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">-</span>
+                                         <span class="p">(</span><span class="n">time_needed</span> <span class="o">*</span> <span class="n">p_avail</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">battery_cap</span><span class="p">[</span><span class="n">car</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">min_laxity</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_updates</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initial SOC modified due to unfavourable starting condition.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># soc for battery degradation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc_deg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># for battery degradation adjust to default soc, if soc is unknown in the beginning</span>
+        <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc_deg</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc_deg</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">def_soc</span>
+
+        <span class="c1"># set the reward history back to an empty list, set cumulative reward to 0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">reward_history</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">cumulative_reward</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">penalty_record</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># rebuild the observation vector with modified values</span>
+        <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;soc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span>
+        <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;hours_left&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span><span class="p">:</span>
+            <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">price</span>
+            <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;tariff&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">tariff</span>
+
+        <span class="c1"># Parse observation to normalization module</span>
+        <span class="n">norm_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span><span class="o">.</span><span class="n">normalize_obs</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+
+        <span class="c1"># Log first soc for battery degradation</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_deg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deg_data_logger</span><span class="o">.</span><span class="n">log_soc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc_deg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">done</span><span class="p">:</span>
+            <span class="c1"># obs action reward cashflow</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_logger</span><span class="o">.</span><span class="n">log_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                                      <span class="n">norm_obs</span><span class="p">,</span>  <span class="c1"># normalized observation</span>
+                                      <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">),</span>  <span class="c1"># action</span>
+                                      <span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># reward</span>
+                                      <span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># cashflow</span>
+                                      <span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># penalties</span>
+                                      <span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># grid overloading</span>
+                                      <span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># soc missing on departure</span>
+                                      <span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># degradation</span>
+                                      <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">),</span>  <span class="c1"># log of charged energy in kWh</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soh</span><span class="p">)</span>  <span class="c1"># soh</span>
+
+        <span class="k">return</span> <span class="n">norm_obs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.step">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param actions: Actions parsed by the agent</span>
+<span class="sd">        :return: Tuple containing next observation, reward, done, truncated and info dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># define variables that are newly used every iteration</span>
+        <span class="n">cum_soc_missing</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># cumulative soc missing for each step</span>
+        <span class="n">there</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;There&quot;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>  <span class="c1"># plugged in y/n (before next time step)</span>
+
+        <span class="c1"># parse the action to the charging function and receive the soc, next soc, reward and cashflow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">next_soc</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">cashflow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_charger</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">,</span> <span class="n">actions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_updates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">)</span>
+
+        <span class="c1"># set the soc to the next soc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">old_soc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">next_soc</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># save cashflow for print function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">current_charging_expense</span> <span class="o">=</span> <span class="n">cashflow</span>
+
+        <span class="c1"># calling the print function</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_function</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+        <span class="c1"># check current load and pv for violation check</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span><span class="p">:</span>
+            <span class="n">current_load</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="s2">&quot;load&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">current_load</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span><span class="p">:</span>
+            <span class="n">current_pv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="s2">&quot;pv&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">current_pv</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># correct actions for spots where no car is plugged in</span>
+        <span class="n">corrected_actions</span> <span class="o">=</span> <span class="n">actions</span> <span class="o">*</span> <span class="n">there</span>
+        <span class="c1"># check if connection has been overloaded and by how much</span>
+        <span class="n">overloaded_flag</span><span class="p">,</span> <span class="n">overload_amount</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span><span class="o">.</span><span class="n">check_violation</span><span class="p">(</span><span class="n">corrected_actions</span><span class="p">,</span>
+                                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span>
+                                                                                 <span class="n">current_load</span><span class="p">,</span> <span class="n">current_pv</span><span class="p">)</span>
+        <span class="n">relative_loading</span> <span class="o">=</span> <span class="n">overload_amount</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span><span class="o">.</span><span class="n">grid_connection</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="c1"># overload_penalty is calculated from a sigmoid function in score_conf</span>
+        <span class="k">if</span> <span class="n">overloaded_flag</span><span class="p">:</span>
+            <span class="n">overload_penalty</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">overloading_penalty</span><span class="p">(</span><span class="n">relative_loading</span><span class="p">)</span>
+            <span class="n">reward</span> <span class="o">+=</span> <span class="n">overload_penalty</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">penalty_record</span> <span class="o">+=</span> <span class="n">overload_penalty</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_updates</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Grid connection of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span><span class="o">.</span><span class="n">grid_connection</span><span class="si">}</span><span class="s2"> kW has been overloaded:&quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">overload_amount</span><span class="p">)</span><span class="si">}</span><span class="s2"> kW. Penalty: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">overload_penalty</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># advance one time step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">minutes</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">)</span>
+
+        <span class="c1"># get the next observation entry from the dataset to get new arrivals or departures</span>
+        <span class="n">next_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observer</span><span class="o">.</span><span class="n">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">price_lookahead</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">bl_pv_lookahead</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                                         <span class="n">ev_conf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="p">,</span>
+                                         <span class="n">load_calc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span><span class="p">,</span>
+                                         <span class="n">aux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aux_flag</span><span class="p">,</span>
+                                         <span class="n">target_soc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">)</span>
+        <span class="n">next_obs_soc</span> <span class="o">=</span> <span class="n">next_obs</span><span class="p">[</span><span class="s2">&quot;soc&quot;</span><span class="p">]</span>
+        <span class="n">next_obs_time_left</span> <span class="o">=</span> <span class="n">next_obs</span><span class="p">[</span><span class="s2">&quot;hours_left&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span><span class="p">:</span>
+            <span class="n">next_obs_price</span> <span class="o">=</span> <span class="n">next_obs</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">price</span> <span class="o">=</span> <span class="n">next_obs_price</span>
+            <span class="n">next_obs_tariff</span> <span class="o">=</span> <span class="n">next_obs</span><span class="p">[</span><span class="s2">&quot;tariff&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">tariff</span> <span class="o">=</span> <span class="n">next_obs_tariff</span>
+
+        <span class="c1"># go through the stations and check whether the same car is still there, no car, or a new arrival</span>
+        <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">):</span>
+
+            <span class="c1"># check if a car just left and didn&#39;t fully charge</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">next_obs_time_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+
+                <span class="c1"># caretaker is a special case because of the lunch break</span>
+                <span class="c1"># it is not long enough to fully recharge, so a different target soc is applied</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">company</span> <span class="o">==</span> <span class="n">CompanyType</span><span class="o">.</span><span class="n">Caretaker</span><span class="p">:</span>
+                    <span class="c1"># lunch break case</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;</span> <span class="mi">11</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">15</span><span class="p">):</span>
+                        <span class="c1"># check for soc violation</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">target_soc_lunch</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
+                            <span class="c1"># penalty for not fulfilling charging requirement, square difference, scale and clip</span>
+                            <span class="n">soc_missing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">target_soc_lunch</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>
+                            <span class="n">cum_soc_missing</span> <span class="o">+=</span> <span class="n">soc_missing</span>
+                            <span class="c1">#current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2</span>
+                            <span class="c1">#current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)</span>
+                            <span class="n">current_soc_pen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">soc_violation_penalty</span><span class="p">(</span><span class="n">soc_missing</span><span class="p">)</span>
+                            <span class="n">reward</span> <span class="o">+=</span> <span class="n">current_soc_pen</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">penalty_record</span> <span class="o">+=</span> <span class="n">current_soc_pen</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_updates</span><span class="p">:</span>
+                                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A car left the station without reaching the target SoC.&quot;</span>
+                                      <span class="sa">f</span><span class="s2">&quot; Penalty: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">current_soc_pen</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                        <span class="k">else</span><span class="p">:</span> <span class="n">reward</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">fully_charged_reward</span>  <span class="c1"># reward for fully charging the car</span>
+
+                    <span class="c1"># caretaker, other operation times, check for violation</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
+                        <span class="c1"># current_soc_pen is calculated from a sigmoid function in score_conf</span>
+                        <span class="n">soc_missing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>
+                        <span class="n">cum_soc_missing</span> <span class="o">+=</span> <span class="n">soc_missing</span>
+                        <span class="c1">#current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2</span>
+                        <span class="c1">#current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)</span>
+                        <span class="n">current_soc_pen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">soc_violation_penalty</span><span class="p">(</span><span class="n">soc_missing</span><span class="p">)</span>
+                        <span class="n">reward</span> <span class="o">+=</span> <span class="n">current_soc_pen</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">penalty_record</span> <span class="o">+=</span> <span class="n">current_soc_pen</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_updates</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A car left the station without reaching the target SoC.&quot;</span>
+                                  <span class="sa">f</span><span class="s2">&quot; Penalty: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">current_soc_pen</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">reward</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">fully_charged_reward</span>  <span class="c1"># reward for fully charging the car</span>
+
+                <span class="c1"># other companies: if charging requirement wasn&#39;t met (with some tolerance eps)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">:</span>
+                    <span class="c1"># current_soc_pen is calculated from a sigmoid function in score_conf</span>
+                    <span class="n">soc_missing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>
+                    <span class="n">cum_soc_missing</span> <span class="o">+=</span> <span class="n">soc_missing</span>
+                    <span class="c1">#current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2</span>
+                    <span class="c1">#current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)</span>
+                    <span class="n">current_soc_pen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">soc_violation_penalty</span><span class="p">(</span><span class="n">soc_missing</span><span class="p">)</span>
+                    <span class="n">reward</span> <span class="o">+=</span> <span class="n">current_soc_pen</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">penalty_record</span> <span class="o">+=</span> <span class="n">current_soc_pen</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_updates</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A car left the station without reaching the target SoC.&quot;</span>
+                              <span class="sa">f</span><span class="s2">&quot; Penalty: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">current_soc_pen</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">reward</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">fully_charged_reward</span>  <span class="c1"># reward for fully charging the car</span>
+
+            <span class="c1"># still charging</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">next_obs_time_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">dt</span>
+
+            <span class="c1"># no car in the next time step</span>
+            <span class="k">elif</span> <span class="n">next_obs_time_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">=</span> <span class="n">next_obs_time_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">=</span> <span class="n">next_obs_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>
+
+            <span class="c1"># new arrival in the next time step</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">next_obs_time_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">=</span> <span class="n">next_obs_time_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">old_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">=</span> <span class="n">next_obs_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>
+
+            <span class="c1"># this shouldn&#39;t happen but if it does, an error is thrown</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Observation format not recognized&quot;</span><span class="p">)</span>
+
+            <span class="c1"># if battery degradation &gt;= 10%, target SOC is increased to ensure sufficient kWh in the battery</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soh</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mf">0.9</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.9</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_updates</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.9</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Target SOC of Car </span><span class="si">{</span><span class="n">car</span><span class="si">}</span><span class="s2"> has been adjusted to 0.9 due to high battery degradation.&quot;</span>
+                          <span class="sa">f</span><span class="s2">&quot;Current SOH: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soh</span><span class="p">[</span><span class="n">car</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Update SOH value for degradation calculations, wherever a car is plugged in</span>
+        <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc_deg</span><span class="p">[</span><span class="n">car</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">car</span><span class="p">]</span>
+
+        <span class="c1"># if the finish time is reached, set done to True</span>
+        <span class="c1"># The RL_agents agent then resets the environment</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">finish_time</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_deg</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">deg_data_logger</span><span class="o">.</span><span class="n">add_log_entry</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_updates</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Episode done: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">done</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logged_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_logger</span><span class="o">.</span><span class="n">log</span>
+
+        <span class="c1"># append to the reward history</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">cumulative_reward</span> <span class="o">+=</span> <span class="n">reward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">reward_history</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">cumulative_reward</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_reward</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reward signal: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">reward</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">next_obs</span><span class="p">[</span><span class="s2">&quot;soc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span>
+        <span class="n">next_obs</span><span class="p">[</span><span class="s2">&quot;hours_left&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span><span class="p">:</span>
+            <span class="n">next_obs</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">price</span>
+            <span class="n">next_obs</span><span class="p">[</span><span class="s2">&quot;tariff&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">tariff</span>
+
+        <span class="c1"># normalize next observation</span>
+        <span class="n">norm_next_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span><span class="o">.</span><span class="n">normalize_obs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">)</span>
+
+        <span class="c1"># Log soc for battery degradation</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_deg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deg_data_logger</span><span class="o">.</span><span class="n">log_soc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc_deg</span><span class="p">)</span>
+
+        <span class="c1"># for logging: calculate penalty amount, grid overloading in kW and percentage points of SOC violated</span>
+        <span class="n">penalty</span> <span class="o">=</span> <span class="n">reward</span> <span class="o">-</span> <span class="p">(</span><span class="n">cashflow</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_conf</span><span class="o">.</span><span class="n">price_multiplier</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">overload_amount</span><span class="p">)</span>
+        <span class="n">soc_v</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">cum_soc_missing</span><span class="p">)</span>
+
+        <span class="c1"># Calculate degradation and state of health based on chosen method</span>
+        <span class="c1"># calculate degradation once per day</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_deg</span> <span class="ow">and</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">hour</span> <span class="o">==</span> <span class="mi">14</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">minute</span> <span class="o">==</span> <span class="mi">45</span><span class="p">)):</span>
+            <span class="n">degradation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sei_deg</span><span class="o">.</span><span class="n">calculate_degradation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deg_data_logger</span><span class="o">.</span><span class="n">soc_log</span><span class="p">,</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span><span class="o">.</span><span class="n">evse_max_power</span><span class="p">,</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="p">,</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">temperature</span><span class="p">)</span>
+            <span class="c1"># calculate SOH from current degradation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soh</span><span class="p">,</span> <span class="n">degradation</span><span class="p">)</span>
+            <span class="c1"># calculate new resulting battery capacity after degradation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">battery_cap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soh</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">init_battery_cap</span>
+        <span class="c1"># otherwise set degradation to 0 for logging purposes</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">degradation</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="c1"># log data if episode is not done, otherwise first observation of next episode would be returned</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">done</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_logger</span><span class="o">.</span><span class="n">log_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                                      <span class="n">norm_next_obs</span><span class="p">,</span>
+                                      <span class="n">actions</span><span class="p">,</span>
+                                      <span class="n">reward</span><span class="p">,</span>
+                                      <span class="n">cashflow</span><span class="p">,</span>
+                                      <span class="n">penalty</span><span class="p">,</span>
+                                      <span class="n">grid</span><span class="p">,</span>
+                                      <span class="n">soc_v</span><span class="p">,</span>
+                                      <span class="n">degradation</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">charge_log</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soh</span><span class="p">)</span>
+
+        <span class="c1"># return according to openAI gym core API</span>
+        <span class="k">return</span> <span class="n">norm_next_obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">done</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.close">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.close">[docs]</a>
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.print">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.print">[docs]</a>
+    <span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timestep: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total price with fees: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">price</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2"> €/kWh&quot;</span><span class="p">)</span>
+            <span class="n">current_spot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="s2">&quot;DELU&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Spot: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">current_spot</span><span class="o">/</span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2"> €/kWh&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tariff: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">tariff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1000</span><span class="si">}</span><span class="s2"> €/kWh&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SOC: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soc</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">, Time left: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">hours_left</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Action taken: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">action</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Actual charging energy: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">total_charging_energy</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2"> kWh&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Logging energy: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">charge_log</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2"> kWh&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Charging cost/revenue: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">current_charging_expense</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2"> €&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SoH: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">soh</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--------------------------&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.render">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.render">[docs]</a>
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO: graph of rewards for example, or charging power or sth like that</span>
+        <span class="c1"># TODO: Maybe a bar graph, centered at 0, n bars for n vehicles and height changes with power</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="c1"># functions that can be called through vec_envs via env_method()</span>
+<div class="viewcode-block" id="FleetEnv.get_log">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.get_log">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># return log dataframe</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_logger</span><span class="o">.</span><span class="n">log</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.is_done">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.is_done">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># return if episode is done</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">done</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.get_start_time">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.get_start_time">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">start_time</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.set_start_time">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.set_start_time">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.get_time">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.get_time">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.get_dist_factor">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.get_dist_factor">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_dist_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observer</span><span class="o">.</span><span class="n">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">price_lookahead</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">bl_pv_lookahead</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                                    <span class="n">ev_conf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="p">,</span>
+                                    <span class="n">load_calc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">load_calculation</span><span class="p">,</span>
+                                    <span class="n">aux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aux_flag</span><span class="p">,</span>
+                                    <span class="n">target_soc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_soc</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;hours_needed&quot;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;hours_left&quot;</span><span class="p">],</span> <span class="mf">0.001</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.choose_time_picker">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.choose_time_picker">[docs]</a>
+    <span class="k">def</span> <span class="nf">choose_time_picker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_picker</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Chooses the right time picker based on the specified in input string.</span>
+<span class="sd">        Static: Always the same time is picked to start an episode</span>
+<span class="sd">        Random: Start an episode randomly from the training set</span>
+<span class="sd">        Eval: Start an episode randomly from the validation set</span>
+<span class="sd">        :param time_picker: (string), specifies which time picker to choose: &quot;static&quot;, &quot;eval&quot;, &quot;random&quot;</span>
+<span class="sd">        :return: tp (TimePicker) -&gt; time picker object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Load time picker module</span>
+        <span class="k">if</span> <span class="n">time_picker</span> <span class="o">==</span> <span class="s2">&quot;static&quot;</span><span class="p">:</span>
+            <span class="c1"># when an episode starts, this class picks the same starting time</span>
+            <span class="n">tp</span><span class="p">:</span> <span class="n">TimePicker</span> <span class="o">=</span> <span class="n">StaticTimePicker</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">time_picker</span> <span class="o">==</span> <span class="s2">&quot;eval&quot;</span><span class="p">:</span>
+            <span class="c1"># picks a random starting times from test set (nov - dez)</span>
+            <span class="n">tp</span><span class="p">:</span> <span class="n">TimePicker</span> <span class="o">=</span> <span class="n">EvalTimePicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">episode_length</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">time_picker</span> <span class="o">==</span> <span class="s2">&quot;random&quot;</span><span class="p">:</span>
+            <span class="c1"># picks random starting times from training set (jan - oct)</span>
+            <span class="n">tp</span><span class="p">:</span> <span class="n">TimePicker</span> <span class="o">=</span> <span class="n">RandomTimePicker</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># must choose between static, eval or random</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Time picker type not recognised&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tp</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.choose_observer">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.choose_observer">[docs]</a>
+    <span class="k">def</span> <span class="nf">choose_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function chooses the right observer, depending on whether to include price, building, PV, etc.</span>
+<span class="sd">        :return: obs (Observer) -&gt; The observer module to choose</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># All observations are made in the observer class</span>
+        <span class="c1"># not even price: only soc and time left</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span><span class="p">:</span>
+            <span class="n">obs</span><span class="p">:</span> <span class="n">Observer</span> <span class="o">=</span> <span class="n">ObserverSocTimeOnly</span><span class="p">()</span>
+        <span class="c1"># only price</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span><span class="p">:</span>
+            <span class="n">obs</span><span class="p">:</span> <span class="n">Observer</span> <span class="o">=</span> <span class="n">ObserverPriceOnly</span><span class="p">()</span>
+        <span class="c1"># price and building load</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span><span class="p">:</span>
+            <span class="n">obs</span><span class="p">:</span> <span class="n">Observer</span> <span class="o">=</span> <span class="n">ObserverWithBuildingLoad</span><span class="p">()</span>
+        <span class="c1"># price and pv</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span><span class="p">:</span>
+            <span class="n">obs</span><span class="p">:</span> <span class="n">Observer</span> <span class="o">=</span> <span class="n">ObserverWithPV</span><span class="p">()</span>
+        <span class="c1"># price, building load and pv</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span><span class="p">:</span>
+            <span class="n">obs</span><span class="p">:</span> <span class="n">Observer</span> <span class="o">=</span> <span class="n">ObserverWithBoth</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Observer configuration not found. Recheck flags.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">obs</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.detect_dim_and_bounds">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.detect_dim_and_bounds">[docs]</a>
+    <span class="k">def</span> <span class="nf">detect_dim_and_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function chooses the right dimension of the observation space based on the chosen configuration.</span>
+<span class="sd">        Each increase of dim is explained below. The low_obs and high_obs are built in the normalizer object,</span>
+<span class="sd">        using the dim value that was calculated in this function.</span>
+
+<span class="sd">        - set boundaries of the observation space, detects if normalized or not.</span>
+<span class="sd">        - If aux flag is true, additional information enlarges the observation space.</span>
+<span class="sd">        - The following code goes through all possible environment setups.</span>
+<span class="sd">        - Depending on the setup, the dimensions differ and every case is handled differently.</span>
+
+<span class="sd">        :return: low_obs and high_obs: tuple[float, float] | tuple[np.ndarray, np.ndarray] -&gt; used for gym.Spaces</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span><span class="p">:</span>
+            <span class="n">dim</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># soc and time left for each EV</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aux_flag</span><span class="p">:</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># there</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># target soc</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># charging left</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># hours needed</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># laxity</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># evse power</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">6</span>  <span class="c1"># month, week, hour sin/cos</span>
+            <span class="n">low_obs</span><span class="p">,</span> <span class="n">high_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span><span class="o">.</span><span class="n">make_boundaries</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span><span class="p">:</span>
+            <span class="n">dim</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">price_lookahead</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aux_flag</span><span class="p">:</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># there</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># target soc</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># charging left</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># hours needed</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># laxity</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># evse power</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">6</span>  <span class="c1"># month, week, hour sin/cos</span>
+            <span class="n">low_obs</span><span class="p">,</span> <span class="n">high_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span><span class="o">.</span><span class="n">make_boundaries</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span><span class="p">:</span>
+            <span class="n">dim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>
+                   <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">price_lookahead</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+                   <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">bl_pv_lookahead</span> <span class="o">+</span> <span class="mi">1</span>
+                   <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aux_flag</span><span class="p">:</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># there</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># target soc</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># charging left</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># hours needed</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># laxity</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># evse power</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># grid cap</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># avail grid cap for charging</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># possible avg action per car</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">6</span>  <span class="c1"># month, week, hour sin/co</span>
+            <span class="n">low_obs</span><span class="p">,</span> <span class="n">high_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span><span class="o">.</span><span class="n">make_boundaries</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span><span class="p">:</span>
+            <span class="n">dim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>
+                   <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">price_lookahead</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+                   <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">bl_pv_lookahead</span> <span class="o">+</span> <span class="mi">1</span>
+                   <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aux_flag</span><span class="p">:</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># there</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># target soc</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># charging left</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># hours needed</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># laxity</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># evse power</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">6</span>  <span class="c1"># month, week, hour sin/cos</span>
+            <span class="n">low_obs</span><span class="p">,</span> <span class="n">high_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span><span class="o">.</span><span class="n">make_boundaries</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_building_load</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_pv</span><span class="p">:</span>
+            <span class="n">dim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># soc and time left</span>
+                   <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">price_lookahead</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>  <span class="c1"># price and tariff</span>
+                   <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">bl_pv_lookahead</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># pv and building load</span>
+                   <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aux_flag</span><span class="p">:</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># there</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># target soc</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># charging left</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># hours needed</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span>  <span class="c1"># laxity</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># evse power</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># grid cap</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># avail grid cap for charging</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># possible avg action per car</span>
+                <span class="n">dim</span> <span class="o">+=</span> <span class="mi">6</span>  <span class="c1"># month, week, hour sin/cos</span>
+            <span class="n">low_obs</span><span class="p">,</span> <span class="n">high_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span><span class="o">.</span><span class="n">make_boundaries</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">low_obs</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">high_obs</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Problem with environment setup. Check building and pv flags.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">low_obs</span><span class="p">,</span> <span class="n">high_obs</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.adjust_caretaker_lunch_soc">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.adjust_caretaker_lunch_soc">[docs]</a>
+    <span class="k">def</span> <span class="nf">adjust_caretaker_lunch_soc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># make an adjustment for caretakers: the afternoon tour SOC on arrival should be calculated with the</span>
+        <span class="c1"># afternoon target SOC. This is set to 0.65 in this case</span>
+        <span class="n">afternoon_trips</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[((</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">))</span>
+                                      <span class="o">|</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="mi">15</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;=</span> <span class="mi">23</span><span class="p">))]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[((</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">))</span>
+                    <span class="o">|</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="mi">15</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;=</span> <span class="mi">23</span><span class="p">)),</span> <span class="s2">&quot;SOC_on_return&quot;</span><span class="p">]</span> \
+            <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">target_soc_lunch</span>
+               <span class="o">-</span> <span class="n">afternoon_trips</span><span class="p">[</span><span class="s2">&quot;last_trip_total_consumption&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">init_battery_cap</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;There&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;SOC_on_return&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="FleetEnv.auto_gen">
+<a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.auto_gen">[docs]</a>
+    <span class="k">def</span> <span class="nf">auto_gen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function automatically generates schedules as specified.</span>
+<span class="sd">        Uses the ScheduleGenerator module.</span>
+<span class="sd">        Note: this can take up to 1-3 hours, depending on the number of vehicles.</span>
+
+<span class="sd">        :return: None -&gt; The schedule is generated and placed in the input folder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gen_sched</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gen_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gen_seed</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating schedules... This may take a while.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gen_n_evs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schedule_gen</span> <span class="o">=</span> <span class="n">ScheduleGenerator</span><span class="p">(</span><span class="n">file_comment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gen_name</span><span class="p">,</span>
+                                                  <span class="n">schedule_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path_name</span><span class="p">,</span>
+                                                  <span class="n">schedule_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schedule_type</span><span class="p">,</span>
+                                                  <span class="n">starting_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gen_start_date</span><span class="p">,</span>
+                                                  <span class="n">ending_date</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gen_end_date</span><span class="p">,</span>
+                                                  <span class="n">vehicle_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                                                  <span class="n">seed</span><span class="o">=</span><span class="n">gen_seed</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span>
+                                                  <span class="n">save_schedule</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">gen_sched</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schedule_gen</span><span class="o">.</span><span class="n">generate_schedule</span><span class="p">())</span>
+
+        <span class="n">complete_schedule</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">gen_sched</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gen_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen_name</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span>
+        <span class="n">complete_schedule</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_name</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen_name</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Schedule generation complete. Saved in Inputs path. File name: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gen_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schedule_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen_name</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Enzo Alexander Cording.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

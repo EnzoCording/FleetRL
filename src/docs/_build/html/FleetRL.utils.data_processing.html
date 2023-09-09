@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FleetRL.utils.data_processing package &mdash; FleetRL 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="FleetRL.utils.ev_charging package" href="FleetRL.utils.ev_charging.html" />
+    <link rel="prev" title="FleetRL.utils.data_logger package" href="FleetRL.utils.data_logger.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            FleetRL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="FleetRL.html">FleetRL package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="FleetRL.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="FleetRL.utils.html">FleetRL.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#fleetrl-main-module">FleetRL.main module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#module-FleetRL">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">FleetRL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
+          <li class="breadcrumb-item"><a href="FleetRL.html">FleetRL package</a></li>
+          <li class="breadcrumb-item"><a href="FleetRL.utils.html">FleetRL.utils package</a></li>
+      <li class="breadcrumb-item active">FleetRL.utils.data_processing package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/FleetRL.utils.data_processing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fleetrl-utils-data-processing-package">
+<h1>FleetRL.utils.data_processing package<a class="headerlink" href="#fleetrl-utils-data-processing-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-FleetRL.utils.data_processing.data_processing">
+<span id="fleetrl-utils-data-processing-data-processing-module"></span><h2>FleetRL.utils.data_processing.data_processing module<a class="headerlink" href="#module-FleetRL.utils.data_processing.data_processing" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.data_processing.data_processing.</span></span><span class="sig-name descname"><span class="pre">DataLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schedule_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tariff_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig" title="FleetRL.fleet_env.config.time_config.TimeConfig"><span class="pre">TimeConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv_flag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.compute_from_schedule">
+<span class="sig-name descname"><span class="pre">compute_from_schedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.compute_from_schedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.compute_from_schedule" title="Link to this definition"></a></dt>
+<dd><p># &gt;&gt;&gt; test_EV = EV()
+# &gt;&gt;&gt; test_EV.get_total_consumption().sum().round(1)
+# 147.8</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.load_building_load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_building_load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.load_building_load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.load_building_load" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.load_feed_in">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_feed_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tariff_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.load_feed_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.load_feed_in" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.load_prices">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_prices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.load_prices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.load_prices" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.load_prices_original">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_prices_original</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.load_prices_original"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.load_prices_original" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.load_pv">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_pv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.load_pv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.load_pv" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.shape_price_reward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape_price_reward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.shape_price_reward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.shape_price_reward" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-FleetRL.utils.data_processing">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-FleetRL.utils.data_processing" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="FleetRL.utils.data_logger.html" class="btn btn-neutral float-left" title="FleetRL.utils.data_logger package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FleetRL.utils.ev_charging.html" class="btn btn-neutral float-right" title="FleetRL.utils.ev_charging package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Enzo Alexander Cording.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
