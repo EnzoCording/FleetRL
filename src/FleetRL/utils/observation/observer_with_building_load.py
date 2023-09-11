@@ -6,6 +6,11 @@ from FleetRL.utils.load_calculation.load_calculation import LoadCalculation
 from FleetRL.fleet_env.config.ev_config import EvConfig
 
 class ObserverWithBuildingLoad(Observer):
+
+    """
+    Observer that takes into account price, and building load.
+    """
+
     def get_obs(self,
                 db: pd.DataFrame,
                 price_lookahead: int,
@@ -17,6 +22,12 @@ class ObserverWithBuildingLoad(Observer):
                 target_soc: list) -> dict:
 
         """
+        - define the starting and ending time via lookahead, np.where returns the index in the dataframe
+        - add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)
+        - get data of price and date from the specific indices
+        - resample data to only include one value per hour (the others are duplicates)
+        - only take into account the current value, and the specified hours of lookahead
+
         :param db: Database from env
         :param price_lookahead: Lookahead in hours for price
         :param bl_pv_lookahead: Lookahead in hours for PV and building
@@ -26,12 +37,6 @@ class ObserverWithBuildingLoad(Observer):
         :param aux: Flag to include extra information on the problem or not. Can help with training
         :param target_soc: List for the current target SOC of each car
         :return: Dict of lists with different parts of the observation
-
-        # define the starting and ending time via lookahead, np.where returns the index in the dataframe
-        # add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)
-        # get data of price and date from the specific indices
-        # resample data to only include one value per hour (the others are duplicates)
-        # only take into account the current value, and the specified hours of lookahead
         """
 
         # soc and time left always present in environment

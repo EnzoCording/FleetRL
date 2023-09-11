@@ -6,7 +6,21 @@ class ScheduleType(Enum):
     Utility = 3
 
 class ScheduleConfig:
+
+    """
+    Statistical configurations for the schedule generator. Mean and standard deviation values are specified for each
+    metric, allowing for a distributional and probabilistic generation approach.
+    """
+
     def __init__(self, schedule_type: ScheduleType):
+        """
+        Values initialised depending on the Schedule Type / Use-case
+        - Consumption mean is taken from the manufacturer site.
+        - The consumption std dev is computed from the Emobpy German case and thus represent
+        driving behaviour and consumption of the German population. Source: https://zenodo.org/record/4514928
+
+        :param schedule_type: LMD, UT or CT
+        """
 
         if schedule_type == schedule_type.Delivery:
             # Benz eVito: https://www.mercedes-benz.de/vans/models/evito/panel-van/overview.html
@@ -115,8 +129,3 @@ class ScheduleConfig:
             self.total_cons_clip = 41  # max kWh that a trip can use
 
             self.charging_power = 22  # kW
-
-        '''
-        The consumption std dev, min, max statistics are computed from the Emobpy German case and thus represent
-        driving behaviour and consumption of the German population. Source: https://zenodo.org/record/4514928
-        '''

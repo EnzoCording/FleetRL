@@ -8,6 +8,10 @@ from FleetRL.fleet_env.config.ev_config import EvConfig
 # This normalizes based on the global maximum values. These could be in the future, hence the oracle prefix.
 # For more realistic approaches, a rolling average could be used, or the sb3 vec normalize function
 class OracleNormalization(Normalization):
+    """
+    Oracle Normalization assumes the knowledge of the max and min values of the dataset. This is necessary to perform
+    a global min/max normalization. Alternatively, a rolling normalization could be implemented.
+    """
     def __init__(self,
                  db,
                  building_flag,
@@ -15,6 +19,17 @@ class OracleNormalization(Normalization):
                  price_flag,
                  ev_conf: EvConfig,
                  load_calc: LoadCalculation, aux: bool):
+        """
+        Initialize max and min values of the dataset, globally.
+
+        :param db: Database dataframe
+        :param building_flag: Include building load flag
+        :param pv_flag: Include PV flag
+        :param price_flag: Include price flag
+        :param ev_conf: EV configuration object
+        :param load_calc: Load calculation object
+        :param aux: Flag whether to include auxiliary observations or not (bool)
+        """
 
         self.max_time_left = max(db["time_left"])
         self.max_price = (max(db["DELU"]) + ev_conf.fixed_markup) * ev_conf.variable_multiplier
@@ -39,6 +54,13 @@ class OracleNormalization(Normalization):
             self.max_grid = load_calc.grid_connection
 
     def normalize_obs(self, input_obs: dict) -> np.ndarray:
+        """
+        Normalization function. Different cases are checked depending on the flags of PV, load, price, and aux.
+        Input observations are a dictionary with clear namings, to make further changes in the code easy and readable.
+
+        :param input_obs: Input observation: Un-normalized observations as specified in the observer.
+        :return: Normalized observation.
+        """
         # normalization is done here, so if the rule is changed it is automatically adjusted in step and reset
         input_obs["soc"] = (input_obs["soc"])  # soc is already normalized
         input_obs["hours_left"] = list(np.divide(input_obs["hours_left"], self.max_time_left))  # max hours of entire db
@@ -140,12 +162,25 @@ class OracleNormalization(Normalization):
         return output_obs
 
     def make_boundaries(self, dim: tuple[int]) -> tuple[float, float] | tuple[np.ndarray, np.ndarray]:
+        """
+        The boundaries are 0 and 1 because the observations are min/max normalized.
+
+        :param dim: Dimension of the observation depending on the flags
+        :return: Low and high observation arrays for gym.Spaces.
+        """
         low_obs = np.zeros(dim, dtype=np.float32)
         high_obs = np.ones(dim, dtype=np.float32)
         return low_obs, high_obs
 
     @staticmethod
     def flatten_obs(obs):
+        """
+        Observations must be flattened for openAI gym compatibility. The parsed observation must be a flat array and
+        not a dictionary. The dictionary either includes float or array. The function removes the nesting.
+
+        :param obs: Normalized observation dictionary
+        :return: A flattened array - necessary for the RL algorithms to be in a 1-dim array e.g. [v_1, ..., v_N]
+        """
         flattened_obs = [v if isinstance(v, list) else [v] for v in obs.values()]
         flattened_obs = [item for sublist in flattened_obs for item in sublist]
         return flattened_obs

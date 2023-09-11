@@ -4,6 +4,9 @@ from FleetRL.utils.load_calculation.load_calculation import LoadCalculation
 from FleetRL.fleet_env.config.ev_config import EvConfig
 
 class Observer:
+    """
+    Parent class for observer modules.
+    """
     def get_obs(self,
                 db: pd.DataFrame,
                 price_lookahead: int,
@@ -37,8 +40,4 @@ class Observer:
         :param time: current timestamp
         :return: length of trip in hours as a float
         """
-        raise NotImplementedError("This is an abstract class")
-
-    @staticmethod
-    def flatten_obs(obs):
         raise NotImplementedError("This is an abstract class")

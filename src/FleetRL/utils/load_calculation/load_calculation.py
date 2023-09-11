@@ -1,4 +1,3 @@
-# import pandapower as pp
 from enum import Enum
 
 class CompanyType(Enum):
@@ -7,9 +6,22 @@ class CompanyType(Enum):
     Utility = 3
 
 class LoadCalculation:
+    """
+    The Load Calculation class sets grid connection, and calculates load overloading
+    """
 
     @staticmethod
     def _import_company(company_type: CompanyType, max_load: float, num_cars: int):
+        """
+        The grid connection is calculated based on the building load, number of EVs and the EVSE kW power.
+        The grid connection is either 1.1 * max_load, or such that a simultaneous charging of 50% of EVs would overload
+        the trafo at max building load.
+
+        :param company_type: Utility, Last-mile delivery, or caretaker
+        :param max_load: The max building load of the use-case in kW
+        :param num_cars: Number of EVs
+        :return: Grid connection in kW, EVSE power in kW, batt_cap in kWh
+        """
         grid_connection: float  # max grid connection in kW
         evse_power: float  # charger capacity in kW
 
@@ -39,12 +51,19 @@ class LoadCalculation:
         return grid_connection, evse_power, batt_cap
 
     def __init__(self, company_type: CompanyType, max_load: float, num_cars: int):
+        """
+        Initialise load calculation module
+
+        :param company_type: LMD, CT, UT
+        :param max_load: Max building load
+        :param num_cars: Number of EVs
+        """
+
         # setting parameters of the company site
         self.company_type = company_type
         self.max_load = max_load
         self.num_cars = num_cars
 
-        # TODO: max power could change, I even have that info in the schedule
         # Grid connection: grid connection point max capacity in kW
         # EVSE (ev supply equipment aka charger) max power in kW
         self.grid_connection, self.evse_max_power, self.batt_cap = LoadCalculation._import_company(self.company_type,
@@ -52,6 +71,14 @@ class LoadCalculation:
                                                                                                    self.num_cars)
 
     def check_violation(self, actions: list[float], there: list[int], building_load: float, pv: float) -> (bool, float):
-        # check if overloaded and by how much
+        """
+
+        :param actions: Actions list, action for each EV [-1,1]
+        :param there: Flag is EV is plugged in or not [0;1]
+        :param building_load: Current building load in kW
+        :param pv: Current PV in kW
+        :return:
+        """
+        # check if overloaded and by how much, PV is subtracted
         overload_amount = abs(min(self.grid_connection - building_load - sum(actions) * self.evse_max_power + pv, 0.0))
         return overload_amount > 0, overload_amount

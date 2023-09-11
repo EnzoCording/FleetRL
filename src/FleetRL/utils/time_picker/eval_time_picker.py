@@ -7,6 +7,9 @@ from FleetRL.utils.time_picker.time_picker import TimePicker
 
 
 class EvalTimePicker(TimePicker):
+    """
+    Time picker for validation set.
+    """
 
     def __init__(self, ep_len):
         self.episode_length = ep_len

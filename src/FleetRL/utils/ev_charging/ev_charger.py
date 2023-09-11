@@ -9,20 +9,31 @@ from FleetRL.utils.load_calculation.load_calculation import LoadCalculation
 
 
 class EvCharger:
+    """
+    The EV Charger class handles the logic from action to battery charging. SOC and charging cost are calculated.
+    Two different cost scenarios can be modelled: spot market in both directions (allowing for arbitrage) and a
+    commercial electricity tariff that takes into account grid fees, and markups. Discharging at PV feed-in levels.
+    """
 
     def __init__(self, ev_conf: EvConfig):
-        # Price analysis: https://www.bdew.de/media/documents/230215_BDEW-Strompreisanalyse_Februar_2023_15.02.2023.pdf
-        # Average spot price for 2020 was ~3.2 ct/kWh and ~4 ct/kWh if looking at peak times only
-        # --> 50% are fees --> spot price is multiplied by factor of 1.5 and offset by +1
-        # this accounts for fees even when prices are negative or zero, but also scales with price levels
+        """
+        Initialising parameters for the commercial tariff scenario
+
+        - Price analysis: https://www.bdew.de/media/documents/230215_BDEW-Strompreisanalyse_Februar_2023_15.02.2023.pdf
+        - Average spot price for 2020 was ~3.2 ct/kWh and ~4 ct/kWh if looking at peak times only
+        - --> 50% are fees --> spot price is multiplied by factor of 1.5 and offset by +1
+        - this accounts for fees even when prices are negative or zero, but also scales with price levels
+
+        - If energy is injected to the grid, it can be treated like solar feed-in from households
+        - https://echtsolar.de/einspeiseverguetung/#t-1677761733663
+        - Fees for handling of 25% are assumed
+
+        :param ev_conf: Ev config object
+        """
+
         self.spot_multiplier = ev_conf.variable_multiplier  # no unit
         self.spot_offset = ev_conf.fixed_markup / 1000  # from €/MWh to €/kWh
-
-        # If energy is injected to the grid, it can be treated like solar feed-in from households
-        # https://echtsolar.de/einspeiseverguetung/#t-1677761733663
-        # Fees for handling of 25% are assumed
         self.handling_fees = ev_conf.feed_in_deduction  # %
-
 
 
     def charge(self,
@@ -38,6 +49,10 @@ class EvCharger:
                target_soc: list):
 
         """
+        The function loops through each car separately and computes SOC and charging cost depending on the action.
+        Positive actions -> charging, negative actions -> discharging. Penalties are taken into account if the battery
+        would be overcharged (agent sends a charging action to a full battery).
+
         :param db: The schedule database of the EVs
         :param num_cars: Number of cars in the model
         :param actions: Actions taken by the agent
@@ -66,6 +81,7 @@ class EvCharger:
         charging_energy = 0.0
         discharging_energy = 0.0
 
+        # reset reward values
         charging_reward = 0.0
         discharging_reward = 0.0
 
@@ -188,7 +204,7 @@ class EvCharger:
             # append total charging energy of the car to the charge log, used in post-processing
             charge_log = np.append(charge_log, charging_energy + discharging_energy)
 
-            # Throw an error if SOC is actually negative
+            # Print if SOC is actually negative
             if (np.round(episode.soc[car], 5) < 0) or (np.round(episode.soc[car], 5) > 1):
                 print(f"SOC negative: {episode.soc[car]}"
                       f"Date: {episode.time}"

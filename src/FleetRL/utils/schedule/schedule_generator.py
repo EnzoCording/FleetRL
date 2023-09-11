@@ -9,6 +9,10 @@ import os
 from FleetRL.utils.schedule.schedule_config import ScheduleConfig, ScheduleType
 
 class ScheduleGenerator:
+    """
+    Probabilistic schedule generator. Loops through each 15 min timeslot in the yearly dataframe and generates a row
+    entry. The format is kept similar to emobpy to enable compatability and ease of use.
+    """
 
     def __init__(self, schedule_dir: str, starting_date: str = "01/01/2020 00:00:00",
                  ending_date: str = "30/12/2020 23:59:59",
@@ -18,6 +22,20 @@ class ScheduleGenerator:
                  schedule_type: ScheduleType = ScheduleType.Delivery,
                  vehicle_id: str = "0",
                  seed: int = None):
+
+        """
+        Initialise seed, directories, and other parameters.
+
+        :param schedule_dir: Folder directory
+        :param starting_date: Starting date for the schedule, should coincide with model start date
+        :param ending_date: Ending date
+        :param freq: Frequency
+        :param save_schedule: Save schedule to csv flag
+        :param file_comment: Comment that appears in the file name
+        :param schedule_type: Use-case LMD/UT/CT
+        :param vehicle_id: Vehicle ID column
+        :param seed: Seed
+        """
 
         # Set seed for reproducibility
         np.random.seed(seed)
@@ -50,9 +68,20 @@ class ScheduleGenerator:
             os.makedirs(self.schedule_dir)
 
     def get_file_name(self):
+        """
+        Get schedule file name
+        :return: File string with csv
+        """
         return self.file_name
 
     def generate_schedule(self):
+
+        """
+        This method chooses the right generation method depending on the use-case. Returns the schedule dataframe.
+
+        :return: pd.DataFrame of the schedule
+        """
+
         if self.schedule_type == self.schedule_type.Delivery:
             return self.generate_delivery()
         elif self.schedule_type == self.schedule_type.Caretaker:
@@ -63,6 +92,11 @@ class ScheduleGenerator:
             raise TypeError("Company type not found!")
 
     def generate_delivery(self):
+
+        """
+        Delivery schedule generator. Saturdays operations occur but at reduced levels, no operations on Sunday.
+        :return: pd.DataFrame of the schedule
+        """
 
         # make DataFrame and a date range, from start to end
         ev_schedule = pd.DataFrame()
@@ -182,6 +216,11 @@ class ScheduleGenerator:
         return ev_schedule
 
     def generate_caretaker(self):
+
+        """
+        Caretaker generator. Lunch break, operations on Sunday, chance for emergency trips at night
+        :return: pd.DataFrame of the schedule
+        """
 
         # make DataFrame and a date range, from start to end
         ev_schedule = pd.DataFrame()
@@ -384,6 +423,11 @@ class ScheduleGenerator:
 
     def generate_utility(self):
 
+        """
+        Utility generation. Chance for operations on Sunday.
+        :return: pd.DataFrame of the schedule.
+        """
+
         # make DataFrame and a date range, from start to end
         ev_schedule = pd.DataFrame()
         ev_schedule["date"] = pd.date_range(start=self.starting_date, end=self.ending_date, freq = self.freq)
@@ -530,15 +574,3 @@ class ScheduleGenerator:
             ev_schedule.to_csv(self.path_name)
 
         return ev_schedule
-
-    # def generate_multiple_ev_schedule(self, num_evs):
-    #     schedule = pd.DataFrame()
-    #     self.save = False
-    #     self.file_comment += f"_{num_evs}_evs"
-    #     self.file_name = f"schedule_{self.time_now}_{self.file_comment}.csv"
-    #     self.path_name = self.schedule_dir + self.file_name
-    #     for i in range(num_evs):
-    #         self.vehicle_id = i
-    #         new_schedule = self.generate_schedule()
-    #         schedule = pd.concat([schedule, new_schedule], axis = 0, ignore_index=True)
-    #     schedule.to_csv(self.path_name)
