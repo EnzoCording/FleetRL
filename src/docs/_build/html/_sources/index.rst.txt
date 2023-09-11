@@ -31,6 +31,9 @@ Unique Implementations:
    :caption: User Guide
 
    guide/installation
+   guide/agent_training
+   guide/agent_eval
+   guide/benchmarking
 
 .. toctree::
    :maxdepth: 1
@@ -45,67 +48,6 @@ Unique Implementations:
    FleetRL.utils.normalization
    FleetRL.utils.observation
    FleetRL.utils.schedule
-   FleetRL.utils.time_picker
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: FleetRL Environment:
-
-   FleetRL.fleet_env
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Battery degradation:
-
-   FleetRL.utils.battery_degradation
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Data Logger:
-
-   FleetRL.utils.data_logger
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Data Processing:
-
-   FleetRL.utils.data_processing
-
-.. toctree::
-   :maxdepth: 1
-   :caption: EV Charging:
-
-   FleetRL.utils.ev_charging
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Load calculation:
-
-   FleetRL.utils.load_calculation
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Normalization:
-
-   FleetRL.utils.normalization
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Observation:
-
-   FleetRL.utils.observation
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Schedule generation:
-
-   FleetRL.utils.schedule
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Time picker:
-
    FleetRL.utils.time_picker
 
 

@@ -31,6 +31,9 @@ Unique Implementations:
    :caption: User Guide
 
    guide/installation
+   guide/agent_training
+   guide/agent_eval
+   guide/benchmarking
 
 .. toctree::
    :maxdepth: 1

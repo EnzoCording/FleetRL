@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="FleetRL.utils.data_logger package" href="FleetRL.utils.data_logger.html" />
-    <link rel="prev" title="FleetRL.utils package" href="FleetRL.utils.html" /> 
+    <link rel="prev" title="FleetRL.fleet_env.config package" href="FleetRL.fleet_env.config.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -34,6 +34,9 @@
           <a href="index.html" class="icon icon-home">
             FleetRL
           </a>
+              <div class="version">
+                master (1.0.0 )
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -42,22 +45,81 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="FleetRL.html">FleetRL package</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="FleetRL.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
-<li class="toctree-l4 current"><a class="reference internal" href="FleetRL.utils.html">FleetRL.utils package</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#fleetrl-main-module">FleetRL.main module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#module-FleetRL">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">FleetRL.utils.battery_degradation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.battery_degradation.batt_deg">FleetRL.utils.battery_degradation.batt_deg module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.battery_degradation.batt_deg.BatteryDegradation"><code class="docutils literal notranslate"><span class="pre">BatteryDegradation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.batt_deg.BatteryDegradation.calculate_degradation"><code class="docutils literal notranslate"><span class="pre">BatteryDegradation.calculate_degradation()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.battery_degradation.compare_methods">FleetRL.utils.battery_degradation.compare_methods module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison"><code class="docutils literal notranslate"><span class="pre">Comparison</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.compare_methods"><code class="docutils literal notranslate"><span class="pre">Comparison.compare_methods()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.deg_rate_calendar"><code class="docutils literal notranslate"><span class="pre">Comparison.deg_rate_calendar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.deg_rate_cycle"><code class="docutils literal notranslate"><span class="pre">Comparison.deg_rate_cycle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.emp_deg"><code class="docutils literal notranslate"><span class="pre">Comparison.emp_deg()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.l_with_sei"><code class="docutils literal notranslate"><span class="pre">Comparison.l_with_sei()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.l_without_sei"><code class="docutils literal notranslate"><span class="pre">Comparison.l_without_sei()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.rainflow_sei"><code class="docutils literal notranslate"><span class="pre">Comparison.rainflow_sei()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.stress_dod"><code class="docutils literal notranslate"><span class="pre">Comparison.stress_dod()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.stress_soc"><code class="docutils literal notranslate"><span class="pre">Comparison.stress_soc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.stress_temp"><code class="docutils literal notranslate"><span class="pre">Comparison.stress_temp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.stress_time"><code class="docutils literal notranslate"><span class="pre">Comparison.stress_time()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.battery_degradation.empirical_degradation">FleetRL.utils.battery_degradation.empirical_degradation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.battery_degradation.empirical_degradation.EmpiricalDegradation"><code class="docutils literal notranslate"><span class="pre">EmpiricalDegradation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.empirical_degradation.EmpiricalDegradation.calculate_degradation"><code class="docutils literal notranslate"><span class="pre">EmpiricalDegradation.calculate_degradation()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.battery_degradation.log_data_deg">FleetRL.utils.battery_degradation.log_data_deg module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.battery_degradation.log_data_deg.LogDataDeg"><code class="docutils literal notranslate"><span class="pre">LogDataDeg</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.log_data_deg.LogDataDeg.add_log_entry"><code class="docutils literal notranslate"><span class="pre">LogDataDeg.add_log_entry()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.log_data_deg.LogDataDeg.log_soc"><code class="docutils literal notranslate"><span class="pre">LogDataDeg.log_soc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.log_data_deg.LogDataDeg.log_soh"><code class="docutils literal notranslate"><span class="pre">LogDataDeg.log_soh()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.battery_degradation.rainflow_sei_degradation">FleetRL.utils.battery_degradation.rainflow_sei_degradation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation"><code class="docutils literal notranslate"><span class="pre">RainflowSeiDegradation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.calculate_degradation"><code class="docutils literal notranslate"><span class="pre">RainflowSeiDegradation.calculate_degradation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.deg_rate_calendar"><code class="docutils literal notranslate"><span class="pre">RainflowSeiDegradation.deg_rate_calendar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.deg_rate_cycle"><code class="docutils literal notranslate"><span class="pre">RainflowSeiDegradation.deg_rate_cycle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.l_with_sei"><code class="docutils literal notranslate"><span class="pre">RainflowSeiDegradation.l_with_sei()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.l_without_sei"><code class="docutils literal notranslate"><span class="pre">RainflowSeiDegradation.l_without_sei()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.stress_dod"><code class="docutils literal notranslate"><span class="pre">RainflowSeiDegradation.stress_dod()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.stress_soc"><code class="docutils literal notranslate"><span class="pre">RainflowSeiDegradation.stress_soc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.stress_temp"><code class="docutils literal notranslate"><span class="pre">RainflowSeiDegradation.stress_temp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.stress_time"><code class="docutils literal notranslate"><span class="pre">RainflowSeiDegradation.stress_time()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.battery_degradation">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">FleetRL.utils.data_logger package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">FleetRL.utils.data_processing package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">FleetRL.utils.ev_charging package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">FleetRL.utils.load_calculation package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">FleetRL.utils.normalization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">FleetRL.utils.observation package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">FleetRL.utils.schedule package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
 </ul>
 
         </div>
@@ -74,9 +136,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
-          <li class="breadcrumb-item"><a href="FleetRL.html">FleetRL package</a></li>
-          <li class="breadcrumb-item"><a href="FleetRL.utils.html">FleetRL.utils package</a></li>
       <li class="breadcrumb-item active">FleetRL.utils.battery_degradation package</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/FleetRL.utils.battery_degradation.rst.txt" rel="nofollow"> View page source</a>
@@ -100,7 +159,7 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.battery_degradation.batt_deg.BatteryDegradation.calculate_degradation">
-<span class="sig-name descname"><span class="pre">calculate_degradation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soc_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charging_power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig" title="FleetRL.fleet_env.config.time_config.TimeConfig"><span class="pre">TimeConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/batt_deg.html#BatteryDegradation.calculate_degradation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.batt_deg.BatteryDegradation.calculate_degradation" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">calculate_degradation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soc_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charging_power</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/batt_deg.html#BatteryDegradation.calculate_degradation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.batt_deg.BatteryDegradation.calculate_degradation" title="Link to this definition"></a></dt>
 <dd><p>This is the parent class for degradation methods. Any new implemented method must follow this style of inputs
 and outputs. Then, the method can be used in FleetRL by changing one line of code in the import.</p>
 <p>The degradation methods in FleetRL are implemented such that degradation is calculated in real-time. In the
@@ -108,14 +167,17 @@ step method of the environment class, the current SoH is calculated by SoH -= de
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>soc_list</strong> – Historic values of SoC until now</p></li>
-<li><p><strong>charging_power</strong> – Charging power in kW</p></li>
-<li><p><strong>time_conf</strong> – Time config instance, necessary for time step length</p></li>
-<li><p><strong>temp</strong> – Temperature to use in battery degradation in °C</p></li>
+<li><p><strong>soc_list</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>) – Historic values of SoC until now</p></li>
+<li><p><strong>charging_power</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – Charging power in kW</p></li>
+<li><p><strong>time_conf</strong> (<a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig" title="FleetRL.fleet_env.config.time_config.TimeConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeConfig</span></code></a>) – Time config instance, necessary for time step length</p></li>
+<li><p><strong>temp</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – Temperature to use in battery degradation in °C</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Degradation of battery (unit-less, reduction of SoH, which is max. 1)</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Degradation of battery (unit-less, reduction of SoH, which is max. 1)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -131,7 +193,7 @@ step method of the environment class, the current SoH is calculated by SoH -= de
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.battery_degradation.compare_methods.Comparison.compare_methods">
-<span class="sig-name descname"><span class="pre">compare_methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/compare_methods.html#Comparison.compare_methods"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.compare_methods" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">compare_methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/compare_methods.html#Comparison.compare_methods"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.compare_methods.Comparison.compare_methods" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -191,11 +253,11 @@ step method of the environment class, the current SoH is calculated by SoH -= de
 <span id="fleetrl-utils-battery-degradation-empirical-degradation-module"></span><h2>FleetRL.utils.battery_degradation.empirical_degradation module<a class="headerlink" href="#module-FleetRL.utils.battery_degradation.empirical_degradation" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.battery_degradation.empirical_degradation.EmpiricalDegradation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.battery_degradation.empirical_degradation.</span></span><span class="sig-name descname"><span class="pre">EmpiricalDegradation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_soh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/empirical_degradation.html#EmpiricalDegradation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.empirical_degradation.EmpiricalDegradation" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.battery_degradation.empirical_degradation.</span></span><span class="sig-name descname"><span class="pre">EmpiricalDegradation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_soh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cars</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/empirical_degradation.html#EmpiricalDegradation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.empirical_degradation.EmpiricalDegradation" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.battery_degradation.batt_deg.BatteryDegradation" title="FleetRL.utils.battery_degradation.batt_deg.BatteryDegradation"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatteryDegradation</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.battery_degradation.empirical_degradation.EmpiricalDegradation.calculate_degradation">
-<span class="sig-name descname"><span class="pre">calculate_degradation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soc_log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charging_power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig" title="FleetRL.fleet_env.config.time_config.TimeConfig"><span class="pre">TimeConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">array</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/empirical_degradation.html#EmpiricalDegradation.calculate_degradation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.empirical_degradation.EmpiricalDegradation.calculate_degradation" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">calculate_degradation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soc_log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charging_power</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/empirical_degradation.html#EmpiricalDegradation.calculate_degradation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.empirical_degradation.EmpiricalDegradation.calculate_degradation" title="Link to this definition"></a></dt>
 <dd><p>Similar to non-linear SEI, the most recent event is taken, and the linear-based degradation is calculated.
 No rainflow counting, thus degradation is computed for each time step.</p>
 <ul class="simple">
@@ -207,14 +269,17 @@ No rainflow counting, thus degradation is computed for each time step.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>soc_log</strong> – Historical log of SOC</p></li>
-<li><p><strong>charging_power</strong> – EVSE power in kW</p></li>
-<li><p><strong>time_conf</strong> – time config object</p></li>
-<li><p><strong>temp</strong> – temperature</p></li>
+<li><p><strong>soc_log</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>) – Historical log of SOC</p></li>
+<li><p><strong>charging_power</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – EVSE power in kW</p></li>
+<li><p><strong>time_conf</strong> (<a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig" title="FleetRL.fleet_env.config.time_config.TimeConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeConfig</span></code></a>) – time config object</p></li>
+<li><p><strong>temp</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – temperature</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Degradation, float</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">array</span></code></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Degradation, float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -251,14 +316,14 @@ No rainflow counting, thus degradation is computed for each time step.</p>
 <span id="fleetrl-utils-battery-degradation-rainflow-sei-degradation-module"></span><h2>FleetRL.utils.battery_degradation.rainflow_sei_degradation module<a class="headerlink" href="#module-FleetRL.utils.battery_degradation.rainflow_sei_degradation" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.battery_degradation.rainflow_sei_degradation.</span></span><span class="sig-name descname"><span class="pre">RainflowSeiDegradation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_soh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/rainflow_sei_degradation.html#RainflowSeiDegradation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.battery_degradation.rainflow_sei_degradation.</span></span><span class="sig-name descname"><span class="pre">RainflowSeiDegradation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_soh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cars</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/rainflow_sei_degradation.html#RainflowSeiDegradation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.battery_degradation.batt_deg.BatteryDegradation" title="FleetRL.utils.battery_degradation.batt_deg.BatteryDegradation"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatteryDegradation</span></code></a></p>
 <p>Non-linear battery degradation model, Xu et al.
 - Source: Modeling of Lithium-Ion Battery Degradation for Cell Life Assessment
 - <a class="reference external" href="https://ieeexplore.ieee.org/document/7488267">https://ieeexplore.ieee.org/document/7488267</a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.calculate_degradation">
-<span class="sig-name descname"><span class="pre">calculate_degradation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soc_log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charging_power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig" title="FleetRL.fleet_env.config.time_config.TimeConfig"><span class="pre">TimeConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">array</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/rainflow_sei_degradation.html#RainflowSeiDegradation.calculate_degradation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.calculate_degradation" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">calculate_degradation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soc_log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charging_power</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/battery_degradation/rainflow_sei_degradation.html#RainflowSeiDegradation.calculate_degradation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation.calculate_degradation" title="Link to this definition"></a></dt>
 <dd><p>Calculates degradation. SOC from environment is converted to the necessary format for rainflow counting.
 Every time step, this function is called with a new soc_log entry. The rainflow library calculates the
 resulting cycle counts, which do not grow identically with soc_log entries. Rainflow results are used for
@@ -267,14 +332,17 @@ calculation, the second most recent rainflow result is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>soc_log</strong> – SOC list for each time step t: t1:[soc_car1, soc_car2, …], t2:[soc_car1, soc_car2,…]</p></li>
-<li><p><strong>charging_power</strong> – kW of the charger</p></li>
-<li><p><strong>time_conf</strong> – Time config instance from the environment</p></li>
-<li><p><strong>temp</strong> – Temperature (default at 25°C)</p></li>
+<li><p><strong>soc_log</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>) – SOC list for each time step t: t1:[soc_car1, soc_car2, …], t2:[soc_car1, soc_car2,…]</p></li>
+<li><p><strong>charging_power</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – kW of the charger</p></li>
+<li><p><strong>time_conf</strong> (<a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig" title="FleetRL.fleet_env.config.time_config.TimeConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeConfig</span></code></a>) – Time config instance from the environment</p></li>
+<li><p><strong>temp</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – Temperature (default at 25°C)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Numpy array of degradation for each vehicle [deg_1, deg_2, …]</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">array</span></code></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Numpy array of degradation for each vehicle [deg_1, deg_2, …]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -331,7 +399,7 @@ calculation, the second most recent rainflow result is used.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="FleetRL.utils.html" class="btn btn-neutral float-left" title="FleetRL.utils package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FleetRL.fleet_env.config.html" class="btn btn-neutral float-left" title="FleetRL.fleet_env.config package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="FleetRL.utils.data_logger.html" class="btn btn-neutral float-right" title="FleetRL.utils.data_logger package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="FleetRL.utils package" href="FleetRL.utils.html" />
+    <link rel="next" title="FleetRL.utils.battery_degradation package" href="FleetRL.utils.battery_degradation.html" />
     <link rel="prev" title="FleetRL.fleet_env package" href="FleetRL.fleet_env.html" /> 
 </head>
 
@@ -34,6 +34,9 @@
           <a href="index.html" class="icon icon-home">
             FleetRL
           </a>
+              <div class="version">
+                master (1.0.0 )
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -42,22 +45,39 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="FleetRL.html">FleetRL package</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="FleetRL.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4 current"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="FleetRL.utils.html">FleetRL.utils package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="FleetRL.fleet_env.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">FleetRL.fleet_env.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-FleetRL.fleet_env.config.ev_config">FleetRL.fleet_env.config.ev_config module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-FleetRL.fleet_env.config.score_config">FleetRL.fleet_env.config.score_config module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-FleetRL.fleet_env.config.time_config">FleetRL.fleet_env.config.time_config module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-FleetRL.fleet_env.config">Module contents</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#fleetrl-main-module">FleetRL.main module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#module-FleetRL">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.html#module-FleetRL.fleet_env.episode">FleetRL.fleet_env.episode module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.html#module-FleetRL.fleet_env.fleet_environment">FleetRL.fleet_env.fleet_environment module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.html#module-FleetRL.fleet_env">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">FleetRL.utils.battery_degradation package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">FleetRL.utils.data_logger package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">FleetRL.utils.data_processing package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">FleetRL.utils.ev_charging package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">FleetRL.utils.load_calculation package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">FleetRL.utils.normalization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">FleetRL.utils.observation package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">FleetRL.utils.schedule package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
 </ul>
 
         </div>
@@ -74,8 +94,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
-          <li class="breadcrumb-item"><a href="FleetRL.html">FleetRL package</a></li>
           <li class="breadcrumb-item"><a href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
       <li class="breadcrumb-item active">FleetRL.fleet_env.config package</li>
       <li class="wy-breadcrumbs-aside">
@@ -153,7 +171,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="FleetRL.fleet_env.html" class="btn btn-neutral float-left" title="FleetRL.fleet_env package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="FleetRL.utils.html" class="btn btn-neutral float-right" title="FleetRL.utils package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="FleetRL.utils.battery_degradation.html" class="btn btn-neutral float-right" title="FleetRL.utils.battery_degradation package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

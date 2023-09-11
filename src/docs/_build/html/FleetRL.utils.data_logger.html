@@ -34,6 +34,9 @@
           <a href="index.html" class="icon icon-home">
             FleetRL
           </a>
+              <div class="version">
+                master (1.0.0 )
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -42,22 +45,33 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="FleetRL.html">FleetRL package</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="FleetRL.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
-<li class="toctree-l4 current"><a class="reference internal" href="FleetRL.utils.html">FleetRL.utils package</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#fleetrl-main-module">FleetRL.main module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.html#module-FleetRL">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">FleetRL.utils.battery_degradation package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">FleetRL.utils.data_logger package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.data_logger.data_logger">FleetRL.utils.data_logger.data_logger module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.data_logger.data_logger.DataLogger"><code class="docutils literal notranslate"><span class="pre">DataLogger</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.data_logger.data_logger.DataLogger.log_data"><code class="docutils literal notranslate"><span class="pre">DataLogger.log_data()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.data_logger">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">FleetRL.utils.data_processing package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">FleetRL.utils.ev_charging package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">FleetRL.utils.load_calculation package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">FleetRL.utils.normalization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">FleetRL.utils.observation package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">FleetRL.utils.schedule package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
 </ul>
 
         </div>
@@ -74,9 +88,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
-          <li class="breadcrumb-item"><a href="FleetRL.html">FleetRL package</a></li>
-          <li class="breadcrumb-item"><a href="FleetRL.utils.html">FleetRL.utils package</a></li>
       <li class="breadcrumb-item active">FleetRL.utils.data_logger package</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/FleetRL.utils.data_logger.rst.txt" rel="nofollow"> View page source</a>
@@ -103,23 +114,23 @@ The log is a dataframe, where each row can be a float or an array.
 Deepcopy to avoid risk of mutability (logs pointing back to changing variables)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.data_logger.data_logger.DataLogger.log_data">
-<span class="sig-name descname"><span class="pre">log_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cashflow</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soc_v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degradation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge_log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_logger/data_logger.html#DataLogger.log_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_logger.data_logger.DataLogger.log_data" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">log_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cashflow</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soc_v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degradation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge_log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soh</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_logger/data_logger.html#DataLogger.log_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_logger.data_logger.DataLogger.log_data" title="Link to this definition"></a></dt>
 <dd><p>While the env object is the same, the episode counter will recognise different episodes.
 A dict is created with the required values, and then appended to the log dataframe</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>time</strong> – Current timestamp</p></li>
-<li><p><strong>obs</strong> – Observation array</p></li>
-<li><p><strong>action</strong> – Action array</p></li>
-<li><p><strong>reward</strong> – Reward float</p></li>
-<li><p><strong>cashflow</strong> – in EUR</p></li>
-<li><p><strong>penalty</strong> – penalty float</p></li>
-<li><p><strong>grid</strong> – Grid connection in kW</p></li>
-<li><p><strong>soc_v</strong> – Amount of SOC violated in # of batteries</p></li>
-<li><p><strong>degradation</strong> – Degradation in that timestep</p></li>
-<li><p><strong>charge_log</strong> – How much energy flowed into the batteries in kWh</p></li>
-<li><p><strong>soh</strong> – Current SoH, array</p></li>
+<li><p><strong>time</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>) – Current timestamp</p></li>
+<li><p><strong>obs</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – Observation array</p></li>
+<li><p><strong>action</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – Action array</p></li>
+<li><p><strong>reward</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – Reward float</p></li>
+<li><p><strong>cashflow</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – in EUR</p></li>
+<li><p><strong>penalty</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – penalty float</p></li>
+<li><p><strong>grid</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – Grid connection in kW</p></li>
+<li><p><strong>soc_v</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – Amount of SOC violated in # of batteries</p></li>
+<li><p><strong>degradation</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – Degradation in that timestep</p></li>
+<li><p><strong>charge_log</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – How much energy flowed into the batteries in kWh</p></li>
+<li><p><strong>soh</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – Current SoH, array</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

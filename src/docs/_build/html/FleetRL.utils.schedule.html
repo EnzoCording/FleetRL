@@ -34,6 +34,9 @@
           <a href="index.html" class="icon icon-home">
             FleetRL
           </a>
+              <div class="version">
+                master (1.0.0 )
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -45,6 +48,9 @@
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/agent_training.html">Agent Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/agent_eval.html">Agent Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/benchmarking.html">Benchmarking</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
@@ -85,72 +91,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">FleetRL Environment:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Battery degradation:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">FleetRL.utils.battery_degradation package</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Data Logger:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">FleetRL.utils.data_logger package</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Data Processing:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">FleetRL.utils.data_processing package</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">EV Charging:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">FleetRL.utils.ev_charging package</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Load calculation:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">FleetRL.utils.load_calculation package</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Normalization:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">FleetRL.utils.normalization package</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Observation:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">FleetRL.utils.observation package</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Schedule generation:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">FleetRL.utils.schedule package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#fleetrl-utils-schedule-manual-generation-module">FleetRL.utils.schedule.manual_generation module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.schedule.schedule_config">FleetRL.utils.schedule.schedule_config module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_config.ScheduleConfig"><code class="docutils literal notranslate"><span class="pre">ScheduleConfig</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_config.ScheduleType"><code class="docutils literal notranslate"><span class="pre">ScheduleType</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_config.ScheduleType.Caretaker"><code class="docutils literal notranslate"><span class="pre">ScheduleType.Caretaker</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_config.ScheduleType.Delivery"><code class="docutils literal notranslate"><span class="pre">ScheduleType.Delivery</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_config.ScheduleType.Utility"><code class="docutils literal notranslate"><span class="pre">ScheduleType.Utility</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.schedule.schedule_generator">FleetRL.utils.schedule.schedule_generator module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator"><code class="docutils literal notranslate"><span class="pre">ScheduleGenerator</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.generate_caretaker"><code class="docutils literal notranslate"><span class="pre">ScheduleGenerator.generate_caretaker()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.generate_delivery"><code class="docutils literal notranslate"><span class="pre">ScheduleGenerator.generate_delivery()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.generate_schedule"><code class="docutils literal notranslate"><span class="pre">ScheduleGenerator.generate_schedule()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.generate_utility"><code class="docutils literal notranslate"><span class="pre">ScheduleGenerator.generate_utility()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.get_file_name"><code class="docutils literal notranslate"><span class="pre">ScheduleGenerator.get_file_name()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.schedule">Module contents</a></li>
-</ul>
-</li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Time picker:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
-</ul>
 
         </div>
       </div>
@@ -188,7 +128,7 @@
 <span id="fleetrl-utils-schedule-schedule-config-module"></span><h2>FleetRL.utils.schedule.schedule_config module<a class="headerlink" href="#module-FleetRL.utils.schedule.schedule_config" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.schedule.schedule_config.ScheduleConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.schedule.schedule_config.</span></span><span class="sig-name descname"><span class="pre">ScheduleConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schedule_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_config.ScheduleType" title="FleetRL.utils.schedule.schedule_config.ScheduleType"><span class="pre">ScheduleType</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/schedule/schedule_config.html#ScheduleConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.schedule.schedule_config.ScheduleConfig" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.schedule.schedule_config.</span></span><span class="sig-name descname"><span class="pre">ScheduleConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schedule_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/schedule/schedule_config.html#ScheduleConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.schedule.schedule_config.ScheduleConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Statistical configurations for the schedule generator. Mean and standard deviation values are specified for each
 metric, allowing for a distributional and probabilistic generation approach.</p>
@@ -221,7 +161,7 @@ metric, allowing for a distributional and probabilistic generation approach.</p>
 <span id="fleetrl-utils-schedule-schedule-generator-module"></span><h2>FleetRL.utils.schedule.schedule_generator module<a class="headerlink" href="#module-FleetRL.utils.schedule.schedule_generator" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.schedule.schedule_generator.ScheduleGenerator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.schedule.schedule_generator.</span></span><span class="sig-name descname"><span class="pre">ScheduleGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schedule_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'01/01/2020</span> <span class="pre">00:00:00'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ending_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'30/12/2020</span> <span class="pre">23:59:59'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'15T'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_schedule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_comment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schedule_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_config.ScheduleType" title="FleetRL.utils.schedule.schedule_config.ScheduleType"><span class="pre">ScheduleType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ScheduleType.Delivery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vehicle_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/schedule/schedule_generator.html#ScheduleGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.schedule.schedule_generator.</span></span><span class="sig-name descname"><span class="pre">ScheduleGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schedule_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'01/01/2020</span> <span class="pre">00:00:00'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ending_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'30/12/2020</span> <span class="pre">23:59:59'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'15T'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_schedule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schedule_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ScheduleType.Delivery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vehicle_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/schedule/schedule_generator.html#ScheduleGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Probabilistic schedule generator. Loops through each 15 min timeslot in the yearly dataframe and generates a row
 entry. The format is kept similar to emobpy to enable compatability and ease of use.</p>
