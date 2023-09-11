@@ -97,21 +97,22 @@
 <dt class="sig sig-object py" id="FleetRL.utils.time_picker.eval_time_picker.EvalTimePicker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.time_picker.eval_time_picker.</span></span><span class="sig-name descname"><span class="pre">EvalTimePicker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_len</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/time_picker/eval_time_picker.html#EvalTimePicker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.time_picker.eval_time_picker.EvalTimePicker" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.time_picker.time_picker.TimePicker" title="FleetRL.utils.time_picker.time_picker.TimePicker"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimePicker</span></code></a></p>
+<p>Time picker for validation set. The amount of days and thus the train/validation split is set in time config.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.time_picker.eval_time_picker.EvalTimePicker.choose_time">
 <span class="sig-name descname"><span class="pre">choose_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_cutoff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Timestamp</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/time_picker/eval_time_picker.html#EvalTimePicker.choose_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.time_picker.eval_time_picker.EvalTimePicker.choose_time" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Randomly chooses a start time from the validation set.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>db</strong> – dataframe from env</p></li>
-<li><p><strong>freq</strong> – frequency specification string for pandas</p></li>
-<li><p><strong>end_cutoff</strong> – amount of days cut off at the end to allow some buffer</p></li>
+<li><p><strong>db</strong> – Database</p></li>
+<li><p><strong>freq</strong> – Time frequency</p></li>
+<li><p><strong>end_cutoff</strong> – This is the size of the validation window. By default, the end_cutoff is 2 months, so Nov</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A chosen time stamp</p>
-</dd>
 </dl>
+<p>and Dec are the validation set.
+:return: start time, pd.TimeStamp</p>
 </dd></dl>
 
 </dd></dl>
@@ -123,19 +124,21 @@
 <dt class="sig sig-object py" id="FleetRL.utils.time_picker.random_time_picker.RandomTimePicker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.time_picker.random_time_picker.</span></span><span class="sig-name descname"><span class="pre">RandomTimePicker</span></span><a class="reference internal" href="_modules/FleetRL/utils/time_picker/random_time_picker.html#RandomTimePicker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.time_picker.random_time_picker.RandomTimePicker" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.time_picker.time_picker.TimePicker" title="FleetRL.utils.time_picker.time_picker.TimePicker"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimePicker</span></code></a></p>
+<p>Picks a random time from the training set.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.time_picker.random_time_picker.RandomTimePicker.choose_time">
 <span class="sig-name descname"><span class="pre">choose_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_cutoff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Timestamp</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/time_picker/random_time_picker.html#RandomTimePicker.choose_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.time_picker.random_time_picker.RandomTimePicker.choose_time" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Randomly chooses a start time from the validation set.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>db</strong> – dataframe from env</p></li>
-<li><p><strong>freq</strong> – frequency specification string for pandas</p></li>
-<li><p><strong>end_cutoff</strong> – amount of days cut off at the end to allow some buffer</p></li>
+<li><p><strong>db</strong> – Database</p></li>
+<li><p><strong>freq</strong> – Time frequency</p></li>
+<li><p><strong>end_cutoff</strong> – Buffer that avoids problem with lookaheads</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A chosen time stamp</p>
+<dd class="field-even"><p>start time, pd.TimeStamp</p>
 </dd>
 </dl>
 </dd></dl>
@@ -149,21 +152,16 @@
 <dt class="sig sig-object py" id="FleetRL.utils.time_picker.static_time_picker.StaticTimePicker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.time_picker.static_time_picker.</span></span><span class="sig-name descname"><span class="pre">StaticTimePicker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'01/01/2020</span> <span class="pre">15:00'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/time_picker/static_time_picker.html#StaticTimePicker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.time_picker.static_time_picker.StaticTimePicker" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.time_picker.time_picker.TimePicker" title="FleetRL.utils.time_picker.time_picker.TimePicker"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimePicker</span></code></a></p>
+<p>Picks a static / always the same starting time.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.time_picker.static_time_picker.StaticTimePicker.choose_time">
 <span class="sig-name descname"><span class="pre">choose_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_cutoff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Timestamp</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/time_picker/static_time_picker.html#StaticTimePicker.choose_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.time_picker.static_time_picker.StaticTimePicker.choose_time" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>db</strong> – dataframe from env</p></li>
-<li><p><strong>freq</strong> – frequency specification string for pandas</p></li>
-<li><p><strong>end_cutoff</strong> – amount of days cut off at the end to allow some buffer</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A chosen time stamp</p>
-</dd>
-</dl>
+<dd><p>Parent class for time picker objects
+:param db: dataframe from env
+:param freq: frequency specification string for pandas
+:param end_cutoff: amount of days cut off at the end to allow some buffer. In the eval time picker case,
+the end cutoff specifies the size of the validation set.
+:return: A chosen time stamp</p>
 </dd></dl>
 
 </dd></dl>
@@ -178,18 +176,12 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.time_picker.time_picker.TimePicker.choose_time">
 <span class="sig-name descname"><span class="pre">choose_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_cutoff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Timestamp</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/time_picker/time_picker.html#TimePicker.choose_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.time_picker.time_picker.TimePicker.choose_time" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>db</strong> – dataframe from env</p></li>
-<li><p><strong>freq</strong> – frequency specification string for pandas</p></li>
-<li><p><strong>end_cutoff</strong> – amount of days cut off at the end to allow some buffer</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A chosen time stamp</p>
-</dd>
-</dl>
+<dd><p>Parent class for time picker objects
+:param db: dataframe from env
+:param freq: frequency specification string for pandas
+:param end_cutoff: amount of days cut off at the end to allow some buffer. In the eval time picker case,
+the end cutoff specifies the size of the validation set.
+:return: A chosen time stamp</p>
 </dd></dl>
 
 </dd></dl>

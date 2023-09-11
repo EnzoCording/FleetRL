@@ -74,7 +74,6 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
-<span class="kn">import</span> <span class="nn">copy</span>
 
 <span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.ev_config</span> <span class="kn">import</span> <span class="n">EvConfig</span>
 <span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.score_config</span> <span class="kn">import</span> <span class="n">ScoreConfig</span>
@@ -532,7 +531,16 @@
 <a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.step">[docs]</a>
     <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :param actions: Actions parsed by the agent</span>
+<span class="sd">        The main logic of the EV charging problem is orchestrated in the step function.</span>
+<span class="sd">        Input: Action on charging power for each EV</span>
+<span class="sd">        Output: Next state, reward</span>
+
+<span class="sd">        Intermediate processes: EV charging model, battery degradation, cost calculation, building load, penalties, etc.</span>
+
+<span class="sd">        The step function runs as long as the done flag is False. Different functions and modules are called in this</span>
+<span class="sd">        function to reduce the complexity and to distribute the tasks of the model.</span>
+
+<span class="sd">        :param actions: Actions parsed by the agent, from -1 to 1, representing % of kW of the EVSE</span>
 <span class="sd">        :return: Tuple containing next observation, reward, done, truncated and info dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -774,6 +782,13 @@
 <div class="viewcode-block" id="FleetEnv.print">
 <a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.print">[docs]</a>
     <span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The print function can provide useful information of the environment dynamics and the agent&#39;s actions.</span>
+<span class="sd">        Can slow down FPS due to the printing at each timestep</span>
+
+<span class="sd">        :param action: Action of the agent</span>
+<span class="sd">        :return: None -&gt; Just prints information if specified</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timestep: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_price</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total price with fees: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">price</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2"> €/kWh&quot;</span><span class="p">)</span>
@@ -801,13 +816,22 @@
 <div class="viewcode-block" id="FleetEnv.get_log">
 <a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.get_log">[docs]</a>
     <span class="k">def</span> <span class="nf">get_log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># return log dataframe</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function can be called through SB3 vectorized environments via VecEnv.env_method(&quot;get_log&quot;)[0]</span>
+<span class="sd">        The zero index is required so only the first element -&gt; the DataFrame is extracted</span>
+
+<span class="sd">        :return: Log dataframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_logger</span><span class="o">.</span><span class="n">log</span></div>
 
 
 <div class="viewcode-block" id="FleetEnv.is_done">
 <a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.is_done">[docs]</a>
     <span class="k">def</span> <span class="nf">is_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        VecEnv.env_method(&quot;is_done&quot;)[0]</span>
+<span class="sd">        :return: Flag is episode is done, bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># return if episode is done</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">done</span></div>
 
@@ -815,12 +839,22 @@
 <div class="viewcode-block" id="FleetEnv.get_start_time">
 <a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.get_start_time">[docs]</a>
     <span class="k">def</span> <span class="nf">get_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        VecEnv.env_method(&quot;get_start_time&quot;)[0]</span>
+<span class="sd">        :return: pd.TimeStamp</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">start_time</span></div>
 
 
 <div class="viewcode-block" id="FleetEnv.set_start_time">
 <a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.set_start_time">[docs]</a>
     <span class="k">def</span> <span class="nf">set_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        VecEnv.env_method(&quot;set_start_time&quot;, [f&quot;{start_time}&quot;])</span>
+<span class="sd">        Must parse the function and argument of start_time</span>
+<span class="sd">        :param start_time: string of pd.TimeStamp / date</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
@@ -828,12 +862,23 @@
 <div class="viewcode-block" id="FleetEnv.get_time">
 <a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.get_time">[docs]</a>
     <span class="k">def</span> <span class="nf">get_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        VecEnv.env_method(&quot;get_time&quot;)[0]</span>
+<span class="sd">        :return: pd.TimeStamp: current timestamp</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">.</span><span class="n">time</span></div>
 
 
 <div class="viewcode-block" id="FleetEnv.get_dist_factor">
 <a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.get_dist_factor">[docs]</a>
     <span class="k">def</span> <span class="nf">get_dist_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function returns the distribution/laxity factor: how much time needed vs. how much time left at charger</span>
+<span class="sd">        If factor is 0.1, the dist agent would only charge with 10% of the EVSE capacity.</span>
+<span class="sd">        Call via env_method(&quot;get_dist_factor&quot;)[0] if using an SB3 Vectorized Environment</span>
+<span class="sd">        :return: dist/laxity factor, float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observer</span><span class="o">.</span><span class="n">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">price_lookahead</span><span class="p">,</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span><span class="o">.</span><span class="n">bl_pv_lookahead</span><span class="p">,</span>
@@ -1009,8 +1054,9 @@
 <a class="viewcode-back" href="../../../FleetRL.fleet_env.html#FleetRL.fleet_env.fleet_environment.FleetEnv.adjust_caretaker_lunch_soc">[docs]</a>
     <span class="k">def</span> <span class="nf">adjust_caretaker_lunch_soc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-
-<span class="sd">        :return:</span>
+<span class="sd">        The caretaker target SOC can be set lower during the lunch break to avoid unfair penalties occurring. This is</span>
+<span class="sd">        because the break is not long enough to charge until 0.85 target SOC.</span>
+<span class="sd">        :return: None -&gt; sets the target SOC during lunch break hours to 0.65 by default</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># make an adjustment for caretakers: the afternoon tour SOC on arrival should be calculated with the</span>
         <span class="c1"># afternoon target SOC. This is set to 0.65 in this case</span>

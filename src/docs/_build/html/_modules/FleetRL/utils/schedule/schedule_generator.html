@@ -82,6 +82,10 @@
 <div class="viewcode-block" id="ScheduleGenerator">
 <a class="viewcode-back" href="../../../../FleetRL.utils.schedule.html#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator">[docs]</a>
 <span class="k">class</span> <span class="nc">ScheduleGenerator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Probabilistic schedule generator. Loops through each 15 min timeslot in the yearly dataframe and generates a row</span>
+<span class="sd">    entry. The format is kept similar to emobpy to enable compatability and ease of use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schedule_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">starting_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;01/01/2020 00:00:00&quot;</span><span class="p">,</span>
                  <span class="n">ending_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;30/12/2020 23:59:59&quot;</span><span class="p">,</span>
@@ -91,6 +95,20 @@
                  <span class="n">schedule_type</span><span class="p">:</span> <span class="n">ScheduleType</span> <span class="o">=</span> <span class="n">ScheduleType</span><span class="o">.</span><span class="n">Delivery</span><span class="p">,</span>
                  <span class="n">vehicle_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span>
                  <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise seed, directories, and other parameters.</span>
+
+<span class="sd">        :param schedule_dir: Folder directory</span>
+<span class="sd">        :param starting_date: Starting date for the schedule, should coincide with model start date</span>
+<span class="sd">        :param ending_date: Ending date</span>
+<span class="sd">        :param freq: Frequency</span>
+<span class="sd">        :param save_schedule: Save schedule to csv flag</span>
+<span class="sd">        :param file_comment: Comment that appears in the file name</span>
+<span class="sd">        :param schedule_type: Use-case LMD/UT/CT</span>
+<span class="sd">        :param vehicle_id: Vehicle ID column</span>
+<span class="sd">        :param seed: Seed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Set seed for reproducibility</span>
         <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
@@ -125,12 +143,23 @@
 <div class="viewcode-block" id="ScheduleGenerator.get_file_name">
 <a class="viewcode-back" href="../../../../FleetRL.utils.schedule.html#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.get_file_name">[docs]</a>
     <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get schedule file name</span>
+<span class="sd">        :return: File string with csv</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span></div>
 
 
 <div class="viewcode-block" id="ScheduleGenerator.generate_schedule">
 <a class="viewcode-back" href="../../../../FleetRL.utils.schedule.html#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.generate_schedule">[docs]</a>
     <span class="k">def</span> <span class="nf">generate_schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method chooses the right generation method depending on the use-case. Returns the schedule dataframe.</span>
+
+<span class="sd">        :return: pd.DataFrame of the schedule</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schedule_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">schedule_type</span><span class="o">.</span><span class="n">Delivery</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_delivery</span><span class="p">()</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">schedule_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">schedule_type</span><span class="o">.</span><span class="n">Caretaker</span><span class="p">:</span>
@@ -144,6 +173,11 @@
 <div class="viewcode-block" id="ScheduleGenerator.generate_delivery">
 <a class="viewcode-back" href="../../../../FleetRL.utils.schedule.html#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.generate_delivery">[docs]</a>
     <span class="k">def</span> <span class="nf">generate_delivery</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delivery schedule generator. Saturdays operations occur but at reduced levels, no operations on Sunday.</span>
+<span class="sd">        :return: pd.DataFrame of the schedule</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># make DataFrame and a date range, from start to end</span>
         <span class="n">ev_schedule</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
@@ -266,6 +300,11 @@
 <div class="viewcode-block" id="ScheduleGenerator.generate_caretaker">
 <a class="viewcode-back" href="../../../../FleetRL.utils.schedule.html#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.generate_caretaker">[docs]</a>
     <span class="k">def</span> <span class="nf">generate_caretaker</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Caretaker generator. Lunch break, operations on Sunday, chance for emergency trips at night</span>
+<span class="sd">        :return: pd.DataFrame of the schedule</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># make DataFrame and a date range, from start to end</span>
         <span class="n">ev_schedule</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
@@ -471,6 +510,11 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.schedule.html#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.generate_utility">[docs]</a>
     <span class="k">def</span> <span class="nf">generate_utility</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Utility generation. Chance for operations on Sunday.</span>
+<span class="sd">        :return: pd.DataFrame of the schedule.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="c1"># make DataFrame and a date range, from start to end</span>
         <span class="n">ev_schedule</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
         <span class="n">ev_schedule</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">starting_date</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ending_date</span><span class="p">,</span> <span class="n">freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
@@ -619,18 +663,6 @@
         <span class="k">return</span> <span class="n">ev_schedule</span></div>
 </div>
 
-
-    <span class="c1"># def generate_multiple_ev_schedule(self, num_evs):</span>
-    <span class="c1">#     schedule = pd.DataFrame()</span>
-    <span class="c1">#     self.save = False</span>
-    <span class="c1">#     self.file_comment += f&quot;_{num_evs}_evs&quot;</span>
-    <span class="c1">#     self.file_name = f&quot;schedule_{self.time_now}_{self.file_comment}.csv&quot;</span>
-    <span class="c1">#     self.path_name = self.schedule_dir + self.file_name</span>
-    <span class="c1">#     for i in range(num_evs):</span>
-    <span class="c1">#         self.vehicle_id = i</span>
-    <span class="c1">#         new_schedule = self.generate_schedule()</span>
-    <span class="c1">#         schedule = pd.concat([schedule, new_schedule], axis = 0, ignore_index=True)</span>
-    <span class="c1">#     schedule.to_csv(self.path_name)</span>
 </pre></div>
 
            </div>

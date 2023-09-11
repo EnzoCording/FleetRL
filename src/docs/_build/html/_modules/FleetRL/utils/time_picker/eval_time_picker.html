@@ -80,14 +80,25 @@
 <div class="viewcode-block" id="EvalTimePicker">
 <a class="viewcode-back" href="../../../../FleetRL.utils.time_picker.html#FleetRL.utils.time_picker.eval_time_picker.EvalTimePicker">[docs]</a>
 <span class="k">class</span> <span class="nc">EvalTimePicker</span><span class="p">(</span><span class="n">TimePicker</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Time picker for validation set. The amount of days and thus the train/validation split is set in time config.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ep_len</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_length</span> <span class="o">=</span> <span class="n">ep_len</span>
 <div class="viewcode-block" id="EvalTimePicker.choose_time">
 <a class="viewcode-back" href="../../../../FleetRL.utils.time_picker.html#FleetRL.utils.time_picker.eval_time_picker.EvalTimePicker.choose_time">[docs]</a>
     <span class="k">def</span> <span class="nf">choose_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">freq</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">end_cutoff</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Timestamp</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Randomly chooses a start time from the validation set.</span>
+
+<span class="sd">        :param db: Database</span>
+<span class="sd">        :param freq: Time frequency</span>
+<span class="sd">        :param end_cutoff: This is the size of the validation window. By default, the end_cutoff is 2 months, so Nov</span>
+<span class="sd">        and Dec are the validation set.</span>
+<span class="sd">        :return: start time, pd.TimeStamp</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># possible start times: remove last X days based on end_cutoff</span>
-        <span class="c1"># TODO: same day can be pulled multiple times - is this a problem?</span>
         <span class="n">possible_start_times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="n">end_cutoff</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">)),</span>
                                              <span class="n">end</span><span class="o">=</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_length</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">)),</span>
                                              <span class="n">freq</span><span class="o">=</span><span class="n">freq</span>

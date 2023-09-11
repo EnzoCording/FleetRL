@@ -98,18 +98,25 @@
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.normalization.Normalization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.normalization.normalization.</span></span><span class="sig-name descname"><span class="pre">Normalization</span></span><a class="reference internal" href="_modules/FleetRL/utils/normalization/normalization.html#Normalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.normalization.Normalization" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Parent class for Normalization.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.normalization.Normalization.make_boundaries">
 <span class="sig-name descname"><span class="pre">make_boundaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/FleetRL/utils/normalization/normalization.html#Normalization.make_boundaries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.normalization.Normalization.make_boundaries" title="Link to this definition"></a></dt>
-<dd><p>Create the observation space for gym. Depending on the observation, upper and lower boundaries can change
-:param dim: The length of the array, depends on the number of cars, and other information contained in the obs
-:return: A tuple, containing the low obs and high obs array that will be parsed to gym.Spaces.box</p>
+<dd><p>Create the observation space for gym. Depending on the observation, upper and lower boundaries can change.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dim</strong> – The length of the array, depends on the number of cars, and other information contained in the obs</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple, containing the low obs and high obs array that will be parsed to gym.Spaces.box</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.normalization.Normalization.normalize_obs">
 <span class="sig-name descname"><span class="pre">normalize_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/normalization/normalization.html#Normalization.normalize_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.normalization.Normalization.normalize_obs" title="Link to this definition"></a></dt>
-<dd><p>Normalizes the values in an observation</p>
+<dd><p>Normalizes the values in an observation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>obs</strong> – An observation, containing the state of charge, hours left, and price</p>
@@ -129,29 +136,48 @@
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.oracle_normalization.OracleNormalization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.normalization.oracle_normalization.</span></span><span class="sig-name descname"><span class="pre">OracleNormalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv_flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_calc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.utils.load_calculation.html#FleetRL.utils.load_calculation.load_calculation.LoadCalculation" title="FleetRL.utils.load_calculation.load_calculation.LoadCalculation"><span class="pre">LoadCalculation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/normalization/oracle_normalization.html#OracleNormalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.oracle_normalization.OracleNormalization" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.normalization.normalization.Normalization" title="FleetRL.utils.normalization.normalization.Normalization"><code class="xref py py-class docutils literal notranslate"><span class="pre">Normalization</span></code></a></p>
+<p>Oracle Normalization assumes the knowledge of the max and min values of the dataset. This is necessary to perform
+a global min/max normalization. Alternatively, a rolling normalization could be implemented.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.oracle_normalization.OracleNormalization.flatten_obs">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flatten_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/normalization/oracle_normalization.html#OracleNormalization.flatten_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.oracle_normalization.OracleNormalization.flatten_obs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Observations must be flattened for openAI gym compatibility. The parsed observation must be a flat array and
+not a dictionary. The dictionary either includes float or array. The function removes the nesting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obs</strong> – Normalized observation dictionary</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A flattened array - necessary for the RL algorithms to be in a 1-dim array e.g. [v_1, …, v_N]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.oracle_normalization.OracleNormalization.make_boundaries">
 <span class="sig-name descname"><span class="pre">make_boundaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/FleetRL/utils/normalization/oracle_normalization.html#OracleNormalization.make_boundaries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.oracle_normalization.OracleNormalization.make_boundaries" title="Link to this definition"></a></dt>
-<dd><p>Create the observation space for gym. Depending on the observation, upper and lower boundaries can change
-:param dim: The length of the array, depends on the number of cars, and other information contained in the obs
-:return: A tuple, containing the low obs and high obs array that will be parsed to gym.Spaces.box</p>
+<dd><p>The boundaries are 0 and 1 because the observations are min/max normalized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dim</strong> – Dimension of the observation depending on the flags</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Low and high observation arrays for gym.Spaces.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.oracle_normalization.OracleNormalization.normalize_obs">
 <span class="sig-name descname"><span class="pre">normalize_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/normalization/oracle_normalization.html#OracleNormalization.normalize_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.oracle_normalization.OracleNormalization.normalize_obs" title="Link to this definition"></a></dt>
-<dd><p>Normalizes the values in an observation</p>
+<dd><p>Normalization function. Different cases are checked depending on the flags of PV, load, price, and aux.
+Input observations are a dictionary with clear namings, to make further changes in the code easy and readable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>obs</strong> – An observation, containing the state of charge, hours left, and price</p>
+<dd class="field-odd"><p><strong>input_obs</strong> – Input observation: Un-normalized observations as specified in the observer.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The normalized observation, concatenated to a single array</p>
+<dd class="field-even"><p>Normalized observation.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -165,31 +191,42 @@
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.unit_normalization.UnitNormalization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.normalization.unit_normalization.</span></span><span class="sig-name descname"><span class="pre">UnitNormalization</span></span><a class="reference internal" href="_modules/FleetRL/utils/normalization/unit_normalization.html#UnitNormalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.unit_normalization.UnitNormalization" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.normalization.normalization.Normalization" title="FleetRL.utils.normalization.normalization.Normalization"><code class="xref py py-class docutils literal notranslate"><span class="pre">Normalization</span></code></a></p>
+<p>This function does not normalize, but parses the un-normalized values.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.unit_normalization.UnitNormalization.flatten_obs">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flatten_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/normalization/unit_normalization.html#UnitNormalization.flatten_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.unit_normalization.UnitNormalization.flatten_obs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Flattening nested dict to np.ndarray</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obs</strong> – Observation dictionary including floats or arrays</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Flattened observation</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.unit_normalization.UnitNormalization.make_boundaries">
 <span class="sig-name descname"><span class="pre">make_boundaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/FleetRL/utils/normalization/unit_normalization.html#UnitNormalization.make_boundaries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.unit_normalization.UnitNormalization.make_boundaries" title="Link to this definition"></a></dt>
-<dd><p>Create the observation space for gym. Depending on the observation, upper and lower boundaries can change
-:param dim: The length of the array, depends on the number of cars, and other information contained in the obs
-:return: A tuple, containing the low obs and high obs array that will be parsed to gym.Spaces.box</p>
+<dd><p>The bounds can be -inf and inf. This is the least restricting path and allows for cross-compatibility of agents
+on environments that have the same shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dim</strong> – Dimension depending on the flags.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Low_obs and high_obs for gym.Spaces.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.unit_normalization.UnitNormalization.normalize_obs">
 <span class="sig-name descname"><span class="pre">normalize_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/normalization/unit_normalization.html#UnitNormalization.normalize_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.unit_normalization.UnitNormalization.normalize_obs" title="Link to this definition"></a></dt>
-<dd><p>Normalizes the values in an observation</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>obs</strong> – An observation, containing the state of charge, hours left, and price</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The normalized observation, concatenated to a single array</p>
-</dd>
-</dl>
+<dd><p>Obs is flattened and returned.
+:param obs: Observation dictionary that includes floats or array
+:return: Flattened np.ndarray</p>
 </dd></dl>
 
 </dd></dl>

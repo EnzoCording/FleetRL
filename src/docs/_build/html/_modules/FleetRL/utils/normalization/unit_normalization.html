@@ -81,16 +81,31 @@
 <div class="viewcode-block" id="UnitNormalization">
 <a class="viewcode-back" href="../../../../FleetRL.utils.normalization.html#FleetRL.utils.normalization.unit_normalization.UnitNormalization">[docs]</a>
 <span class="k">class</span> <span class="nc">UnitNormalization</span><span class="p">(</span><span class="n">Normalization</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function does not normalize, but parses the un-normalized values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="UnitNormalization.normalize_obs">
 <a class="viewcode-back" href="../../../../FleetRL.utils.normalization.html#FleetRL.utils.normalization.unit_normalization.UnitNormalization.normalize_obs">[docs]</a>
     <span class="k">def</span> <span class="nf">normalize_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obs is flattened and returned.</span>
+<span class="sd">        :param obs: Observation dictionary that includes floats or array</span>
+<span class="sd">        :return: Flattened np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flatten_obs</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="UnitNormalization.make_boundaries">
 <a class="viewcode-back" href="../../../../FleetRL.utils.normalization.html#FleetRL.utils.normalization.unit_normalization.UnitNormalization.make_boundaries">[docs]</a>
     <span class="k">def</span> <span class="nf">make_boundaries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The bounds can be -inf and inf. This is the least restricting path and allows for cross-compatibility of agents</span>
+<span class="sd">        on environments that have the same shape.</span>
+
+<span class="sd">        :param dim: Dimension depending on the flags.</span>
+<span class="sd">        :return: Low_obs and high_obs for gym.Spaces.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span></div>
 
 
@@ -98,6 +113,12 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.normalization.html#FleetRL.utils.normalization.unit_normalization.UnitNormalization.flatten_obs">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">flatten_obs</span><span class="p">(</span><span class="n">obs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Flattening nested dict to np.ndarray</span>
+
+<span class="sd">        :param obs: Observation dictionary including floats or arrays</span>
+<span class="sd">        :return: Flattened observation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">flattened_obs</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">obs</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
         <span class="n">flattened_obs</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">flattened_obs</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">flattened_obs</span></div>

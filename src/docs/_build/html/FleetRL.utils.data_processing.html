@@ -98,15 +98,18 @@
 <dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.data_processing.data_processing.</span></span><span class="sig-name descname"><span class="pre">DataLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schedule_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tariff_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig" title="FleetRL.fleet_env.config.time_config.TimeConfig"><span class="pre">TimeConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv_flag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The DataLoader class handles the csv import and pre-processing of the timeseries information.
+Optimized pandas functions such as merge_asof are used to significantly speed up processing compared to loops.
+Cython could further improve this initial processing step. It only happens once when instantiating env objects.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.compute_from_schedule">
 <span class="sig-name descname"><span class="pre">compute_from_schedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.compute_from_schedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.compute_from_schedule" title="Link to this definition"></a></dt>
-<dd><p># &gt;&gt;&gt; test_EV = EV()
-# &gt;&gt;&gt; test_EV.get_total_consumption().sum().round(1)
-# 147.8</p>
+<dd><p>This function pre-processes the input data and adds additional rows to the file.
+There flag, time left at charger, soc on return, consumption, etc.</p>
+<p>Use of merge_asof and vectorized operations for performance gains</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p>
+<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -114,32 +117,81 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.load_building_load">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_building_load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.load_building_load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.load_building_load" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Load building load from csv
+:param path_name: Parent directory string
+:param file_name: file name with .csv ending
+:param date_range: pd.date_range which was defined from the “date” column in the EV schedules. Note that the
+EV schedule dates therefore dictate the model’s timeframe.
+:return: load dataframe</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.load_feed_in">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_feed_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tariff_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.load_feed_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.load_feed_in" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Load feedin from csv
+:param path_name: Parent directory string
+:param tariff_name: file name with .csv ending
+:param date_range: pd.date_range which was defined from the “date” column in the EV schedules. Note that the
+EV schedule dates therefore dictate the model’s timeframe.
+:return: tariff dataframe</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.load_prices">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_prices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.load_prices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.load_prices" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Load prices from csv
+:param path_name: Parent directory string
+:param spot_name: file name with .csv ending
+:param date_range: pd.date_range which was defined from the “date” column in the EV schedules. Note that the
+EV schedule dates therefore dictate the model’s timeframe.
+:return: spot price dataframe</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.load_prices_original">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_prices_original</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.load_prices_original"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.load_prices_original" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Load prices from csv
+:param path_name: Parent directory string
+:param spot_name: file name with .csv ending
+:param date_range: pd.date_range which was defined from the “date” column in the EV schedules. Note that the
+EV schedule dates therefore dictate the model’s timeframe.
+:return: spot price dataframe</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.load_pv">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_pv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.load_pv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.load_pv" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Load pv from csv
+:param path_name: Parent directory string
+:param pv_name: file name with .csv ending
+:param date_range: pd.date_range which was defined from the “date” column in the EV schedules. Note that the
+EV schedule dates therefore dictate the model’s timeframe.
+:return: pv dataframe</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.data_processing.data_processing.DataLoader.shape_price_reward">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape_price_reward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/data_processing/data_processing.html#DataLoader.shape_price_reward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.data_processing.data_processing.DataLoader.shape_price_reward" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><ul class="simple">
+<li><p>de-trend prices, so they can be used as a reward function</p></li>
+<li><p>agent should not be penalised more if the general price level is higher</p></li>
+<li><p>instead, the agent should just focus on price fluctuations and exploit them</p></li>
+<li><p>computing average for whole year, split data into monthly chunks</p></li>
+<li><p>offset monthly chunks, such that the monthly average = annual average</p></li>
+<li><p>this corrects for absolute price increases, but leaves fluctuations intact</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>db</strong> – database with schedules, pv, prices, load, dataframe</p></li>
+<li><p><strong>ev_conf</strong> – ev config object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>db with updated, de-trended prices</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

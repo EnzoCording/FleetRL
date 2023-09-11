@@ -98,11 +98,7 @@
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer.Observer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer.</span></span><span class="sig-name descname"><span class="pre">Observer</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer.html#Observer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer.Observer" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="FleetRL.utils.observation.observer.Observer.flatten_obs">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flatten_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer.html#Observer.flatten_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer.Observer.flatten_obs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
+<p>Parent class for observer modules.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer.Observer.get_obs">
 <span class="sig-name descname"><span class="pre">get_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bl_pv_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_calc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.utils.load_calculation.html#FleetRL.utils.load_calculation.load_calculation.LoadCalculation" title="FleetRL.utils.load_calculation.load_calculation.LoadCalculation"><span class="pre">LoadCalculation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer.html#Observer.get_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer.Observer.get_obs" title="Link to this definition"></a></dt>
@@ -151,10 +147,18 @@
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer_bl_pv.</span></span><span class="sig-name descname"><span class="pre">ObserverWithBoth</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_bl_pv.html#ObserverWithBoth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.observation.observer.Observer" title="FleetRL.utils.observation.observer.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a></p>
+<p>Observer for price, PV, and load (full model).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth.get_obs">
 <span class="sig-name descname"><span class="pre">get_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bl_pv_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_calc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.utils.load_calculation.html#FleetRL.utils.load_calculation.load_calculation.LoadCalculation" title="FleetRL.utils.load_calculation.load_calculation.LoadCalculation"><span class="pre">LoadCalculation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_bl_pv.html#ObserverWithBoth.get_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth.get_obs" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><ul class="simple">
+<li><p>define the starting and ending time via lookahead, np.where returns the index in the dataframe</p></li>
+<li><p>add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)</p></li>
+<li><p>get data of price and date from the specific indices</p></li>
+<li><p>resample data to only include one value per hour (the others are duplicates)</p></li>
+<li><p>only take into account the current value, and the specified hours of lookahead</p></li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>db</strong> – Database from env</p></li>
@@ -171,11 +175,6 @@
 <dd class="field-even"><p>Dict of lists with different parts of the observation</p>
 </dd>
 </dl>
-<p># define the starting and ending time via lookahead, np.where returns the index in the dataframe
-# add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)
-# get data of price and date from the specific indices
-# resample data to only include one value per hour (the others are duplicates)
-# only take into account the current value, and the specified hours of lookahead</p>
 </dd></dl>
 
 <dl class="py method">
@@ -204,10 +203,18 @@
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_price_only.ObserverPriceOnly">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer_price_only.</span></span><span class="sig-name descname"><span class="pre">ObserverPriceOnly</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_price_only.html#ObserverPriceOnly"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_price_only.ObserverPriceOnly" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.observation.observer.Observer" title="FleetRL.utils.observation.observer.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a></p>
+<p>Observer for a model that only takes into account the price, but disregards PV and building load.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_price_only.ObserverPriceOnly.get_obs">
 <span class="sig-name descname"><span class="pre">get_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bl_pv_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_calc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.utils.load_calculation.html#FleetRL.utils.load_calculation.load_calculation.LoadCalculation" title="FleetRL.utils.load_calculation.load_calculation.LoadCalculation"><span class="pre">LoadCalculation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_price_only.html#ObserverPriceOnly.get_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_price_only.ObserverPriceOnly.get_obs" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><ul class="simple">
+<li><p>define the starting and ending time via lookahead, np.where returns the index in the dataframe</p></li>
+<li><p>add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)</p></li>
+<li><p>get data of price and date from the specific indices</p></li>
+<li><p>resample data to only include one value per hour (the others are duplicates)</p></li>
+<li><p>only take into account the current value, and the specified hours of lookahead</p></li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>db</strong> – Database from env</p></li>
@@ -224,11 +231,6 @@
 <dd class="field-even"><p>Dict of lists with different parts of the observation</p>
 </dd>
 </dl>
-<p># define the starting and ending time via lookahead, np.where returns the index in the dataframe
-# add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)
-# get data of price and date from the specific indices
-# resample data to only include one value per hour (the others are duplicates)
-# only take into account the current value, and the specified hours of lookahead</p>
 </dd></dl>
 
 <dl class="py method">
@@ -257,10 +259,18 @@
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_soc_time_only.ObserverSocTimeOnly">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer_soc_time_only.</span></span><span class="sig-name descname"><span class="pre">ObserverSocTimeOnly</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_soc_time_only.html#ObserverSocTimeOnly"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_soc_time_only.ObserverSocTimeOnly" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.observation.observer.Observer" title="FleetRL.utils.observation.observer.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a></p>
+<p>Observer that only regards SOC and time left, but not charging cost, PV or building laod</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_soc_time_only.ObserverSocTimeOnly.get_obs">
 <span class="sig-name descname"><span class="pre">get_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bl_pv_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_calc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.utils.load_calculation.html#FleetRL.utils.load_calculation.load_calculation.LoadCalculation" title="FleetRL.utils.load_calculation.load_calculation.LoadCalculation"><span class="pre">LoadCalculation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_soc_time_only.html#ObserverSocTimeOnly.get_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_soc_time_only.ObserverSocTimeOnly.get_obs" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><ul class="simple">
+<li><p>define the starting and ending time via lookahead, np.where returns the index in the dataframe</p></li>
+<li><p>add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)</p></li>
+<li><p>get data of price and date from the specific indices</p></li>
+<li><p>resample data to only include one value per hour (the others are duplicates)</p></li>
+<li><p>only take into account the current value, and the specified hours of lookahead</p></li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>db</strong> – Database from env</p></li>
@@ -277,11 +287,6 @@
 <dd class="field-even"><p>Dict of lists with different parts of the observation</p>
 </dd>
 </dl>
-<p># define the starting and ending time via lookahead, np.where returns the index in the dataframe
-# add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)
-# get data of price and date from the specific indices
-# resample data to only include one value per hour (the others are duplicates)
-# only take into account the current value, and the specified hours of lookahead</p>
 </dd></dl>
 
 <dl class="py method">
@@ -310,10 +315,18 @@
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_with_building_load.ObserverWithBuildingLoad">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer_with_building_load.</span></span><span class="sig-name descname"><span class="pre">ObserverWithBuildingLoad</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_with_building_load.html#ObserverWithBuildingLoad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_with_building_load.ObserverWithBuildingLoad" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.observation.observer.Observer" title="FleetRL.utils.observation.observer.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a></p>
+<p>Observer that takes into account price, and building load.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_with_building_load.ObserverWithBuildingLoad.get_obs">
 <span class="sig-name descname"><span class="pre">get_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bl_pv_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_calc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.utils.load_calculation.html#FleetRL.utils.load_calculation.load_calculation.LoadCalculation" title="FleetRL.utils.load_calculation.load_calculation.LoadCalculation"><span class="pre">LoadCalculation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_with_building_load.html#ObserverWithBuildingLoad.get_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_with_building_load.ObserverWithBuildingLoad.get_obs" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><ul class="simple">
+<li><p>define the starting and ending time via lookahead, np.where returns the index in the dataframe</p></li>
+<li><p>add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)</p></li>
+<li><p>get data of price and date from the specific indices</p></li>
+<li><p>resample data to only include one value per hour (the others are duplicates)</p></li>
+<li><p>only take into account the current value, and the specified hours of lookahead</p></li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>db</strong> – Database from env</p></li>
@@ -330,11 +343,6 @@
 <dd class="field-even"><p>Dict of lists with different parts of the observation</p>
 </dd>
 </dl>
-<p># define the starting and ending time via lookahead, np.where returns the index in the dataframe
-# add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)
-# get data of price and date from the specific indices
-# resample data to only include one value per hour (the others are duplicates)
-# only take into account the current value, and the specified hours of lookahead</p>
 </dd></dl>
 
 <dl class="py method">
@@ -363,10 +371,18 @@
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_with_pv.ObserverWithPV">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer_with_pv.</span></span><span class="sig-name descname"><span class="pre">ObserverWithPV</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_with_pv.html#ObserverWithPV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_with_pv.ObserverWithPV" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FleetRL.utils.observation.observer.Observer" title="FleetRL.utils.observation.observer.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a></p>
+<p>Observer that regards price, and PV.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_with_pv.ObserverWithPV.get_obs">
 <span class="sig-name descname"><span class="pre">get_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bl_pv_lookahead</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig" title="FleetRL.fleet_env.config.ev_config.EvConfig"><span class="pre">EvConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_calc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FleetRL.utils.load_calculation.html#FleetRL.utils.load_calculation.load_calculation.LoadCalculation" title="FleetRL.utils.load_calculation.load_calculation.LoadCalculation"><span class="pre">LoadCalculation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_with_pv.html#ObserverWithPV.get_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_with_pv.ObserverWithPV.get_obs" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><ul class="simple">
+<li><p>define the starting and ending time via lookahead, np.where returns the index in the dataframe</p></li>
+<li><p>add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)</p></li>
+<li><p>get data of price and date from the specific indices</p></li>
+<li><p>resample data to only include one value per hour (the others are duplicates)</p></li>
+<li><p>only take into account the current value, and the specified hours of lookahead</p></li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>db</strong> – Database from env</p></li>
@@ -383,11 +399,6 @@
 <dd class="field-even"><p>Dict of lists with different parts of the observation</p>
 </dd>
 </dl>
-<p># define the starting and ending time via lookahead, np.where returns the index in the dataframe
-# add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)
-# get data of price and date from the specific indices
-# resample data to only include one value per hour (the others are duplicates)
-# only take into account the current value, and the specified hours of lookahead</p>
 </dd></dl>
 
 <dl class="py method">

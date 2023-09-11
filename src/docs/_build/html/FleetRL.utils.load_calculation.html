@@ -120,10 +120,24 @@
 <dt class="sig sig-object py" id="FleetRL.utils.load_calculation.load_calculation.LoadCalculation">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.load_calculation.load_calculation.</span></span><span class="sig-name descname"><span class="pre">LoadCalculation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">company_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType" title="FleetRL.utils.load_calculation.load_calculation.CompanyType"><span class="pre">CompanyType</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_load</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/load_calculation/load_calculation.html#LoadCalculation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.load_calculation.load_calculation.LoadCalculation" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The Load Calculation class sets grid connection, and calculates load overloading</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.utils.load_calculation.load_calculation.LoadCalculation.check_violation">
 <span class="sig-name descname"><span class="pre">check_violation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">actions:</span> <span class="pre">list[float],</span> <span class="pre">there:</span> <span class="pre">list[int],</span> <span class="pre">building_load:</span> <span class="pre">float,</span> <span class="pre">pv:</span> <span class="pre">float)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'bool'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'float'&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/load_calculation/load_calculation.html#LoadCalculation.check_violation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.load_calculation.load_calculation.LoadCalculation.check_violation" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actions</strong> – Actions list, action for each EV [-1,1]</p></li>
+<li><p><strong>there</strong> – Flag is EV is plugged in or not [0;1]</p></li>
+<li><p><strong>building_load</strong> – Current building load in kW</p></li>
+<li><p><strong>pv</strong> – Current PV in kW</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

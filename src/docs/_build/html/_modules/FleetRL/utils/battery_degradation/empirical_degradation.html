@@ -81,12 +81,11 @@
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialising the Degradation instance</span>
+<span class="sd">        - http://queenbattery.com.cn/our-products/677-lg-e63-376v-63ah-li-po-li-polymer-battery-cell.html?search_query=lg+e63&amp;results=1</span>
+<span class="sd">        - read off the graphs in section 4: cycle and calendar aging</span>
 <span class="sd">        :param init_soh: Initial state of health, assumed same for each EV</span>
 <span class="sd">        :param num_cars: How many EVs are being optimized</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># http://queenbattery.com.cn/our-products/677-lg-e63-376v-63ah-li-po-li-polymer-battery-cell.html?search_query=lg+e63&amp;results=1</span>
-        <span class="c1"># read off the graphs in section 4: cycle and calendar aging</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">cycle_loss_11</span> <span class="o">=</span> <span class="mf">0.000125</span>  <span class="c1"># Cycle loss per full cycle (100% DoD discharge and charge) at 11 kW</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cycle_loss_22</span> <span class="o">=</span> <span class="mf">0.000125</span>  <span class="c1"># Cycle loss per full cycle (100% DoD discharge and charge) at 11 kW</span>
@@ -103,10 +102,21 @@
 <div class="viewcode-block" id="EmpiricalDegradation.calculate_degradation">
 <a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.empirical_degradation.EmpiricalDegradation.calculate_degradation">[docs]</a>
     <span class="k">def</span> <span class="nf">calculate_degradation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">soc_log</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">charging_power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">time_conf</span><span class="p">:</span> <span class="n">TimeConfig</span><span class="p">,</span> <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
-        <span class="c1"># find out the most recent entries in the soc list</span>
-        <span class="c1"># get old and new soc</span>
-        <span class="c1"># get average soc</span>
-        <span class="c1"># compute cycle and calendar based on avg soc and charging power</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Similar to non-linear SEI, the most recent event is taken, and the linear-based degradation is calculated.</span>
+<span class="sd">        No rainflow counting, thus degradation is computed for each time step.</span>
+
+<span class="sd">        - find out the most recent entries in the soc list</span>
+<span class="sd">        - get old and new soc</span>
+<span class="sd">        - get average soc</span>
+<span class="sd">        - compute cycle and calendar based on avg soc and charging power</span>
+
+<span class="sd">        :param soc_log: Historical log of SOC</span>
+<span class="sd">        :param charging_power: EVSE power in kW</span>
+<span class="sd">        :param time_conf: time config object</span>
+<span class="sd">        :param temp: temperature</span>
+<span class="sd">        :return: Degradation, float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># compute sorted soc list based on the log records of the episode so far</span>
         <span class="c1"># go from: t1:[soc_car1, soc_car2, ...], t2:[soc_car1, soc_car2,...]</span>

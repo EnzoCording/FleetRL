@@ -155,11 +155,9 @@ the SOC and time left at the charger, regardless of whether the vehicle is match
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.adjust_caretaker_lunch_soc">
 <span class="sig-name descname"><span class="pre">adjust_caretaker_lunch_soc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.adjust_caretaker_lunch_soc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.adjust_caretaker_lunch_soc" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p>
-</dd>
-</dl>
+<dd><p>The caretaker target SOC can be set lower during the lunch break to avoid unfair penalties occurring. This is
+because the break is not long enough to charge until 0.85 target SOC.
+:return: None -&gt; sets the target SOC during lunch break hours to 0.65 by default</p>
 </dd></dl>
 
 <dl class="py method">
@@ -222,32 +220,59 @@ using the dim value that was calculated in this function.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.get_dist_factor">
 <span class="sig-name descname"><span class="pre">get_dist_factor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.get_dist_factor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.get_dist_factor" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>This function returns the distribution/laxity factor: how much time needed vs. how much time left at charger
+If factor is 0.1, the dist agent would only charge with 10% of the EVSE capacity.
+Call via env_method(“get_dist_factor”)[0] if using an SB3 Vectorized Environment
+:return: dist/laxity factor, float</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.get_log">
 <span class="sig-name descname"><span class="pre">get_log</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.get_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.get_log" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>This function can be called through SB3 vectorized environments via VecEnv.env_method(“get_log”)[0]
+The zero index is required so only the first element -&gt; the DataFrame is extracted</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Log dataframe</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.get_start_time">
 <span class="sig-name descname"><span class="pre">get_start_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.get_start_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.get_start_time" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>VecEnv.env_method(“get_start_time”)[0]
+:return: pd.TimeStamp</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.get_time">
 <span class="sig-name descname"><span class="pre">get_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.get_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.get_time" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>VecEnv.env_method(“get_time”)[0]
+:return: pd.TimeStamp: current timestamp</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.is_done">
 <span class="sig-name descname"><span class="pre">is_done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.is_done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.is_done" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>VecEnv.env_method(“is_done”)[0]
+:return: Flag is episode is done, bool</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.print">
 <span class="sig-name descname"><span class="pre">print</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.print"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.print" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>The print function can provide useful information of the environment dynamics and the agent’s actions.
+Can slow down FPS due to the printing at each timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>action</strong> – Action of the agent</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None -&gt; Just prints information if specified</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.render">
@@ -300,14 +325,24 @@ in the environment initialised, i.e., <code class="docutils literal notranslate"
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.set_start_time">
 <span class="sig-name descname"><span class="pre">set_start_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.set_start_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.set_start_time" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>VecEnv.env_method(“set_start_time”, [f”{start_time}”])
+Must parse the function and argument of start_time
+:param start_time: string of pd.TimeStamp / date
+:return: None</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv.step">
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.step" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>The main logic of the EV charging problem is orchestrated in the step function.
+Input: Action on charging power for each EV
+Output: Next state, reward</p>
+<p>Intermediate processes: EV charging model, battery degradation, cost calculation, building load, penalties, etc.</p>
+<p>The step function runs as long as the done flag is False. Different functions and modules are called in this
+function to reduce the complexity and to distribute the tasks of the model.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>actions</strong> – Actions parsed by the agent</p>
+<dd class="field-odd"><p><strong>actions</strong> – Actions parsed by the agent, from -1 to 1, representing % of kW of the EVSE</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Tuple containing next observation, reward, done, truncated and info dictionary</p>

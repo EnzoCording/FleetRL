@@ -81,10 +81,18 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.rainflow_sei_degradation.RainflowSeiDegradation">[docs]</a>
 <span class="k">class</span> <span class="nc">RainflowSeiDegradation</span><span class="p">(</span><span class="n">BatteryDegradation</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_soh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">num_cars</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Non-linear battery degradation model, Xu et al.</span>
+<span class="sd">    - Source: Modeling of Lithium-Ion Battery Degradation for Cell Life Assessment</span>
+<span class="sd">    - https://ieeexplore.ieee.org/document/7488267</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-        <span class="c1"># Source: Modeling of Lithium-Ion Battery Degradation for Cell Life Assessment</span>
-        <span class="c1"># https://ieeexplore.ieee.org/document/7488267</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_soh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">num_cars</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise necessary parameters, default params, etc.</span>
+<span class="sd">        :param init_soh: New batteries or used? Assumed same for all EVs</span>
+<span class="sd">        :param num_cars: Number of vehicles</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span> <span class="o">=</span> <span class="n">num_cars</span>
 

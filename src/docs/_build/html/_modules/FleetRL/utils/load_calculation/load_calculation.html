@@ -69,8 +69,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for FleetRL.utils.load_calculation.load_calculation</h1><div class="highlight"><pre>
-<span></span><span class="c1"># import pandapower as pp</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span></span><span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 
 <div class="viewcode-block" id="CompanyType">
 <a class="viewcode-back" href="../../../../FleetRL.utils.load_calculation.html#FleetRL.utils.load_calculation.load_calculation.CompanyType">[docs]</a>
@@ -83,9 +82,22 @@
 <div class="viewcode-block" id="LoadCalculation">
 <a class="viewcode-back" href="../../../../FleetRL.utils.load_calculation.html#FleetRL.utils.load_calculation.load_calculation.LoadCalculation">[docs]</a>
 <span class="k">class</span> <span class="nc">LoadCalculation</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Load Calculation class sets grid connection, and calculates load overloading</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_import_company</span><span class="p">(</span><span class="n">company_type</span><span class="p">:</span> <span class="n">CompanyType</span><span class="p">,</span> <span class="n">max_load</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">num_cars</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The grid connection is calculated based on the building load, number of EVs and the EVSE kW power.</span>
+<span class="sd">        The grid connection is either 1.1 * max_load, or such that a simultaneous charging of 50% of EVs would overload</span>
+<span class="sd">        the trafo at max building load.</span>
+
+<span class="sd">        :param company_type: Utility, Last-mile delivery, or caretaker</span>
+<span class="sd">        :param max_load: The max building load of the use-case in kW</span>
+<span class="sd">        :param num_cars: Number of EVs</span>
+<span class="sd">        :return: Grid connection in kW, EVSE power in kW, batt_cap in kWh</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">grid_connection</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># max grid connection in kW</span>
         <span class="n">evse_power</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># charger capacity in kW</span>
 
@@ -115,12 +127,19 @@
         <span class="k">return</span> <span class="n">grid_connection</span><span class="p">,</span> <span class="n">evse_power</span><span class="p">,</span> <span class="n">batt_cap</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">company_type</span><span class="p">:</span> <span class="n">CompanyType</span><span class="p">,</span> <span class="n">max_load</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">num_cars</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise load calculation module</span>
+
+<span class="sd">        :param company_type: LMD, CT, UT</span>
+<span class="sd">        :param max_load: Max building load</span>
+<span class="sd">        :param num_cars: Number of EVs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="c1"># setting parameters of the company site</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">company_type</span> <span class="o">=</span> <span class="n">company_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_load</span> <span class="o">=</span> <span class="n">max_load</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_cars</span> <span class="o">=</span> <span class="n">num_cars</span>
 
-        <span class="c1"># TODO: max power could change, I even have that info in the schedule</span>
         <span class="c1"># Grid connection: grid connection point max capacity in kW</span>
         <span class="c1"># EVSE (ev supply equipment aka charger) max power in kW</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">grid_connection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">evse_max_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batt_cap</span> <span class="o">=</span> <span class="n">LoadCalculation</span><span class="o">.</span><span class="n">_import_company</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">company_type</span><span class="p">,</span>
@@ -130,7 +149,15 @@
 <div class="viewcode-block" id="LoadCalculation.check_violation">
 <a class="viewcode-back" href="../../../../FleetRL.utils.load_calculation.html#FleetRL.utils.load_calculation.load_calculation.LoadCalculation.check_violation">[docs]</a>
     <span class="k">def</span> <span class="nf">check_violation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">there</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">building_load</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">pv</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-        <span class="c1"># check if overloaded and by how much</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param actions: Actions list, action for each EV [-1,1]</span>
+<span class="sd">        :param there: Flag is EV is plugged in or not [0;1]</span>
+<span class="sd">        :param building_load: Current building load in kW</span>
+<span class="sd">        :param pv: Current PV in kW</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># check if overloaded and by how much, PV is subtracted</span>
         <span class="n">overload_amount</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid_connection</span> <span class="o">-</span> <span class="n">building_load</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">evse_max_power</span> <span class="o">+</span> <span class="n">pv</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">overload_amount</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">overload_amount</span></div>
 </div>

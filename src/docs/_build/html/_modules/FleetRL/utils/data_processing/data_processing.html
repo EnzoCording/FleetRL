@@ -84,12 +84,32 @@
 <div class="viewcode-block" id="DataLoader">
 <a class="viewcode-back" href="../../../../FleetRL.utils.data_processing.html#FleetRL.utils.data_processing.data_processing.DataLoader">[docs]</a>
 <span class="k">class</span> <span class="nc">DataLoader</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The DataLoader class handles the csv import and pre-processing of the timeseries information.</span>
+<span class="sd">    Optimized pandas functions such as merge_asof are used to significantly speed up processing compared to loops.</span>
+<span class="sd">    Cython could further improve this initial processing step. It only happens once when instantiating env objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_name</span><span class="p">,</span> <span class="n">schedule_name</span><span class="p">,</span>
                  <span class="n">spot_name</span><span class="p">,</span> <span class="n">tariff_name</span><span class="p">,</span>
                  <span class="n">building_name</span><span class="p">,</span> <span class="n">pv_name</span><span class="p">,</span>
                  <span class="n">time_conf</span><span class="p">:</span> <span class="n">TimeConfig</span><span class="p">,</span> <span class="n">ev_conf</span><span class="p">:</span> <span class="n">EvConfig</span><span class="p">,</span>
                  <span class="n">target_soc</span><span class="p">,</span> <span class="n">building_flag</span><span class="p">,</span> <span class="n">pv_flag</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initial information that is required for loading data</span>
+<span class="sd">        :param path_name: string pointing to the parent directory of input files</span>
+<span class="sd">        :param schedule_name: string of the schedule csv, e.g. &quot;1_LMD.csv&quot;</span>
+<span class="sd">        :param spot_name: string of the spot price csv</span>
+<span class="sd">        :param tariff_name: string of the feed-in tariff csv</span>
+<span class="sd">        :param building_name: building load csv</span>
+<span class="sd">        :param pv_name: pv data csv</span>
+<span class="sd">        :param time_conf: time config object</span>
+<span class="sd">        :param ev_conf: ev config object</span>
+<span class="sd">        :param target_soc: target soc</span>
+<span class="sd">        :param building_flag: include/load building load flag</span>
+<span class="sd">        :param pv_flag: include/load pv flag</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># save the time_conf within DataLoader as well because it is used in some functions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time_conf</span> <span class="o">=</span> <span class="n">time_conf</span>
@@ -112,6 +132,7 @@
         <span class="c1"># resetting the index to a numerical value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schedule</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schedule</span><span class="p">))</span>
 
+        <span class="c1"># compute / preprocess from loaded schedule</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_from_schedule</span><span class="p">(</span><span class="n">ev_conf</span><span class="p">,</span> <span class="n">time_conf</span><span class="p">,</span> <span class="n">target_soc</span><span class="p">)</span>
 
         <span class="c1"># create a date range with the chosen frequency</span>
@@ -122,6 +143,7 @@
                                                 <span class="n">freq</span><span class="o">=</span><span class="n">time_conf</span><span class="o">.</span><span class="n">freq</span>
                                                 <span class="p">)</span>
 
+        <span class="c1"># load csv files</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spot_price</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="o">.</span><span class="n">load_prices</span><span class="p">(</span><span class="n">path_name</span><span class="p">,</span> <span class="n">spot_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">date_range</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tariff</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="o">.</span><span class="n">load_feed_in</span><span class="p">(</span><span class="n">path_name</span><span class="p">,</span> <span class="n">tariff_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">date_range</span><span class="p">)</span>
 
@@ -163,11 +185,12 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.data_processing.html#FleetRL.utils.data_processing.data_processing.DataLoader.compute_from_schedule">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_from_schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev_conf</span><span class="p">,</span> <span class="n">time_conf</span><span class="p">,</span> <span class="n">target_soc</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        # &gt;&gt;&gt; test_EV = EV()</span>
-<span class="sd">        # &gt;&gt;&gt; test_EV.get_total_consumption().sum().round(1)</span>
-<span class="sd">        # 147.8</span>
+<span class="sd">        This function pre-processes the input data and adds additional rows to the file.</span>
+<span class="sd">        There flag, time left at charger, soc on return, consumption, etc.</span>
+
+<span class="sd">        Use of merge_asof and vectorized operations for performance gains</span>
 <span class="sd">    </span>
-<span class="sd">        :return:</span>
+<span class="sd">        :return: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># new column with flag if EV is there or not</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;There&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;PowerRating_kW&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))</span>
@@ -259,11 +282,10 @@
 
         <span class="c1"># create SOC column and populate with zeros</span>
         <span class="c1"># calculate SOC on return, assuming the previous trip charged to the target soc</span>
-        <span class="c1"># TODO this could be changed in the future to make it more complex</span>
+        <span class="c1"># maybe this could be changed in the future to make it more complex (future SOC depends on previous SOC)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;SOC_on_return&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_soc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;last_trip_total_consumption&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">div</span><span class="p">(</span>
             <span class="n">ev_conf</span><span class="o">.</span><span class="n">init_battery_cap</span><span class="p">)</span>
-        <span class="c1"># TODO could be set to -1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schedule</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;There&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;SOC_on_return&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
 
 
@@ -271,6 +293,14 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.data_processing.html#FleetRL.utils.data_processing.data_processing.DataLoader.load_prices_original">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">load_prices_original</span><span class="p">(</span><span class="n">path_name</span><span class="p">,</span> <span class="n">spot_name</span><span class="p">,</span> <span class="n">date_range</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load prices from csv</span>
+<span class="sd">        :param path_name: Parent directory string</span>
+<span class="sd">        :param spot_name: file name with .csv ending</span>
+<span class="sd">        :param date_range: pd.date_range which was defined from the &quot;date&quot; column in the EV schedules. Note that the</span>
+<span class="sd">        EV schedule dates therefore dictate the model&#39;s timeframe.</span>
+<span class="sd">        :return: spot price dataframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># load csv</span>
         <span class="n">spot</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path_name</span> <span class="o">+</span> <span class="n">spot_name</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
 
@@ -300,6 +330,14 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.data_processing.html#FleetRL.utils.data_processing.data_processing.DataLoader.load_prices">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">load_prices</span><span class="p">(</span><span class="n">path_name</span><span class="p">,</span> <span class="n">spot_name</span><span class="p">,</span> <span class="n">date_range</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load prices from csv</span>
+<span class="sd">        :param path_name: Parent directory string</span>
+<span class="sd">        :param spot_name: file name with .csv ending</span>
+<span class="sd">        :param date_range: pd.date_range which was defined from the &quot;date&quot; column in the EV schedules. Note that the</span>
+<span class="sd">        EV schedule dates therefore dictate the model&#39;s timeframe.</span>
+<span class="sd">        :return: spot price dataframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># load csv</span>
         <span class="n">spot</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path_name</span> <span class="o">+</span> <span class="n">spot_name</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">])</span>
 
@@ -327,6 +365,14 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.data_processing.html#FleetRL.utils.data_processing.data_processing.DataLoader.load_feed_in">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">load_feed_in</span><span class="p">(</span><span class="n">path_name</span><span class="p">,</span> <span class="n">tariff_name</span><span class="p">,</span> <span class="n">date_range</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load feedin from csv</span>
+<span class="sd">        :param path_name: Parent directory string</span>
+<span class="sd">        :param tariff_name: file name with .csv ending</span>
+<span class="sd">        :param date_range: pd.date_range which was defined from the &quot;date&quot; column in the EV schedules. Note that the</span>
+<span class="sd">        EV schedule dates therefore dictate the model&#39;s timeframe.</span>
+<span class="sd">        :return: tariff dataframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># load csv</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path_name</span> <span class="o">+</span> <span class="n">tariff_name</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">])</span>
 
@@ -344,6 +390,16 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.data_processing.html#FleetRL.utils.data_processing.data_processing.DataLoader.load_building_load">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">load_building_load</span><span class="p">(</span><span class="n">path_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">date_range</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load building load from csv</span>
+<span class="sd">        :param path_name: Parent directory string</span>
+<span class="sd">        :param file_name: file name with .csv ending</span>
+<span class="sd">        :param date_range: pd.date_range which was defined from the &quot;date&quot; column in the EV schedules. Note that the</span>
+<span class="sd">        EV schedule dates therefore dictate the model&#39;s timeframe.</span>
+<span class="sd">        :return: load dataframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">b_load</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path_name</span> <span class="o">+</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">])</span>
         <span class="c1"># b_load[&quot;date&quot;] = pd.to_datetime(b_load[&quot;date&quot;], format=&quot;mixed&quot;)</span>
 
@@ -362,6 +418,14 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.data_processing.html#FleetRL.utils.data_processing.data_processing.DataLoader.load_pv">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">load_pv</span><span class="p">(</span><span class="n">path_name</span><span class="p">,</span> <span class="n">pv_name</span><span class="p">,</span> <span class="n">date_range</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load pv from csv</span>
+<span class="sd">        :param path_name: Parent directory string</span>
+<span class="sd">        :param pv_name: file name with .csv ending</span>
+<span class="sd">        :param date_range: pd.date_range which was defined from the &quot;date&quot; column in the EV schedules. Note that the</span>
+<span class="sd">        EV schedule dates therefore dictate the model&#39;s timeframe.</span>
+<span class="sd">        :return: pv dataframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pv</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path_name</span> <span class="o">+</span> <span class="n">pv_name</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">])</span>
         <span class="c1"># pv[&quot;date&quot;] = pd.to_datetime(pv[&quot;date&quot;], format=&quot;mixed&quot;)</span>
 
@@ -380,13 +444,19 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.data_processing.html#FleetRL.utils.data_processing.data_processing.DataLoader.shape_price_reward">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">shape_price_reward</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">ev_conf</span><span class="p">:</span> <span class="n">EvConfig</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        - de-trend prices, so they can be used as a reward function</span>
+<span class="sd">        - agent should not be penalised more if the general price level is higher</span>
+<span class="sd">        - instead, the agent should just focus on price fluctuations and exploit them</span>
+<span class="sd">        - computing average for whole year, split data into monthly chunks</span>
+<span class="sd">        - offset monthly chunks, such that the monthly average = annual average</span>
+<span class="sd">        - this corrects for absolute price increases, but leaves fluctuations intact</span>
 
-        <span class="c1"># de-trend prices, so they can be used as a reward function</span>
-        <span class="c1"># agent should not be penalised more if the general price level is higher</span>
-        <span class="c1"># instead, the agent should just focus on price fluctuations and exploit them</span>
-        <span class="c1"># computing average for whole year, split data into monthly chunks</span>
-        <span class="c1"># offset monthly chunks, such that the monthly average = annual average</span>
-        <span class="c1"># this corrects for absolute price increases, but leaves fluctuations intact</span>
+<span class="sd">        :param db: database with schedules, pv, prices, load, dataframe</span>
+<span class="sd">        :param ev_conf: ev config object</span>
+<span class="sd">        :return: db with updated, de-trended prices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">price</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="s2">&quot;DELU&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
         <span class="n">price</span> <span class="o">=</span> <span class="n">price</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">fixed_markup</span><span class="p">)</span>
         <span class="n">price</span> <span class="o">=</span> <span class="n">price</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">variable_multiplier</span><span class="p">)</span>
@@ -418,7 +488,6 @@
 
         <span class="k">return</span> <span class="n">db</span></div>
 </div>
-
 
 </pre></div>
 

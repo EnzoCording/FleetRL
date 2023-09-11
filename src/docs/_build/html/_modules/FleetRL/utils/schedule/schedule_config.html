@@ -82,7 +82,21 @@
 <div class="viewcode-block" id="ScheduleConfig">
 <a class="viewcode-back" href="../../../../FleetRL.utils.schedule.html#FleetRL.utils.schedule.schedule_config.ScheduleConfig">[docs]</a>
 <span class="k">class</span> <span class="nc">ScheduleConfig</span><span class="p">:</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Statistical configurations for the schedule generator. Mean and standard deviation values are specified for each</span>
+<span class="sd">    metric, allowing for a distributional and probabilistic generation approach.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schedule_type</span><span class="p">:</span> <span class="n">ScheduleType</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Values initialised depending on the Schedule Type / Use-case</span>
+<span class="sd">        - Consumption mean is taken from the manufacturer site.</span>
+<span class="sd">        - The consumption std dev is computed from the Emobpy German case and thus represent</span>
+<span class="sd">        driving behaviour and consumption of the German population. Source: https://zenodo.org/record/4514928</span>
+
+<span class="sd">        :param schedule_type: LMD, UT or CT</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">schedule_type</span> <span class="o">==</span> <span class="n">schedule_type</span><span class="o">.</span><span class="n">Delivery</span><span class="p">:</span>
             <span class="c1"># Benz eVito: https://www.mercedes-benz.de/vans/models/evito/panel-van/overview.html</span>
@@ -190,12 +204,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">consumption_max</span> <span class="o">=</span> <span class="mf">0.453</span>  <span class="c1"># Maximum consumption, ceiling of consumption levels</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">total_cons_clip</span> <span class="o">=</span> <span class="mi">41</span>  <span class="c1"># max kWh that a trip can use</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">charging_power</span> <span class="o">=</span> <span class="mi">22</span>  <span class="c1"># kW</span>
-
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        The consumption std dev, min, max statistics are computed from the Emobpy German case and thus represent</span>
-<span class="sd">        driving behaviour and consumption of the German population. Source: https://zenodo.org/record/4514928</span>
-<span class="sd">        &#39;&#39;&#39;</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">charging_power</span> <span class="o">=</span> <span class="mi">22</span>  <span class="c1"># kW</span></div>
 
 </pre></div>
 

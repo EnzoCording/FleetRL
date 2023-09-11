@@ -79,6 +79,11 @@
 <div class="viewcode-block" id="ObserverWithPV">
 <a class="viewcode-back" href="../../../../FleetRL.utils.observation.html#FleetRL.utils.observation.observer_with_pv.ObserverWithPV">[docs]</a>
 <span class="k">class</span> <span class="nc">ObserverWithPV</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Observer that regards price, and PV.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="ObserverWithPV.get_obs">
 <a class="viewcode-back" href="../../../../FleetRL.utils.observation.html#FleetRL.utils.observation.observer_with_pv.ObserverWithPV.get_obs">[docs]</a>
     <span class="k">def</span> <span class="nf">get_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -92,6 +97,12 @@
                 <span class="n">target_soc</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        - define the starting and ending time via lookahead, np.where returns the index in the dataframe</span>
+<span class="sd">        - add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)</span>
+<span class="sd">        - get data of price and date from the specific indices</span>
+<span class="sd">        - resample data to only include one value per hour (the others are duplicates)</span>
+<span class="sd">        - only take into account the current value, and the specified hours of lookahead</span>
+
 <span class="sd">        :param db: Database from env</span>
 <span class="sd">        :param price_lookahead: Lookahead in hours for price</span>
 <span class="sd">        :param bl_pv_lookahead: Lookahead in hours for PV and building</span>
@@ -101,12 +112,6 @@
 <span class="sd">        :param aux: Flag to include extra information on the problem or not. Can help with training</span>
 <span class="sd">        :param target_soc: List for the current target SOC of each car</span>
 <span class="sd">        :return: Dict of lists with different parts of the observation</span>
-
-<span class="sd">        # define the starting and ending time via lookahead, np.where returns the index in the dataframe</span>
-<span class="sd">        # add lookahead + 2 here because of rounding issues with the resample function on square times (00:00)</span>
-<span class="sd">        # get data of price and date from the specific indices</span>
-<span class="sd">        # resample data to only include one value per hour (the others are duplicates)</span>
-<span class="sd">        # only take into account the current value, and the specified hours of lookahead</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># soc and time left always present in environment</span>

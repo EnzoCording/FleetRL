@@ -81,6 +81,10 @@
 <div class="viewcode-block" id="OracleNormalization">
 <a class="viewcode-back" href="../../../../FleetRL.utils.normalization.html#FleetRL.utils.normalization.oracle_normalization.OracleNormalization">[docs]</a>
 <span class="k">class</span> <span class="nc">OracleNormalization</span><span class="p">(</span><span class="n">Normalization</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Oracle Normalization assumes the knowledge of the max and min values of the dataset. This is necessary to perform</span>
+<span class="sd">    a global min/max normalization. Alternatively, a rolling normalization could be implemented.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">db</span><span class="p">,</span>
                  <span class="n">building_flag</span><span class="p">,</span>
@@ -88,6 +92,17 @@
                  <span class="n">price_flag</span><span class="p">,</span>
                  <span class="n">ev_conf</span><span class="p">:</span> <span class="n">EvConfig</span><span class="p">,</span>
                  <span class="n">load_calc</span><span class="p">:</span> <span class="n">LoadCalculation</span><span class="p">,</span> <span class="n">aux</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize max and min values of the dataset, globally.</span>
+
+<span class="sd">        :param db: Database dataframe</span>
+<span class="sd">        :param building_flag: Include building load flag</span>
+<span class="sd">        :param pv_flag: Include PV flag</span>
+<span class="sd">        :param price_flag: Include price flag</span>
+<span class="sd">        :param ev_conf: EV configuration object</span>
+<span class="sd">        :param load_calc: Load calculation object</span>
+<span class="sd">        :param aux: Flag whether to include auxiliary observations or not (bool)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">max_time_left</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;time_left&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_price</span> <span class="o">=</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;DELU&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">fixed_markup</span><span class="p">)</span> <span class="o">*</span> <span class="n">ev_conf</span><span class="o">.</span><span class="n">variable_multiplier</span>
@@ -114,6 +129,13 @@
 <div class="viewcode-block" id="OracleNormalization.normalize_obs">
 <a class="viewcode-back" href="../../../../FleetRL.utils.normalization.html#FleetRL.utils.normalization.oracle_normalization.OracleNormalization.normalize_obs">[docs]</a>
     <span class="k">def</span> <span class="nf">normalize_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_obs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Normalization function. Different cases are checked depending on the flags of PV, load, price, and aux.</span>
+<span class="sd">        Input observations are a dictionary with clear namings, to make further changes in the code easy and readable.</span>
+
+<span class="sd">        :param input_obs: Input observation: Un-normalized observations as specified in the observer.</span>
+<span class="sd">        :return: Normalized observation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># normalization is done here, so if the rule is changed it is automatically adjusted in step and reset</span>
         <span class="n">input_obs</span><span class="p">[</span><span class="s2">&quot;soc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_obs</span><span class="p">[</span><span class="s2">&quot;soc&quot;</span><span class="p">])</span>  <span class="c1"># soc is already normalized</span>
         <span class="n">input_obs</span><span class="p">[</span><span class="s2">&quot;hours_left&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">input_obs</span><span class="p">[</span><span class="s2">&quot;hours_left&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_time_left</span><span class="p">))</span>  <span class="c1"># max hours of entire db</span>
@@ -218,6 +240,12 @@
 <div class="viewcode-block" id="OracleNormalization.make_boundaries">
 <a class="viewcode-back" href="../../../../FleetRL.utils.normalization.html#FleetRL.utils.normalization.oracle_normalization.OracleNormalization.make_boundaries">[docs]</a>
     <span class="k">def</span> <span class="nf">make_boundaries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The boundaries are 0 and 1 because the observations are min/max normalized.</span>
+
+<span class="sd">        :param dim: Dimension of the observation depending on the flags</span>
+<span class="sd">        :return: Low and high observation arrays for gym.Spaces.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">low_obs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
         <span class="n">high_obs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">low_obs</span><span class="p">,</span> <span class="n">high_obs</span></div>
@@ -227,6 +255,13 @@
 <a class="viewcode-back" href="../../../../FleetRL.utils.normalization.html#FleetRL.utils.normalization.oracle_normalization.OracleNormalization.flatten_obs">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">flatten_obs</span><span class="p">(</span><span class="n">obs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Observations must be flattened for openAI gym compatibility. The parsed observation must be a flat array and</span>
+<span class="sd">        not a dictionary. The dictionary either includes float or array. The function removes the nesting.</span>
+
+<span class="sd">        :param obs: Normalized observation dictionary</span>
+<span class="sd">        :return: A flattened array - necessary for the RL algorithms to be in a 1-dim array e.g. [v_1, ..., v_N]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">flattened_obs</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">obs</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
         <span class="n">flattened_obs</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">flattened_obs</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">flattened_obs</span></div>
