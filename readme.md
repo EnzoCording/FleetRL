@@ -29,6 +29,8 @@ fleet_environment:
 load_calculation:
 - Calculates violations of building load
 
+[Documentation](/src/docs/_build/html/index.html)
+
 [License](LICENSE)
 
 No custom license is added to this repository until the thesis has been published.
