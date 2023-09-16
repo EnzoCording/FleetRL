@@ -1,34 +1,7 @@
-FleetRL.utils.time\_picker package
+Time picker
 ==================================
 
-Submodules
-----------
-
-FleetRL.utils.time\_picker.eval\_time\_picker module
-----------------------------------------------------
-
-.. automodule:: FleetRL.utils.time_picker.eval_time_picker
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-FleetRL.utils.time\_picker.random\_time\_picker module
-------------------------------------------------------
-
-.. automodule:: FleetRL.utils.time_picker.random_time_picker
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-FleetRL.utils.time\_picker.static\_time\_picker module
-------------------------------------------------------
-
-.. automodule:: FleetRL.utils.time_picker.static_time_picker
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-FleetRL.utils.time\_picker.time\_picker module
+Time picker parent class
 ----------------------------------------------
 
 .. automodule:: FleetRL.utils.time_picker.time_picker
@@ -36,10 +9,26 @@ FleetRL.utils.time\_picker.time\_picker module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+Random time picker
+------------------------------------------------------
 
-.. automodule:: FleetRL.utils.time_picker
+.. automodule:: FleetRL.utils.time_picker.random_time_picker
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Eval time picker
+----------------------------------------------------
+
+.. automodule:: FleetRL.utils.time_picker.eval_time_picker
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Static time picker
+------------------------------------------------------
+
+.. automodule:: FleetRL.utils.time_picker.static_time_picker
    :members:
    :undoc-members:
    :show-inheritance:

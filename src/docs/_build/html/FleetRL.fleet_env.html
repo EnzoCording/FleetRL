@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FleetRL.fleet_env package &mdash; FleetRL 1.0.0 documentation</title>
+  <title>Fleet Environment &mdash; FleetRL 1.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,11 +17,13 @@
         <script src="_static/documentation_options.js?v=8d563738"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="FleetRL.fleet_env.config package" href="FleetRL.fleet_env.config.html" />
-    <link rel="prev" title="Installation" href="guide/installation.html" /> 
+    <link rel="next" title="Environment Config" href="FleetRL.fleet_env.config.html" />
+    <link rel="prev" title="Benchmarking" href="guide/benchmarking.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,20 +51,18 @@
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/agent_training.html">Agent Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/agent_eval.html">Agent Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/benchmarking.html">Benchmarking</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">FleetRL.fleet_env package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html">FleetRL.fleet_env.config package</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.fleet_env.episode">FleetRL.fleet_env.episode module</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Fleet Environment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.fleet_env.episode">Episode module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.fleet_env.episode.Episode"><code class="docutils literal notranslate"><span class="pre">Episode</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.fleet_env.fleet_environment">FleetRL.fleet_env.fleet_environment module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.fleet_env.fleet_environment">Environment module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.fleet_env.fleet_environment.FleetEnv"><code class="docutils literal notranslate"><span class="pre">FleetEnv</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.adjust_caretaker_lunch_soc"><code class="docutils literal notranslate"><span class="pre">FleetEnv.adjust_caretaker_lunch_soc()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.fleet_env.fleet_environment.FleetEnv.auto_gen"><code class="docutils literal notranslate"><span class="pre">FleetEnv.auto_gen()</span></code></a></li>
@@ -83,18 +84,22 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.fleet_env">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.fleet_env">fleet_env</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#environment-config">Environment Config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html">Environment Config</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">FleetRL.utils.battery_degradation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">FleetRL.utils.data_logger package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">FleetRL.utils.data_processing package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">FleetRL.utils.ev_charging package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">FleetRL.utils.load_calculation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">FleetRL.utils.normalization package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">FleetRL.utils.observation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">FleetRL.utils.schedule package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">Data logger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">Load calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">Normalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">Observation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">Schedule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">Time picker</a></li>
 </ul>
 
         </div>
@@ -111,7 +116,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">FleetRL.fleet_env package</li>
+      <li class="breadcrumb-item active">Fleet Environment</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/FleetRL.fleet_env.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -121,41 +126,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="fleetrl-fleet-env-package">
-<h1>FleetRL.fleet_env package<a class="headerlink" href="#fleetrl-fleet-env-package" title="Link to this heading"></a></h1>
-<section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.config.html">FleetRL.fleet_env.config package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config.ev_config">FleetRL.fleet_env.config.ev_config module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig"><code class="docutils literal notranslate"><span class="pre">EvConfig</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config.score_config">FleetRL.fleet_env.config.score_config module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig"><code class="docutils literal notranslate"><span class="pre">ScoreConfig</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig.overloading_penalty"><code class="docutils literal notranslate"><span class="pre">ScoreConfig.overloading_penalty()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig.soc_violation_penalty"><code class="docutils literal notranslate"><span class="pre">ScoreConfig.soc_violation_penalty()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config.time_config">FleetRL.fleet_env.config.time_config module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig"><code class="docutils literal notranslate"><span class="pre">TimeConfig</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
-</section>
+  <section id="fleet-environment">
+<h1>Fleet Environment<a class="headerlink" href="#fleet-environment" title="Link to this heading"></a></h1>
 <section id="module-FleetRL.fleet_env.episode">
-<span id="fleetrl-fleet-env-episode-module"></span><h2>FleetRL.fleet_env.episode module<a class="headerlink" href="#module-FleetRL.fleet_env.episode" title="Link to this heading"></a></h2>
+<span id="episode-module"></span><h2>Episode module<a class="headerlink" href="#module-FleetRL.fleet_env.episode" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.episode.Episode">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.fleet_env.episode.</span></span><span class="sig-name descname"><span class="pre">Episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_conf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/episode.html#Episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.episode.Episode" title="Link to this definition"></a></dt>
@@ -165,7 +139,7 @@
 
 </section>
 <section id="module-FleetRL.fleet_env.fleet_environment">
-<span id="fleetrl-fleet-env-fleet-environment-module"></span><h2>FleetRL.fleet_env.fleet_environment module<a class="headerlink" href="#module-FleetRL.fleet_env.fleet_environment" title="Link to this heading"></a></h2>
+<span id="environment-module"></span><h2>Environment module<a class="headerlink" href="#module-FleetRL.fleet_env.fleet_environment" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.fleet_env.fleet_environment.FleetEnv">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.fleet_env.fleet_environment.</span></span><span class="sig-name descname"><span class="pre">FleetEnv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_case</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tariff_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schedule_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lmd_sched_single.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_building</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_pv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_price</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_picker_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'random'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_soc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batt_cap_in_all_use_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_soh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg_emp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_price_reward</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_overloading_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_invalid_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_overcharging_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episode_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculate_degradation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_in_env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_schedule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_n_evs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_markup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_mul</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feed_in_ded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/fleet_env/fleet_environment.html#FleetEnv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.fleet_environment.FleetEnv" title="Link to this definition"></a></dt>
@@ -397,7 +371,33 @@ function to reduce the complexity and to distribute the tasks of the model.</p>
 
 </section>
 <section id="module-FleetRL.fleet_env">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-FleetRL.fleet_env" title="Link to this heading"></a></h2>
+<span id="fleet-env"></span><h2>fleet_env<a class="headerlink" href="#module-FleetRL.fleet_env" title="Link to this heading"></a></h2>
+</section>
+<section id="environment-config">
+<h2>Environment Config<a class="headerlink" href="#environment-config" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.config.html">Environment Config</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config.ev_config">EV config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.ev_config.EvConfig"><code class="docutils literal notranslate"><span class="pre">EvConfig</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config.score_config">Score config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig"><code class="docutils literal notranslate"><span class="pre">ScoreConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig.overloading_penalty"><code class="docutils literal notranslate"><span class="pre">ScoreConfig.overloading_penalty()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.score_config.ScoreConfig.soc_violation_penalty"><code class="docutils literal notranslate"><span class="pre">ScoreConfig.soc_violation_penalty()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="FleetRL.fleet_env.config.html#module-FleetRL.fleet_env.config.time_config">Time config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="FleetRL.fleet_env.config.html#FleetRL.fleet_env.config.time_config.TimeConfig"><code class="docutils literal notranslate"><span class="pre">TimeConfig</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
 </section>
 </section>
 
@@ -405,8 +405,8 @@ function to reduce the complexity and to distribute the tasks of the model.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="guide/installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="FleetRL.fleet_env.config.html" class="btn btn-neutral float-right" title="FleetRL.fleet_env.config package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="guide/benchmarking.html" class="btn btn-neutral float-left" title="Benchmarking" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FleetRL.fleet_env.config.html" class="btn btn-neutral float-right" title="Environment Config" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

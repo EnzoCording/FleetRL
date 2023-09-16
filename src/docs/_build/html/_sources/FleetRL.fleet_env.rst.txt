@@ -1,18 +1,7 @@
-FleetRL.fleet\_env package
+Fleet Environment
 ==========================
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   FleetRL.fleet_env.config
-
-Submodules
-----------
-
-FleetRL.fleet\_env.episode module
+Episode module
 ---------------------------------
 
 .. automodule:: FleetRL.fleet_env.episode
@@ -20,7 +9,7 @@ FleetRL.fleet\_env.episode module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.fleet\_env.fleet\_environment module
+Environment module
 --------------------------------------------
 
 .. automodule:: FleetRL.fleet_env.fleet_environment
@@ -28,10 +17,18 @@ FleetRL.fleet\_env.fleet\_environment module
    :undoc-members:
    :show-inheritance:
 
-Module contents
+fleet\_env
 ---------------
 
 .. automodule:: FleetRL.fleet_env
    :members:
    :undoc-members:
    :show-inheritance:
+
+Environment Config
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   FleetRL.fleet_env.config

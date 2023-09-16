@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FleetRL.utils.normalization package &mdash; FleetRL 1.0.0 documentation</title>
+  <title>Normalization &mdash; FleetRL 1.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,11 +17,13 @@
         <script src="_static/documentation_options.js?v=8d563738"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="FleetRL.utils.observation package" href="FleetRL.utils.observation.html" />
-    <link rel="prev" title="FleetRL.utils.load_calculation package" href="FleetRL.utils.load_calculation.html" /> 
+    <link rel="next" title="Observation" href="FleetRL.utils.observation.html" />
+    <link rel="prev" title="Load calculation" href="FleetRL.utils.load_calculation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,18 +51,20 @@
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/agent_training.html">Agent Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/agent_eval.html">Agent Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/benchmarking.html">Benchmarking</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">FleetRL.utils.battery_degradation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">FleetRL.utils.data_logger package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">FleetRL.utils.data_processing package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">FleetRL.utils.ev_charging package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">FleetRL.utils.load_calculation package</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">FleetRL.utils.normalization package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.normalization.normalization">FleetRL.utils.normalization.normalization module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">Fleet Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">Data logger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">Load calculation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Normalization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.normalization.normalization">Normalization parent class</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.normalization.normalization.Normalization"><code class="docutils literal notranslate"><span class="pre">Normalization</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.normalization.normalization.Normalization.make_boundaries"><code class="docutils literal notranslate"><span class="pre">Normalization.make_boundaries()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.normalization.normalization.Normalization.normalize_obs"><code class="docutils literal notranslate"><span class="pre">Normalization.normalize_obs()</span></code></a></li>
@@ -67,7 +72,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.normalization.oracle_normalization">FleetRL.utils.normalization.oracle_normalization module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.normalization.oracle_normalization">Oracle normalization</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.normalization.oracle_normalization.OracleNormalization"><code class="docutils literal notranslate"><span class="pre">OracleNormalization</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.normalization.oracle_normalization.OracleNormalization.flatten_obs"><code class="docutils literal notranslate"><span class="pre">OracleNormalization.flatten_obs()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.normalization.oracle_normalization.OracleNormalization.make_boundaries"><code class="docutils literal notranslate"><span class="pre">OracleNormalization.make_boundaries()</span></code></a></li>
@@ -76,7 +81,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.normalization.unit_normalization">FleetRL.utils.normalization.unit_normalization module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.normalization.unit_normalization">Unit normalization</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.normalization.unit_normalization.UnitNormalization"><code class="docutils literal notranslate"><span class="pre">UnitNormalization</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.normalization.unit_normalization.UnitNormalization.flatten_obs"><code class="docutils literal notranslate"><span class="pre">UnitNormalization.flatten_obs()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.normalization.unit_normalization.UnitNormalization.make_boundaries"><code class="docutils literal notranslate"><span class="pre">UnitNormalization.make_boundaries()</span></code></a></li>
@@ -85,12 +90,11 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.normalization">Module contents</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">FleetRL.utils.observation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">FleetRL.utils.schedule package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">Observation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">Schedule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">Time picker</a></li>
 </ul>
 
         </div>
@@ -107,7 +111,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">FleetRL.utils.normalization package</li>
+      <li class="breadcrumb-item active">Normalization</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/FleetRL.utils.normalization.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -117,13 +121,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="fleetrl-utils-normalization-package">
-<h1>FleetRL.utils.normalization package<a class="headerlink" href="#fleetrl-utils-normalization-package" title="Link to this heading"></a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
-</section>
+  <section id="normalization">
+<h1>Normalization<a class="headerlink" href="#normalization" title="Link to this heading"></a></h1>
 <section id="module-FleetRL.utils.normalization.normalization">
-<span id="fleetrl-utils-normalization-normalization-module"></span><h2>FleetRL.utils.normalization.normalization module<a class="headerlink" href="#module-FleetRL.utils.normalization.normalization" title="Link to this heading"></a></h2>
+<span id="normalization-parent-class"></span><h2>Normalization parent class<a class="headerlink" href="#module-FleetRL.utils.normalization.normalization" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.normalization.Normalization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.normalization.normalization.</span></span><span class="sig-name descname"><span class="pre">Normalization</span></span><a class="reference internal" href="_modules/FleetRL/utils/normalization/normalization.html#Normalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.normalization.Normalization" title="Link to this definition"></a></dt>
@@ -167,7 +168,7 @@
 
 </section>
 <section id="module-FleetRL.utils.normalization.oracle_normalization">
-<span id="fleetrl-utils-normalization-oracle-normalization-module"></span><h2>FleetRL.utils.normalization.oracle_normalization module<a class="headerlink" href="#module-FleetRL.utils.normalization.oracle_normalization" title="Link to this heading"></a></h2>
+<span id="oracle-normalization"></span><h2>Oracle normalization<a class="headerlink" href="#module-FleetRL.utils.normalization.oracle_normalization" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.oracle_normalization.OracleNormalization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.normalization.oracle_normalization.</span></span><span class="sig-name descname"><span class="pre">OracleNormalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv_flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_calc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/normalization/oracle_normalization.html#OracleNormalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.oracle_normalization.OracleNormalization" title="Link to this definition"></a></dt>
@@ -228,7 +229,7 @@ Input observations are a dictionary with clear namings, to make further changes 
 
 </section>
 <section id="module-FleetRL.utils.normalization.unit_normalization">
-<span id="fleetrl-utils-normalization-unit-normalization-module"></span><h2>FleetRL.utils.normalization.unit_normalization module<a class="headerlink" href="#module-FleetRL.utils.normalization.unit_normalization" title="Link to this heading"></a></h2>
+<span id="unit-normalization"></span><h2>Unit normalization<a class="headerlink" href="#module-FleetRL.utils.normalization.unit_normalization" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.normalization.unit_normalization.UnitNormalization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.normalization.unit_normalization.</span></span><span class="sig-name descname"><span class="pre">UnitNormalization</span></span><a class="reference internal" href="_modules/FleetRL/utils/normalization/unit_normalization.html#UnitNormalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.normalization.unit_normalization.UnitNormalization" title="Link to this definition"></a></dt>
@@ -279,17 +280,14 @@ on environments that have the same shape.</p>
 </dd></dl>
 
 </section>
-<section id="module-FleetRL.utils.normalization">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-FleetRL.utils.normalization" title="Link to this heading"></a></h2>
-</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="FleetRL.utils.load_calculation.html" class="btn btn-neutral float-left" title="FleetRL.utils.load_calculation package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="FleetRL.utils.observation.html" class="btn btn-neutral float-right" title="FleetRL.utils.observation package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="FleetRL.utils.load_calculation.html" class="btn btn-neutral float-left" title="Load calculation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FleetRL.utils.observation.html" class="btn btn-neutral float-right" title="Observation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

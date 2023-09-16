@@ -7,6 +7,7 @@
   <title>Agent Training &mdash; FleetRL 1.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,9 +17,13 @@
         <script src="../_static/documentation_options.js?v=8d563738"></script>
         <script src="../_static/doctools.js?v=888ff710"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Agent Evaluation" href="agent_eval.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,21 +49,24 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Agent Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_eval.html">Agent Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarking.html">Benchmarking</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.battery_degradation.html">FleetRL.utils.battery_degradation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.data_logger.html">FleetRL.utils.data_logger package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.data_processing.html">FleetRL.utils.data_processing package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.ev_charging.html">FleetRL.utils.ev_charging package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.load_calculation.html">FleetRL.utils.load_calculation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.normalization.html">FleetRL.utils.normalization package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.observation.html">FleetRL.utils.observation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.schedule.html">FleetRL.utils.schedule package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.fleet_env.html">Fleet Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.data_logger.html">Data logger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.load_calculation.html">Load calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.normalization.html">Normalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.observation.html">Observation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.schedule.html">Schedule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.time_picker.html">Time picker</a></li>
 </ul>
 
         </div>
@@ -87,12 +95,254 @@
              
   <section id="agent-training">
 <span id="id1"></span><h1>Agent Training<a class="headerlink" href="#agent-training" title="Link to this heading"></a></h1>
+<p><strong>Configuring the environment</strong></p>
+<p>Below, a basic configuration is shown for a last-mile delivery use-case.
+It features multiple EVs and multiple parallel environments. New schedules will be generated in this case - this can be changed
+by setting <code class="docutils literal notranslate"><span class="pre">gen_new_sched</span></code> to False.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define fundamental parameters</span>
+<span class="n">run_name</span> <span class="o">=</span> <span class="s2">&quot;LMD_2022_arbitrage_PPO&quot;</span>
+<span class="n">n_train_steps</span> <span class="o">=</span> <span class="mi">48</span>  <span class="c1"># number of hours in a training episode</span>
+<span class="n">n_eval_steps</span> <span class="o">=</span> <span class="mi">8600</span>  <span class="c1"># number of hours in one evaluation episode</span>
+<span class="n">n_eval_episodes</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># number of episodes for evaluation</span>
+<span class="n">n_evs</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># number of evs</span>
+<span class="n">n_envs</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># number of envs parallel - has to be equal to 1, if train_freq = (1, episode) or default setting</span>
+<span class="n">time_steps_per_hour</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># temporal resolution</span>
+<span class="n">use_case</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;lmd&quot;</span>  <span class="c1"># for file name</span>
+<span class="n">scenario</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;arb&quot;</span><span class="p">,</span> <span class="s2">&quot;tariff&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tariff&quot;</span>  <span class="c1"># arbitrage or tariff</span>
+<span class="n">gen_new_schedule</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># generate a new schedule - refer to schedule generator and its config to change settings</span>
+<span class="n">gen_new_test_schedule</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># generate a new schedule for agent testing</span>
+</pre></div>
+</div>
+<p>Training parameters change training-relevant parameters in the backends of FleetRL and stable-baselines3.
+This includes normalization, vectorization of environments, total training steps and the interval at which models are saved.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># training parameters</span>
+<span class="n">norm_obs_in_env</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># normalize observations in FleetRL (max, min normalization)</span>
+<span class="n">vec_norm_obs</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># normalize observations in SB3 (rolling normalization)</span>
+<span class="n">vec_norm_rew</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># normalize rewards in SB3 (rolling normalization)</span>
+<span class="n">total_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">1e6</span><span class="p">)</span>  <span class="c1"># total training time steps</span>
+<span class="n">saving_interval</span> <span class="o">=</span> <span class="mi">50000</span>  <span class="c1"># interval for saving the model</span>
+</pre></div>
+</div>
+<p><strong>Creating an environment object</strong></p>
+<p>To instantiate a FleetEnv object, some arguments are required, and some are optional.
+This example sets the most important parameters to create an environment object for last-mile delivery.
+Depending in the pricing scenario, the right input files and markups are chosen.
+The same adaptation applies for the use-case’s schedule and building load input files.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># environment arguments - adjust settings if necessary</span>
+<span class="c1"># additional settings can be changed in the config files</span>
+<span class="n">env_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;schedule_name&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">n_evs</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">use_case</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;building_name&quot;</span><span class="p">:</span> <span class="s2">&quot;load_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">use_case</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;use_case&quot;</span><span class="p">:</span> <span class="n">use_case</span><span class="p">,</span>
+              <span class="s2">&quot;include_building&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+              <span class="s2">&quot;include_pv&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+              <span class="s2">&quot;time_picker&quot;</span><span class="p">:</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;deg_emp&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="s2">&quot;include_price&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+              <span class="s2">&quot;ignore_price_reward&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="s2">&quot;ignore_invalid_penalty&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="s2">&quot;ignore_overcharging_penalty&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="s2">&quot;ignore_overloading_penalty&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="s2">&quot;episode_length&quot;</span><span class="p">:</span> <span class="n">n_train_steps</span><span class="p">,</span>
+              <span class="s2">&quot;normalize_in_env&quot;</span><span class="p">:</span> <span class="n">norm_obs_in_env</span><span class="p">,</span>
+              <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+              <span class="s2">&quot;aux&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+              <span class="s2">&quot;log_data&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="s2">&quot;calculate_degradation&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+              <span class="s2">&quot;target_soc&quot;</span><span class="p">:</span> <span class="mf">0.85</span><span class="p">,</span>
+              <span class="s2">&quot;gen_schedule&quot;</span><span class="p">:</span> <span class="n">gen_new_schedule</span><span class="p">,</span>
+              <span class="s2">&quot;gen_start_date&quot;</span><span class="p">:</span> <span class="s2">&quot;2022-01-01 00:00&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;gen_end_date&quot;</span><span class="p">:</span> <span class="s2">&quot;2022-12-31 23:59:59&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;gen_name&quot;</span><span class="p">:</span> <span class="s2">&quot;my_sched.csv&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;gen_n_evs&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+              <span class="s2">&quot;seed&quot;</span><span class="p">:</span> <span class="mi">42</span>
+              <span class="p">}</span>
+
+<span class="k">if</span> <span class="n">scenario</span> <span class="o">==</span> <span class="s2">&quot;tariff&quot;</span><span class="p">:</span>
+    <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;spot_markup&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;spot_mul&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.5</span>
+    <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;feed_in_ded&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.25</span>
+    <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;price_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;spot_2021_new.csv&quot;</span>
+    <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;tariff_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;fixed_feed_in.csv&quot;</span>
+<span class="k">elif</span> <span class="n">scenario</span> <span class="o">==</span> <span class="s2">&quot;arb&quot;</span><span class="p">:</span>
+    <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;spot_markup&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;spot_mul&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;feed_in_ded&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;price_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;spot_2021_new.csv&quot;</span>
+    <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;tariff_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;spot_2021_new_tariff.csv&quot;</span>
+</pre></div>
+</div>
+<p><strong>Create environments</strong></p>
+<p>Vectorized environments are created via the respective SB3 method.
+The SubprocVecEnv is used because it allows for parallel processing (unlike <code class="docutils literal notranslate"><span class="pre">DummyVecEnv</span></code>).
+The VecEnv is wrapped in a normalization wrapper via <code class="docutils literal notranslate"><span class="pre">VecNormalize</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_vec_env</span> <span class="o">=</span> <span class="n">make_vec_env</span><span class="p">(</span><span class="n">FleetEnv</span><span class="p">,</span>
+                             <span class="n">n_envs</span><span class="o">=</span><span class="n">n_envs</span><span class="p">,</span>
+                             <span class="n">vec_env_cls</span><span class="o">=</span><span class="n">SubprocVecEnv</span><span class="p">,</span>
+                             <span class="n">env_kwargs</span><span class="o">=</span><span class="n">env_kwargs</span><span class="p">)</span>
+
+<span class="n">train_norm_vec_env</span> <span class="o">=</span> <span class="n">VecNormalize</span><span class="p">(</span><span class="n">venv</span><span class="o">=</span><span class="n">train_vec_env</span><span class="p">,</span>
+                                  <span class="n">norm_obs</span><span class="o">=</span><span class="n">vec_norm_obs</span><span class="p">,</span>
+                                  <span class="n">norm_reward</span><span class="o">=</span><span class="n">vec_norm_rew</span><span class="p">,</span>
+                                  <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                  <span class="n">clip_reward</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For the validation environment, a new schedule does not need to be generated.
+However, the eval time picker needs to be used, and the schedule name of the training
+environment needs to be adopted.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;time_picker&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;eval&quot;</span>
+<span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;gen_schedule&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;schedule_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">env_kwargs</span><span class="p">[</span><span class="s2">&quot;gen_name&quot;</span><span class="p">]</span>
+
+<span class="n">eval_vec_env</span> <span class="o">=</span> <span class="n">make_vec_env</span><span class="p">(</span><span class="n">FleetEnv</span><span class="p">,</span>
+                             <span class="n">n_envs</span><span class="o">=</span><span class="n">n_envs</span><span class="p">,</span>
+                             <span class="n">vec_env_cls</span><span class="o">=</span><span class="n">SubprocVecEnv</span><span class="p">,</span>
+                             <span class="n">env_kwargs</span><span class="o">=</span><span class="n">env_kwargs</span><span class="p">)</span>
+
+<span class="n">eval_norm_vec_env</span> <span class="o">=</span> <span class="n">VecNormalize</span><span class="p">(</span><span class="n">venv</span><span class="o">=</span><span class="n">eval_vec_env</span><span class="p">,</span>
+                                  <span class="n">norm_obs</span><span class="o">=</span><span class="n">vec_norm_obs</span><span class="p">,</span>
+                                  <span class="n">norm_reward</span><span class="o">=</span><span class="n">vec_norm_rew</span><span class="p">,</span>
+                                  <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                  <span class="n">clip_reward</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Adding callbacks</strong></p>
+<p>The SB3 EvalCallback is used to run a validation on the validation set. This tests the
+currently training agent on a separate portion of the dataset, allowing for better judgement of
+performance on unseen data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">eval_callback</span> <span class="o">=</span> <span class="n">EvalCallback</span><span class="p">(</span><span class="n">eval_env</span><span class="o">=</span><span class="n">eval_norm_vec_env</span><span class="p">,</span>
+                             <span class="n">warn</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">deterministic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">eval_freq</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">10000</span> <span class="o">//</span> <span class="n">n_envs</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                             <span class="n">n_eval_episodes</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                             <span class="n">render</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                             <span class="p">)</span>
+</pre></div>
+</div>
+<p>The HyperParamCallback is used to log metric in TensorBoard. Depending on the used RL algorithm,
+more parameters can be logged.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">HyperParamCallback</span><span class="p">(</span><span class="n">BaseCallback</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Saves hyperparameters and metrics at start of training, logging to tensorboard</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_on_training_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hparam_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;algorithm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="s2">&quot;learning rate&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">metric_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;rollout/ep_len_mean&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;train/value_loss&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">record</span><span class="p">(</span>
+            <span class="s2">&quot;hparams&quot;</span><span class="p">,</span>
+            <span class="n">HParam</span><span class="p">(</span><span class="n">hparam_dict</span><span class="p">,</span> <span class="n">metric_dict</span><span class="p">),</span>
+            <span class="n">exclude</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;stdout&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="s2">&quot;csv&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_on_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<span class="n">hyperparameter_callback</span> <span class="o">=</span> <span class="n">HyperParamCallback</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>A progress bar can be included. This might not show during live training
+in some remote computing environments.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">progress_bar</span> <span class="o">=</span> <span class="n">ProgressBarCallback</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A wandb callback exists for SB3. Check the wandb documentation for implementation.</p>
+</div>
+<p><strong>Adding action noise, e.g. for TD3 and DDPG</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">n_actions</span> <span class="o">=</span> <span class="n">train_norm_vec_env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">param_noise</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">noise_scale</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">seq_len</span> <span class="o">=</span> <span class="n">n_train_steps</span> <span class="o">*</span> <span class="n">time_steps_per_hour</span>
+<span class="n">action_noise</span> <span class="o">=</span> <span class="n">PinkActionNoise</span><span class="p">(</span><span class="n">noise_scale</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">n_actions</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Instantiating model</strong></p>
+<p>To avoid specific model tuning for each new use-case, it is recommended to
+first try a model’s default parameters. Below, a hyperparameter configuration is proposed for PPO
+that performed well for all three use-cases. It can potentially yield potential performance
+increases.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="s2">&quot;MlpPolicy&quot;</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="c1"># setting verbose to 0 can introduce performance increases in jupyterlab environments</span>
+            <span class="n">env</span><span class="o">=</span><span class="n">train_norm_vec_env</span><span class="p">,</span>
+            <span class="n">tensorboard_log</span><span class="o">=</span><span class="s2">&quot;./tb_log&quot;</span><span class="p">)</span>
+
+<span class="c1"># might introduce performance increases</span>
+            <span class="c1"># gamma=0.99,</span>
+            <span class="c1"># learning_rate=0.0005,</span>
+            <span class="c1"># batch_size=128,</span>
+            <span class="c1"># n_epochs=8,</span>
+            <span class="c1"># gae_lambda=0.9,</span>
+            <span class="c1"># clip_range=0.2,</span>
+            <span class="c1"># clip_range_vf=None,</span>
+            <span class="c1"># normalize_advantage=True,</span>
+            <span class="c1"># ent_coef=0.0008,</span>
+            <span class="c1"># vf_coef=0.5,</span>
+            <span class="c1"># max_grad_norm=0.5,</span>
+            <span class="c1"># n_steps=2048)</span>
+</pre></div>
+</div>
+<p>Creating tensorboard instance. Port can be specified in case a certain port is free
+on remote computing environments. <code class="docutils literal notranslate"><span class="pre">Bind_all</span></code> might be required by some remote machines.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">reload_ext</span> <span class="n">tensorboard</span>
+<span class="o">%</span><span class="n">tensorboard</span> <span class="o">--</span><span class="n">logdir</span> <span class="o">./</span><span class="n">tb_log</span> <span class="o">--</span><span class="n">bind_all</span> <span class="o">--</span><span class="n">port</span> <span class="mi">6006</span>
+</pre></div>
+</div>
+<p>Setting directories according to path names.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">comment</span> <span class="o">=</span> <span class="n">run_name</span>
+<span class="n">time_now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+<span class="n">trained_agents_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;./RL_agents/trained_agents/vec_PPO_</span><span class="si">{</span><span class="n">time_now</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">run_name</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="n">logs_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;./RL_agents/trained_agents/logs/vec_PPO_</span><span class="si">{</span><span class="n">time_now</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">run_name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">trained_agents_dir</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">trained_agents_dir</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">logs_dir</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">logs_dir</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Model training</strong></p>
+<p>Per interval, a unique model artifact is saved. Additionally, an artifact is saved
+regarding the normalization metrics and the agent model - this is overwritten each time.
+The instantiated callbacks must be included here.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># model training</span>
+<span class="c1"># models are saved in a specified interval: once with unique step identifiers</span>
+<span class="c1"># model and the normalization metrics are saved as well, overwriting the previous file every time</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">total_steps</span> <span class="o">/</span> <span class="n">saving_interval</span><span class="p">)):</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">total_timesteps</span><span class="o">=</span><span class="n">saving_interval</span><span class="p">,</span>
+                <span class="n">reset_num_timesteps</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">tb_log_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;PPO_</span><span class="si">{</span><span class="n">time_now</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">comment</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">callback</span><span class="o">=</span><span class="p">[</span><span class="n">eval_callback</span><span class="p">,</span> <span class="n">hyperparameter_callback</span><span class="p">,</span> <span class="n">progress_bar</span><span class="p">])</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trained_agents_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">saving_interval</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Don&#39;t forget to save the VecNormalize statistics when saving the agent</span>
+    <span class="n">log_dir</span> <span class="o">=</span> <span class="s2">&quot;./RL_agents/trained_agents/tmp/vec_PPO/&quot;</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">log_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;PPO-fleet_</span><span class="si">{</span><span class="n">comment</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">time_now</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">stats_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;vec_normalize-</span><span class="si">{</span><span class="n">comment</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">time_now</span><span class="si">}</span><span class="s2">.pkl&quot;</span><span class="p">)</span>
+    <span class="n">train_norm_vec_env</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">stats_path</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="agent_eval.html" class="btn btn-neutral float-right" title="Agent Evaluation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

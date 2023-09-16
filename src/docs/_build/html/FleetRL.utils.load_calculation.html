@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FleetRL.utils.load_calculation package &mdash; FleetRL 1.0.0 documentation</title>
+  <title>Load calculation &mdash; FleetRL 1.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,11 +17,13 @@
         <script src="_static/documentation_options.js?v=8d563738"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="FleetRL.utils.normalization package" href="FleetRL.utils.normalization.html" />
-    <link rel="prev" title="FleetRL.utils.ev_charging package" href="FleetRL.utils.ev_charging.html" /> 
+    <link rel="next" title="Normalization" href="FleetRL.utils.normalization.html" />
+    <link rel="prev" title="EV charging" href="FleetRL.utils.ev_charging.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,36 +51,34 @@
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/agent_training.html">Agent Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/agent_eval.html">Agent Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/benchmarking.html">Benchmarking</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">FleetRL.utils.battery_degradation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">FleetRL.utils.data_logger package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">FleetRL.utils.data_processing package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">FleetRL.utils.ev_charging package</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">FleetRL.utils.load_calculation package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.load_calculation.load_calculation">FleetRL.utils.load_calculation.load_calculation module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType"><code class="docutils literal notranslate"><span class="pre">CompanyType</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Caretaker"><code class="docutils literal notranslate"><span class="pre">CompanyType.Caretaker</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Delivery"><code class="docutils literal notranslate"><span class="pre">CompanyType.Delivery</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Utility"><code class="docutils literal notranslate"><span class="pre">CompanyType.Utility</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">Fleet Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">Data logger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Load calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType"><code class="docutils literal notranslate"><span class="pre">CompanyType</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Caretaker"><code class="docutils literal notranslate"><span class="pre">CompanyType.Caretaker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Delivery"><code class="docutils literal notranslate"><span class="pre">CompanyType.Delivery</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Utility"><code class="docutils literal notranslate"><span class="pre">CompanyType.Utility</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.LoadCalculation"><code class="docutils literal notranslate"><span class="pre">LoadCalculation</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.LoadCalculation.check_violation"><code class="docutils literal notranslate"><span class="pre">LoadCalculation.check_violation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.LoadCalculation"><code class="docutils literal notranslate"><span class="pre">LoadCalculation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.LoadCalculation.check_violation"><code class="docutils literal notranslate"><span class="pre">LoadCalculation.check_violation()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.load_calculation">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">FleetRL.utils.normalization package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">FleetRL.utils.observation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">FleetRL.utils.schedule package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">Normalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">Observation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">Schedule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">Time picker</a></li>
 </ul>
 
         </div>
@@ -94,7 +95,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">FleetRL.utils.load_calculation package</li>
+      <li class="breadcrumb-item active">Load calculation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/FleetRL.utils.load_calculation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -104,13 +105,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="fleetrl-utils-load-calculation-package">
-<h1>FleetRL.utils.load_calculation package<a class="headerlink" href="#fleetrl-utils-load-calculation-package" title="Link to this heading"></a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
-</section>
-<section id="module-FleetRL.utils.load_calculation.load_calculation">
-<span id="fleetrl-utils-load-calculation-load-calculation-module"></span><h2>FleetRL.utils.load_calculation.load_calculation module<a class="headerlink" href="#module-FleetRL.utils.load_calculation.load_calculation" title="Link to this heading"></a></h2>
+  <section id="module-FleetRL.utils.load_calculation.load_calculation">
+<span id="load-calculation"></span><h1>Load calculation<a class="headerlink" href="#module-FleetRL.utils.load_calculation.load_calculation" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.load_calculation.load_calculation.CompanyType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.load_calculation.load_calculation.</span></span><span class="sig-name descname"><span class="pre">CompanyType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/load_calculation/load_calculation.html#CompanyType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType" title="Link to this definition"></a></dt>
@@ -162,17 +158,13 @@
 </dd></dl>
 
 </section>
-<section id="module-FleetRL.utils.load_calculation">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-FleetRL.utils.load_calculation" title="Link to this heading"></a></h2>
-</section>
-</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="FleetRL.utils.ev_charging.html" class="btn btn-neutral float-left" title="FleetRL.utils.ev_charging package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="FleetRL.utils.normalization.html" class="btn btn-neutral float-right" title="FleetRL.utils.normalization package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="FleetRL.utils.ev_charging.html" class="btn btn-neutral float-left" title="EV charging" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FleetRL.utils.normalization.html" class="btn btn-neutral float-right" title="Normalization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

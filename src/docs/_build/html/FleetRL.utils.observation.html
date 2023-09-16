@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FleetRL.utils.observation package &mdash; FleetRL 1.0.0 documentation</title>
+  <title>Observation &mdash; FleetRL 1.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,11 +17,13 @@
         <script src="_static/documentation_options.js?v=8d563738"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="FleetRL.utils.schedule package" href="FleetRL.utils.schedule.html" />
-    <link rel="prev" title="FleetRL.utils.normalization package" href="FleetRL.utils.normalization.html" /> 
+    <link rel="next" title="Schedule" href="FleetRL.utils.schedule.html" />
+    <link rel="prev" title="Normalization" href="FleetRL.utils.normalization.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,19 +51,21 @@
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/agent_training.html">Agent Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/agent_eval.html">Agent Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/benchmarking.html">Benchmarking</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">FleetRL.utils.battery_degradation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">FleetRL.utils.data_logger package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">FleetRL.utils.data_processing package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">FleetRL.utils.ev_charging package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">FleetRL.utils.load_calculation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">FleetRL.utils.normalization package</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">FleetRL.utils.observation package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer">FleetRL.utils.observation.observer module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">Fleet Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">Data logger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">Load calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">Normalization</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Observation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer">Observer parent class</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.observation.observer.Observer"><code class="docutils literal notranslate"><span class="pre">Observer</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer.Observer.get_obs"><code class="docutils literal notranslate"><span class="pre">Observer.get_obs()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer.Observer.get_trip_len"><code class="docutils literal notranslate"><span class="pre">Observer.get_trip_len()</span></code></a></li>
@@ -68,7 +73,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer_bl_pv">FleetRL.utils.observation.observer_bl_pv module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer_bl_pv">Building and PV</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth"><code class="docutils literal notranslate"><span class="pre">ObserverWithBoth</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth.get_obs"><code class="docutils literal notranslate"><span class="pre">ObserverWithBoth.get_obs()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth.get_trip_len"><code class="docutils literal notranslate"><span class="pre">ObserverWithBoth.get_trip_len()</span></code></a></li>
@@ -76,7 +81,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer_price_only">FleetRL.utils.observation.observer_price_only module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer_price_only">Price only</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.observation.observer_price_only.ObserverPriceOnly"><code class="docutils literal notranslate"><span class="pre">ObserverPriceOnly</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer_price_only.ObserverPriceOnly.get_obs"><code class="docutils literal notranslate"><span class="pre">ObserverPriceOnly.get_obs()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer_price_only.ObserverPriceOnly.get_trip_len"><code class="docutils literal notranslate"><span class="pre">ObserverPriceOnly.get_trip_len()</span></code></a></li>
@@ -84,7 +89,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer_soc_time_only">FleetRL.utils.observation.observer_soc_time_only module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer_soc_time_only">Time only</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.observation.observer_soc_time_only.ObserverSocTimeOnly"><code class="docutils literal notranslate"><span class="pre">ObserverSocTimeOnly</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer_soc_time_only.ObserverSocTimeOnly.get_obs"><code class="docutils literal notranslate"><span class="pre">ObserverSocTimeOnly.get_obs()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer_soc_time_only.ObserverSocTimeOnly.get_trip_len"><code class="docutils literal notranslate"><span class="pre">ObserverSocTimeOnly.get_trip_len()</span></code></a></li>
@@ -92,7 +97,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer_with_building_load">FleetRL.utils.observation.observer_with_building_load module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer_with_building_load">Building load</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.observation.observer_with_building_load.ObserverWithBuildingLoad"><code class="docutils literal notranslate"><span class="pre">ObserverWithBuildingLoad</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer_with_building_load.ObserverWithBuildingLoad.get_obs"><code class="docutils literal notranslate"><span class="pre">ObserverWithBuildingLoad.get_obs()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer_with_building_load.ObserverWithBuildingLoad.get_trip_len"><code class="docutils literal notranslate"><span class="pre">ObserverWithBuildingLoad.get_trip_len()</span></code></a></li>
@@ -100,7 +105,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer_with_pv">FleetRL.utils.observation.observer_with_pv module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation.observer_with_pv">PV</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.observation.observer_with_pv.ObserverWithPV"><code class="docutils literal notranslate"><span class="pre">ObserverWithPV</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer_with_pv.ObserverWithPV.get_obs"><code class="docutils literal notranslate"><span class="pre">ObserverWithPV.get_obs()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.observation.observer_with_pv.ObserverWithPV.get_trip_len"><code class="docutils literal notranslate"><span class="pre">ObserverWithPV.get_trip_len()</span></code></a></li>
@@ -108,11 +113,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.observation">Module contents</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">FleetRL.utils.schedule package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">Schedule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">Time picker</a></li>
 </ul>
 
         </div>
@@ -129,7 +133,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">FleetRL.utils.observation package</li>
+      <li class="breadcrumb-item active">Observation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/FleetRL.utils.observation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -139,13 +143,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="fleetrl-utils-observation-package">
-<h1>FleetRL.utils.observation package<a class="headerlink" href="#fleetrl-utils-observation-package" title="Link to this heading"></a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
-</section>
+  <section id="observation">
+<h1>Observation<a class="headerlink" href="#observation" title="Link to this heading"></a></h1>
 <section id="module-FleetRL.utils.observation.observer">
-<span id="fleetrl-utils-observation-observer-module"></span><h2>FleetRL.utils.observation.observer module<a class="headerlink" href="#module-FleetRL.utils.observation.observer" title="Link to this heading"></a></h2>
+<span id="observer-parent-class"></span><h2>Observer parent class<a class="headerlink" href="#module-FleetRL.utils.observation.observer" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer.Observer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer.</span></span><span class="sig-name descname"><span class="pre">Observer</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer.html#Observer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer.Observer" title="Link to this definition"></a></dt>
@@ -200,7 +201,7 @@
 
 </section>
 <section id="module-FleetRL.utils.observation.observer_bl_pv">
-<span id="fleetrl-utils-observation-observer-bl-pv-module"></span><h2>FleetRL.utils.observation.observer_bl_pv module<a class="headerlink" href="#module-FleetRL.utils.observation.observer_bl_pv" title="Link to this heading"></a></h2>
+<span id="building-and-pv"></span><h2>Building and PV<a class="headerlink" href="#module-FleetRL.utils.observation.observer_bl_pv" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer_bl_pv.</span></span><span class="sig-name descname"><span class="pre">ObserverWithBoth</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_bl_pv.html#ObserverWithBoth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_bl_pv.ObserverWithBoth" title="Link to this definition"></a></dt>
@@ -262,7 +263,7 @@
 
 </section>
 <section id="module-FleetRL.utils.observation.observer_price_only">
-<span id="fleetrl-utils-observation-observer-price-only-module"></span><h2>FleetRL.utils.observation.observer_price_only module<a class="headerlink" href="#module-FleetRL.utils.observation.observer_price_only" title="Link to this heading"></a></h2>
+<span id="price-only"></span><h2>Price only<a class="headerlink" href="#module-FleetRL.utils.observation.observer_price_only" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_price_only.ObserverPriceOnly">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer_price_only.</span></span><span class="sig-name descname"><span class="pre">ObserverPriceOnly</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_price_only.html#ObserverPriceOnly"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_price_only.ObserverPriceOnly" title="Link to this definition"></a></dt>
@@ -324,7 +325,7 @@
 
 </section>
 <section id="module-FleetRL.utils.observation.observer_soc_time_only">
-<span id="fleetrl-utils-observation-observer-soc-time-only-module"></span><h2>FleetRL.utils.observation.observer_soc_time_only module<a class="headerlink" href="#module-FleetRL.utils.observation.observer_soc_time_only" title="Link to this heading"></a></h2>
+<span id="time-only"></span><h2>Time only<a class="headerlink" href="#module-FleetRL.utils.observation.observer_soc_time_only" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_soc_time_only.ObserverSocTimeOnly">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer_soc_time_only.</span></span><span class="sig-name descname"><span class="pre">ObserverSocTimeOnly</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_soc_time_only.html#ObserverSocTimeOnly"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_soc_time_only.ObserverSocTimeOnly" title="Link to this definition"></a></dt>
@@ -386,7 +387,7 @@
 
 </section>
 <section id="module-FleetRL.utils.observation.observer_with_building_load">
-<span id="fleetrl-utils-observation-observer-with-building-load-module"></span><h2>FleetRL.utils.observation.observer_with_building_load module<a class="headerlink" href="#module-FleetRL.utils.observation.observer_with_building_load" title="Link to this heading"></a></h2>
+<span id="building-load"></span><h2>Building load<a class="headerlink" href="#module-FleetRL.utils.observation.observer_with_building_load" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_with_building_load.ObserverWithBuildingLoad">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer_with_building_load.</span></span><span class="sig-name descname"><span class="pre">ObserverWithBuildingLoad</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_with_building_load.html#ObserverWithBuildingLoad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_with_building_load.ObserverWithBuildingLoad" title="Link to this definition"></a></dt>
@@ -448,7 +449,7 @@
 
 </section>
 <section id="module-FleetRL.utils.observation.observer_with_pv">
-<span id="fleetrl-utils-observation-observer-with-pv-module"></span><h2>FleetRL.utils.observation.observer_with_pv module<a class="headerlink" href="#module-FleetRL.utils.observation.observer_with_pv" title="Link to this heading"></a></h2>
+<span id="pv"></span><h2>PV<a class="headerlink" href="#module-FleetRL.utils.observation.observer_with_pv" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.observation.observer_with_pv.ObserverWithPV">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.observation.observer_with_pv.</span></span><span class="sig-name descname"><span class="pre">ObserverWithPV</span></span><a class="reference internal" href="_modules/FleetRL/utils/observation/observer_with_pv.html#ObserverWithPV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.observation.observer_with_pv.ObserverWithPV" title="Link to this definition"></a></dt>
@@ -509,17 +510,14 @@
 </dd></dl>
 
 </section>
-<section id="module-FleetRL.utils.observation">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-FleetRL.utils.observation" title="Link to this heading"></a></h2>
-</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="FleetRL.utils.normalization.html" class="btn btn-neutral float-left" title="FleetRL.utils.normalization package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="FleetRL.utils.schedule.html" class="btn btn-neutral float-right" title="FleetRL.utils.schedule package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="FleetRL.utils.normalization.html" class="btn btn-neutral float-left" title="Normalization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FleetRL.utils.schedule.html" class="btn btn-neutral float-right" title="Schedule" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

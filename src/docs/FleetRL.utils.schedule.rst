@@ -1,18 +1,7 @@
-FleetRL.utils.schedule package
+Schedule
 ==============================
 
-Submodules
-----------
-
-FleetRL.utils.schedule.manual\_generation module
-------------------------------------------------
-
-.. automodule:: FleetRL.utils.schedule.manual_generation
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-FleetRL.utils.schedule.schedule\_config module
+Schedule config
 ----------------------------------------------
 
 .. automodule:: FleetRL.utils.schedule.schedule_config
@@ -20,18 +9,10 @@ FleetRL.utils.schedule.schedule\_config module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.utils.schedule.schedule\_generator module
+Schedule generator
 -------------------------------------------------
 
 .. automodule:: FleetRL.utils.schedule.schedule_generator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: FleetRL.utils.schedule
    :members:
    :undoc-members:
    :show-inheritance:

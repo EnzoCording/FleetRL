@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FleetRL.utils.schedule package &mdash; FleetRL 1.0.0 documentation</title>
+  <title>Schedule &mdash; FleetRL 1.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,11 +17,13 @@
         <script src="_static/documentation_options.js?v=8d563738"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="FleetRL.utils.time_picker package" href="FleetRL.utils.time_picker.html" />
-    <link rel="prev" title="FleetRL.utils.observation package" href="FleetRL.utils.observation.html" /> 
+    <link rel="next" title="Time picker" href="FleetRL.utils.time_picker.html" />
+    <link rel="prev" title="Observation" href="FleetRL.utils.observation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -54,18 +57,16 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">FleetRL.fleet_env package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">FleetRL.utils.battery_degradation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">FleetRL.utils.data_logger package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">FleetRL.utils.data_processing package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">FleetRL.utils.ev_charging package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">FleetRL.utils.load_calculation package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">FleetRL.utils.normalization package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">FleetRL.utils.observation package</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">FleetRL.utils.schedule package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#fleetrl-utils-schedule-manual-generation-module">FleetRL.utils.schedule.manual_generation module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.schedule.schedule_config">FleetRL.utils.schedule.schedule_config module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">Fleet Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">Data logger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">Load calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">Normalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">Observation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Schedule</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.schedule.schedule_config">Schedule config</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_config.ScheduleConfig"><code class="docutils literal notranslate"><span class="pre">ScheduleConfig</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_config.ScheduleType"><code class="docutils literal notranslate"><span class="pre">ScheduleType</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_config.ScheduleType.Caretaker"><code class="docutils literal notranslate"><span class="pre">ScheduleType.Caretaker</span></code></a></li>
@@ -75,7 +76,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.schedule.schedule_generator">FleetRL.utils.schedule.schedule_generator module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.schedule.schedule_generator">Schedule generator</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator"><code class="docutils literal notranslate"><span class="pre">ScheduleGenerator</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.generate_caretaker"><code class="docutils literal notranslate"><span class="pre">ScheduleGenerator.generate_caretaker()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator.generate_delivery"><code class="docutils literal notranslate"><span class="pre">ScheduleGenerator.generate_delivery()</span></code></a></li>
@@ -86,10 +87,9 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-FleetRL.utils.schedule">Module contents</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">FleetRL.utils.time_picker package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">Time picker</a></li>
 </ul>
 
         </div>
@@ -106,7 +106,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">FleetRL.utils.schedule package</li>
+      <li class="breadcrumb-item active">Schedule</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/FleetRL.utils.schedule.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -116,16 +116,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="fleetrl-utils-schedule-package">
-<h1>FleetRL.utils.schedule package<a class="headerlink" href="#fleetrl-utils-schedule-package" title="Link to this heading"></a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
-</section>
-<section id="fleetrl-utils-schedule-manual-generation-module">
-<h2>FleetRL.utils.schedule.manual_generation module<a class="headerlink" href="#fleetrl-utils-schedule-manual-generation-module" title="Link to this heading"></a></h2>
-</section>
+  <section id="schedule">
+<h1>Schedule<a class="headerlink" href="#schedule" title="Link to this heading"></a></h1>
 <section id="module-FleetRL.utils.schedule.schedule_config">
-<span id="fleetrl-utils-schedule-schedule-config-module"></span><h2>FleetRL.utils.schedule.schedule_config module<a class="headerlink" href="#module-FleetRL.utils.schedule.schedule_config" title="Link to this heading"></a></h2>
+<span id="schedule-config"></span><h2>Schedule config<a class="headerlink" href="#module-FleetRL.utils.schedule.schedule_config" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.schedule.schedule_config.ScheduleConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.schedule.schedule_config.</span></span><span class="sig-name descname"><span class="pre">ScheduleConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schedule_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/schedule/schedule_config.html#ScheduleConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.schedule.schedule_config.ScheduleConfig" title="Link to this definition"></a></dt>
@@ -158,7 +152,7 @@ metric, allowing for a distributional and probabilistic generation approach.</p>
 
 </section>
 <section id="module-FleetRL.utils.schedule.schedule_generator">
-<span id="fleetrl-utils-schedule-schedule-generator-module"></span><h2>FleetRL.utils.schedule.schedule_generator module<a class="headerlink" href="#module-FleetRL.utils.schedule.schedule_generator" title="Link to this heading"></a></h2>
+<span id="schedule-generator"></span><h2>Schedule generator<a class="headerlink" href="#module-FleetRL.utils.schedule.schedule_generator" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="FleetRL.utils.schedule.schedule_generator.ScheduleGenerator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.utils.schedule.schedule_generator.</span></span><span class="sig-name descname"><span class="pre">ScheduleGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schedule_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'01/01/2020</span> <span class="pre">00:00:00'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ending_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'30/12/2020</span> <span class="pre">23:59:59'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'15T'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_schedule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schedule_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ScheduleType.Delivery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vehicle_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FleetRL/utils/schedule/schedule_generator.html#ScheduleGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.utils.schedule.schedule_generator.ScheduleGenerator" title="Link to this definition"></a></dt>
@@ -207,17 +201,14 @@ entry. The format is kept similar to emobpy to enable compatability and ease of 
 </dd></dl>
 
 </section>
-<section id="module-FleetRL.utils.schedule">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-FleetRL.utils.schedule" title="Link to this heading"></a></h2>
-</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="FleetRL.utils.observation.html" class="btn btn-neutral float-left" title="FleetRL.utils.observation package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="FleetRL.utils.time_picker.html" class="btn btn-neutral float-right" title="FleetRL.utils.time_picker package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="FleetRL.utils.observation.html" class="btn btn-neutral float-left" title="Observation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FleetRL.utils.time_picker.html" class="btn btn-neutral float-right" title="Time picker" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

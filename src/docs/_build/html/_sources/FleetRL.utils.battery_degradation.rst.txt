@@ -1,10 +1,7 @@
-FleetRL.utils.battery\_degradation package
+Battery degradation
 ==========================================
 
-Submodules
-----------
-
-FleetRL.utils.battery\_degradation.batt\_deg module
+Battery degradation parent class
 ---------------------------------------------------
 
 .. automodule:: FleetRL.utils.battery_degradation.batt_deg
@@ -12,15 +9,7 @@ FleetRL.utils.battery\_degradation.batt\_deg module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.utils.battery\_degradation.compare\_methods module
-----------------------------------------------------------
-
-.. automodule:: FleetRL.utils.battery_degradation.compare_methods
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-FleetRL.utils.battery\_degradation.empirical\_degradation module
+Empirical degradation
 ----------------------------------------------------------------
 
 .. automodule:: FleetRL.utils.battery_degradation.empirical_degradation
@@ -28,15 +17,7 @@ FleetRL.utils.battery\_degradation.empirical\_degradation module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.utils.battery\_degradation.log\_data\_deg module
---------------------------------------------------------
-
-.. automodule:: FleetRL.utils.battery_degradation.log_data_deg
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-FleetRL.utils.battery\_degradation.rainflow\_sei\_degradation module
+Non-linear Rainflow SEI degradation
 --------------------------------------------------------------------
 
 .. automodule:: FleetRL.utils.battery_degradation.rainflow_sei_degradation
@@ -44,10 +25,18 @@ FleetRL.utils.battery\_degradation.rainflow\_sei\_degradation module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+Degradation data logger
+--------------------------------------------------------
 
-.. automodule:: FleetRL.utils.battery_degradation
+.. automodule:: FleetRL.utils.battery_degradation.log_data_deg
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Compare methods
+----------------------------------------------------------
+
+.. automodule:: FleetRL.utils.battery_degradation.compare_methods
    :members:
    :undoc-members:
    :show-inheritance:

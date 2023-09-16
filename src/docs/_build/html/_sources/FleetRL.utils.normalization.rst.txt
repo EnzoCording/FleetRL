@@ -1,10 +1,7 @@
-FleetRL.utils.normalization package
+Normalization
 ===================================
 
-Submodules
-----------
-
-FleetRL.utils.normalization.normalization module
+Normalization parent class
 ------------------------------------------------
 
 .. automodule:: FleetRL.utils.normalization.normalization
@@ -12,7 +9,7 @@ FleetRL.utils.normalization.normalization module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.utils.normalization.oracle\_normalization module
+Oracle normalization
 --------------------------------------------------------
 
 .. automodule:: FleetRL.utils.normalization.oracle_normalization
@@ -20,18 +17,10 @@ FleetRL.utils.normalization.oracle\_normalization module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.utils.normalization.unit\_normalization module
+Unit normalization
 ------------------------------------------------------
 
 .. automodule:: FleetRL.utils.normalization.unit_normalization
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: FleetRL.utils.normalization
    :members:
    :undoc-members:
    :show-inheritance:

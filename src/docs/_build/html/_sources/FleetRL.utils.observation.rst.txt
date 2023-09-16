@@ -1,10 +1,7 @@
-FleetRL.utils.observation package
+Observation
 =================================
 
-Submodules
-----------
-
-FleetRL.utils.observation.observer module
+Observer parent class
 -----------------------------------------
 
 .. automodule:: FleetRL.utils.observation.observer
@@ -12,7 +9,7 @@ FleetRL.utils.observation.observer module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.utils.observation.observer\_bl\_pv module
+Building and PV
 -------------------------------------------------
 
 .. automodule:: FleetRL.utils.observation.observer_bl_pv
@@ -20,7 +17,7 @@ FleetRL.utils.observation.observer\_bl\_pv module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.utils.observation.observer\_price\_only module
+Price only
 ------------------------------------------------------
 
 .. automodule:: FleetRL.utils.observation.observer_price_only
@@ -28,7 +25,7 @@ FleetRL.utils.observation.observer\_price\_only module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.utils.observation.observer\_soc\_time\_only module
+Time only
 ----------------------------------------------------------
 
 .. automodule:: FleetRL.utils.observation.observer_soc_time_only
@@ -36,7 +33,7 @@ FleetRL.utils.observation.observer\_soc\_time\_only module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.utils.observation.observer\_with\_building\_load module
+Building load
 ---------------------------------------------------------------
 
 .. automodule:: FleetRL.utils.observation.observer_with_building_load
@@ -44,18 +41,10 @@ FleetRL.utils.observation.observer\_with\_building\_load module
    :undoc-members:
    :show-inheritance:
 
-FleetRL.utils.observation.observer\_with\_pv module
+PV
 ---------------------------------------------------
 
 .. automodule:: FleetRL.utils.observation.observer_with_pv
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: FleetRL.utils.observation
    :members:
    :undoc-members:
    :show-inheritance:
