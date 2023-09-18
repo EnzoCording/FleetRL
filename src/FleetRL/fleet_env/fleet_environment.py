@@ -76,7 +76,7 @@ class FleetEnv(gym.Env):
                  include_building: bool = True,
                  include_pv: bool = True,
                  include_price: bool = True,
-                 time_picker_name: Literal["static", "random", "eval"] = "random",
+                 time_picker: Literal["static", "random", "eval"] = "random",
                  target_soc: float = 0.85,
                  max_batt_cap_in_all_use_cases = 60,
                  init_soh: float = 1.0,
@@ -109,7 +109,7 @@ class FleetEnv(gym.Env):
         :param include_building: Flag to include building or not
         :param include_pv: Flag to include pv or not
         :param include_price: Flag to include price or not
-        :param time_picker_name: Specify whether to pick time "static", "random" or "eval" (train vs validation set)
+        :param time_picker: Specify whether to pick time "static", "random" or "eval" (train vs validation set)
         :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
         :param max_batt_cap_in_all_use_cases: The largest battery size to be considered in the model
         :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
@@ -242,8 +242,8 @@ class FleetEnv(gym.Env):
         # Class simulating EV charging
         self.ev_charger: EvCharger = EvCharger(self.ev_conf)
 
-        # Choose time picker based on input string time_picker_name
-        self.time_picker = self.choose_time_picker(time_picker_name)
+        # Choose time picker based on input string time_picker
+        self.time_picker = self.choose_time_picker(time_picker)
 
         # Choose the right observer module based on the environment settings
         self.observer = self.choose_observer()

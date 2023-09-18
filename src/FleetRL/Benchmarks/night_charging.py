@@ -65,7 +65,7 @@ if __name__ == "__main__":
                    tariff_name=env_kwargs["tariff_name"],
                    price_name=env_kwargs["price_name"],
                    episode_length=n_steps,
-                   time_picker_name=env_kwargs["time_picker"],
+                   time_picker=env_kwargs["time_picker"],
                    building_name=env_kwargs["building_name"])
 
     df = env.db

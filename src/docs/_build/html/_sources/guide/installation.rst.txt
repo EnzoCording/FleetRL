@@ -3,11 +3,22 @@
 Installation
 ============
 
-Installation via Github repository:
-- Unzip the package
-- Rename directory from FleetRL-master to FleetRL
-- cd FleetRL
-- pip install -r requirements.txt
+**Prerequisites**
 
-Notes:
-- On remote environments on vast.ai it can be necessary to run pip install -U numpy prior to installing FleetRL
+FleetRL requires Python >=3.8. Python >= 3.10 is strongly recommended.
+
+.. note::
+
+    The creation of a virtual environment is strongly recommended. To be able to use GPU compute,
+    CUDA drivers must be installed (11.8 was mostly used during development).
+
+Installation via Github repository:
+ * Unzip the package
+ * Rename directory from FleetRL-master to FleetRL
+ * cd into /FleetRL
+ * pip install -r requirements.txt
+
+.. note::
+
+    On remote environments on vast.ai it can be necessary to run pip install -U numpy prior to
+    installing FleetRL
