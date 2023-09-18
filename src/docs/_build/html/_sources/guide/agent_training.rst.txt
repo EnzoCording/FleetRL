@@ -7,7 +7,7 @@ Agent Training
 
 Below, a basic configuration is shown for a last-mile delivery use-case.
 It features multiple EVs and multiple parallel environments. New schedules will be generated in this case - this can be changed
-by setting ``gen_new_sched`` to False.
+by setting ``gen_new_sched`` and ``gen_new_test_sched`` to False.
 
 .. code-block:: python
 
@@ -24,7 +24,7 @@ by setting ``gen_new_sched`` to False.
     gen_new_schedule = True  # generate a new schedule - refer to schedule generator and its config to change settings
     gen_new_test_schedule = True  # generate a new schedule for agent testing
 
-Training parameters change training-relevant parameters in the backends of FleetRL and stable-baselines3.
+Training parameters change settings in the backends of FleetRL and stable-baselines3.
 This includes normalization, vectorization of environments, total training steps and the interval at which models are saved.
 
 .. code-block:: python
@@ -39,9 +39,8 @@ This includes normalization, vectorization of environments, total training steps
 **Creating an environment object**
 
 To instantiate a FleetEnv object, some arguments are required, and some are optional.
-This example sets the most important parameters to create an environment object for last-mile delivery.
-Depending in the pricing scenario, the right input files and markups are chosen.
-The same adaptation applies for the use-case's schedule and building load input files.
+Depending on the pricing scenario, the right input files and markups are chosen.
+Depending on the use-case, the schedule and building load input files are chosen.
 
 .. code-block:: python
 
@@ -197,6 +196,10 @@ in some remote computing environments.
     seq_len = n_train_steps * time_steps_per_hour
     action_noise = PinkActionNoise(noise_scale, seq_len, n_actions)
 
+.. note::
+    ``PinkActionNoise`` was used here, according to https://openreview.net/pdf?id=hQ9V5QN27eS.
+    Alternatively, ``NormalActionNoise``, or ``OhrnsteinUhlenbeckNoise`` of the SB3 library can be used.
+
 **Instantiating model**
 
 To avoid specific model tuning for each new use-case, it is recommended to
@@ -226,7 +229,7 @@ increases.
                 # n_steps=2048)
 
 Creating tensorboard instance. Port can be specified in case a certain port is free
-on remote computing environments. ``Bind_all`` might be required by some remote machines.
+on remote computing environments. ``bind_all`` might be required by some remote machines.
 
 .. code-block:: python
 

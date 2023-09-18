@@ -296,12 +296,22 @@ of each quarter hour is plotted, indicating when charging signals are sent to th
     plt.ylim([-max * 1.2, max * 1.2])
     plt.show()
 
+.. image:: ./single_lmd_1year_mul3_real.png
+  :width: 300
+  :alt: Exemplary charging curve for last-mile delivery
+
 **Saving the logs for future use**
 
-The logs can be saved as pickle files, so the same analytics and other visualizations can be performed on another machine,
-or at a later point in time.
+The logs can be saved as pickle files, so the same analytics and other visualizations can be performed
+on another machine, or at a later point in time.
 
 .. code-block:: python
 
     dumb_log.to_pickle(f"dumb_log_{file_name_comment}")
     log_rl.to_pickle(f"rl_log_{file_name_comment}")
+
+Example of what can be done in post-processing
+
+.. image:: ./showcase_5_ct_v3.pdf
+  :width: 300
+  :alt: Exemplary charging curve for last-mile delivery

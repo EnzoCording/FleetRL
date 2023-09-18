@@ -359,13 +359,16 @@ of each quarter hour is plotted, indicating when charging signals are sent to th
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<a class="reference internal image-reference" href="../_images/single_lmd_1year_mul3_real.png"><img alt="Exemplary charging curve for last-mile delivery" src="../_images/single_lmd_1year_mul3_real.png" style="width: 300px;" /></a>
 <p><strong>Saving the logs for future use</strong></p>
-<p>The logs can be saved as pickle files, so the same analytics and other visualizations can be performed on another machine,
-or at a later point in time.</p>
+<p>The logs can be saved as pickle files, so the same analytics and other visualizations can be performed
+on another machine, or at a later point in time.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dumb_log</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;dumb_log_</span><span class="si">{</span><span class="n">file_name_comment</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="n">log_rl</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;rl_log_</span><span class="si">{</span><span class="n">file_name_comment</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Example of what can be done in post-processing</p>
+<a class="reference internal image-reference" href="../_images/showcase_5_ct_v3.pdf"><img alt="Exemplary charging curve for last-mile delivery" src="../_images/showcase_5_ct_v3.pdf" style="width: 300px;" /></a>
 </section>
 
 

@@ -1,8 +1,8 @@
 Fleet Environment
-==========================
+=================================
 
 Episode module
----------------------------------
+-------------------------------------------
 
 .. automodule:: FleetRL.fleet_env.episode
    :members:
@@ -10,7 +10,7 @@ Episode module
    :show-inheritance:
 
 Environment module
---------------------------------------------
+-------------------------------------------
 
 .. automodule:: FleetRL.fleet_env.fleet_environment
    :members:
@@ -18,7 +18,7 @@ Environment module
    :show-inheritance:
 
 fleet\_env
----------------
+-------------------------------------------
 
 .. automodule:: FleetRL.fleet_env
    :members:
@@ -26,7 +26,7 @@ fleet\_env
    :show-inheritance:
 
 Environment Config
------------
+-------------------------------------------
 
 .. toctree::
    :maxdepth: 4

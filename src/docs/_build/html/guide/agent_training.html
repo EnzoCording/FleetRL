@@ -98,7 +98,7 @@
 <p><strong>Configuring the environment</strong></p>
 <p>Below, a basic configuration is shown for a last-mile delivery use-case.
 It features multiple EVs and multiple parallel environments. New schedules will be generated in this case - this can be changed
-by setting <code class="docutils literal notranslate"><span class="pre">gen_new_sched</span></code> to False.</p>
+by setting <code class="docutils literal notranslate"><span class="pre">gen_new_sched</span></code> and <code class="docutils literal notranslate"><span class="pre">gen_new_test_sched</span></code> to False.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define fundamental parameters</span>
 <span class="n">run_name</span> <span class="o">=</span> <span class="s2">&quot;LMD_2022_arbitrage_PPO&quot;</span>
 <span class="n">n_train_steps</span> <span class="o">=</span> <span class="mi">48</span>  <span class="c1"># number of hours in a training episode</span>
@@ -113,7 +113,7 @@ by setting <code class="docutils literal notranslate"><span class="pre">gen_new_
 <span class="n">gen_new_test_schedule</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># generate a new schedule for agent testing</span>
 </pre></div>
 </div>
-<p>Training parameters change training-relevant parameters in the backends of FleetRL and stable-baselines3.
+<p>Training parameters change settings in the backends of FleetRL and stable-baselines3.
 This includes normalization, vectorization of environments, total training steps and the interval at which models are saved.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># training parameters</span>
 <span class="n">norm_obs_in_env</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># normalize observations in FleetRL (max, min normalization)</span>
@@ -125,9 +125,8 @@ This includes normalization, vectorization of environments, total training steps
 </div>
 <p><strong>Creating an environment object</strong></p>
 <p>To instantiate a FleetEnv object, some arguments are required, and some are optional.
-This example sets the most important parameters to create an environment object for last-mile delivery.
-Depending in the pricing scenario, the right input files and markups are chosen.
-The same adaptation applies for the use-case’s schedule and building load input files.</p>
+Depending on the pricing scenario, the right input files and markups are chosen.
+Depending on the use-case, the schedule and building load input files are chosen.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># environment arguments - adjust settings if necessary</span>
 <span class="c1"># additional settings can be changed in the config files</span>
 <span class="n">env_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;schedule_name&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">n_evs</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">use_case</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span>
@@ -268,6 +267,11 @@ in some remote computing environments.</p>
 <span class="n">action_noise</span> <span class="o">=</span> <span class="n">PinkActionNoise</span><span class="p">(</span><span class="n">noise_scale</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">n_actions</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">PinkActionNoise</span></code> was used here, according to <a class="reference external" href="https://openreview.net/pdf?id=hQ9V5QN27eS">https://openreview.net/pdf?id=hQ9V5QN27eS</a>.
+Alternatively, <code class="docutils literal notranslate"><span class="pre">NormalActionNoise</span></code>, or <code class="docutils literal notranslate"><span class="pre">OhrnsteinUhlenbeckNoise</span></code> of the SB3 library can be used.</p>
+</div>
 <p><strong>Instantiating model</strong></p>
 <p>To avoid specific model tuning for each new use-case, it is recommended to
 first try a model’s default parameters. Below, a hyperparameter configuration is proposed for PPO
@@ -294,7 +298,7 @@ increases.</p>
 </pre></div>
 </div>
 <p>Creating tensorboard instance. Port can be specified in case a certain port is free
-on remote computing environments. <code class="docutils literal notranslate"><span class="pre">Bind_all</span></code> might be required by some remote machines.</p>
+on remote computing environments. <code class="docutils literal notranslate"><span class="pre">bind_all</span></code> might be required by some remote machines.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">reload_ext</span> <span class="n">tensorboard</span>
 <span class="o">%</span><span class="n">tensorboard</span> <span class="o">--</span><span class="n">logdir</span> <span class="o">./</span><span class="n">tb_log</span> <span class="o">--</span><span class="n">bind_all</span> <span class="o">--</span><span class="n">port</span> <span class="mi">6006</span>
 </pre></div>

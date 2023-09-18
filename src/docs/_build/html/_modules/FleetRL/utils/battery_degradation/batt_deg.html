@@ -6,6 +6,7 @@
   <title>FleetRL.utils.battery_degradation.batt_deg &mdash; FleetRL 1.0.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,6 +16,8 @@
         <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
         <script src="../../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -31,6 +34,9 @@
           <a href="../../../../index.html" class="icon icon-home">
             FleetRL
           </a>
+              <div class="version">
+                master (1.0.0 )
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -39,9 +45,25 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/agent_training.html">Agent Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/agent_eval.html">Agent Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guide/benchmarking.html">Benchmarking</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../FleetRL.fleet_env.html">Fleet Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../FleetRL.utils.data_logger.html">Data logger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../FleetRL.utils.load_calculation.html">Load calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../FleetRL.utils.normalization.html">Normalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../FleetRL.utils.observation.html">Observation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../FleetRL.utils.schedule.html">Schedule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../FleetRL.utils.time_picker.html">Time picker</a></li>
 </ul>
 
         </div>
@@ -70,6 +92,7 @@
              
   <h1>Source code for FleetRL.utils.battery_degradation.batt_deg</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">FleetRL.fleet_env.config.time_config</span> <span class="kn">import</span> <span class="n">TimeConfig</span>
+
 <div class="viewcode-block" id="BatteryDegradation">
 <a class="viewcode-back" href="../../../../FleetRL.utils.battery_degradation.html#FleetRL.utils.battery_degradation.batt_deg.BatteryDegradation">[docs]</a>
 <span class="k">class</span> <span class="nc">BatteryDegradation</span><span class="p">:</span>

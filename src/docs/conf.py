@@ -10,6 +10,7 @@ import datetime
 import os
 import sys
 from typing import Dict
+import FleetRL
 
 # We CANNOT enable 'sphinxcontrib.spelling' because ReadTheDocs.org does not support
 # PyEnchant.

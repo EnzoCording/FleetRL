@@ -1,4 +1,5 @@
 from FleetRL.fleet_env.config.time_config import TimeConfig
+
 class BatteryDegradation:
     def calculate_degradation(self, soc_list: list, charging_power: float, time_conf: TimeConfig, temp: float) -> float:
         """
