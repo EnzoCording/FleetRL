@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Agent Training" href="agent_training.html" />
-    <link rel="prev" title="FleetRL - Realistic RL environments for commercial EV fleets" href="../index.html" /> 
+    <link rel="prev" title="Overview" href="overview.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,6 +50,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agent_training.html">Agent Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agent_eval.html">Agent Evaluation</a></li>
@@ -96,7 +97,15 @@
   <section id="installation">
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
 <p><strong>Prerequisites</strong></p>
-<p>FleetRL requires Python &gt;=3.8. Python &gt;= 3.10 is strongly recommended.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>FleetRL requires Python &gt;=3.8</p></li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Python &gt;= 3.10 is strongly recommended.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The creation of a virtual environment is strongly recommended. To be able to use GPU compute,
@@ -113,16 +122,33 @@ CUDA drivers must be installed (11.8 was mostly used during development).</p>
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>On remote environments on vast.ai it can be necessary to run pip install -U numpy prior to
+<p>On remote environments on vast.ai it can be necessary to run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">numpy</span></code> prior to
 installing FleetRL</p>
 </div>
+<p><strong>Miniconda Windows</strong></p>
+<p>In this example, FleetRL can be installed completely from scratch, only Miniconda is required.
+Run the commands below consecutively.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="o">**</span><span class="n">environment_name</span><span class="o">**</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.10</span>
+<span class="n">conda</span> <span class="n">activate</span> <span class="o">**</span><span class="n">environment_name</span><span class="o">**</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">jupyter</span>
+<span class="n">jupyter</span> <span class="n">notebook</span>
+</pre></div>
+</div>
+<p>Inside the Jupyter Notebook, being in the FleetRL directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!pip install -r requirements.txt
+# restart kernel
+import FleetRL
+</pre></div>
+</div>
+<p>At this point, the <code class="docutils literal notranslate"><span class="pre">complete_pipeline.ipynb</span></code> should run completely. To use GPU, CUDA must be
+properly configured.</p>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../index.html" class="btn btn-neutral float-left" title="FleetRL - Realistic RL environments for commercial EV fleets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="agent_training.html" class="btn btn-neutral float-right" title="Agent Training" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -3,11 +3,35 @@
 Agent Training
 ============
 
+**Importing dependencies**
+
+.. code-block:: python
+
+    import datetime as dt
+    import numpy as np
+    import math
+    import matplotlib.pyplot as plt
+    from typing import Literal
+    import pandas as pd
+    import time
+    import os
+
+    from FleetRL.fleet_env import FleetEnv
+
+    from stable_baselines3.common.vec_env import VecNormalize, SubprocVecEnv
+    from stable_baselines3.common.env_util import make_vec_env
+    from stable_baselines3 import PPO
+    from stable_baselines3.common.callbacks import EvalCallback, ProgressBarCallback, BaseCallback
+    from stable_baselines3.common.logger import HParam
+
+    from pink import PinkActionNoise
+    from stable_baselines3.common.noise import OrnsteinUhlenbeckActionNoise, NormalActionNoise
+
 **Configuring the environment**
 
 Below, a basic configuration is shown for a last-mile delivery use-case.
-It features multiple EVs and multiple parallel environments. New schedules will be generated in this case - this can be changed
-by setting ``gen_new_sched`` and ``gen_new_test_sched`` to False.
+It features multiple EVs and multiple parallel environments. New schedules will be generated in this
+case - this can be changed by setting ``gen_new_sched`` and ``gen_new_test_sched`` to False.
 
 .. code-block:: python
 
@@ -97,7 +121,8 @@ The VecEnv is wrapped in a normalization wrapper via ``VecNormalize``.
     train_vec_env = make_vec_env(FleetEnv,
                                  n_envs=n_envs,
                                  vec_env_cls=SubprocVecEnv,
-                                 env_kwargs=env_kwargs)
+                                 env_kwargs=env_kwargs,
+                                 seed = env_kwargs["seed"])
 
     train_norm_vec_env = VecNormalize(venv=train_vec_env,
                                       norm_obs=vec_norm_obs,
@@ -118,7 +143,8 @@ environment needs to be adopted.
     eval_vec_env = make_vec_env(FleetEnv,
                                  n_envs=n_envs,
                                  vec_env_cls=SubprocVecEnv,
-                                 env_kwargs=env_kwargs)
+                                 env_kwargs=env_kwargs,
+                                 seed=env_kwargs["seed"])
 
     eval_norm_vec_env = VecNormalize(venv=eval_vec_env,
                                       norm_obs=vec_norm_obs,
@@ -198,7 +224,7 @@ in some remote computing environments.
 
 .. note::
     ``PinkActionNoise`` was used here, according to https://openreview.net/pdf?id=hQ9V5QN27eS.
-    Alternatively, ``NormalActionNoise``, or ``OhrnsteinUhlenbeckNoise`` of the SB3 library can be used.
+    Alternatively, ``NormalActionNoise``, or ``OrnsteinUhlenbeckNoise`` of the SB3 library can be used.
 
 **Instantiating model**
 

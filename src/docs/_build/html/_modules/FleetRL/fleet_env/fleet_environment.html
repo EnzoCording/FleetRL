@@ -6,6 +6,7 @@
   <title>FleetRL.fleet_env.fleet_environment &mdash; FleetRL 1.0.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -15,6 +16,8 @@
         <script src="../../../_static/documentation_options.js?v=8d563738"></script>
         <script src="../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -31,6 +34,9 @@
           <a href="../../../index.html" class="icon icon-home">
             FleetRL
           </a>
+              <div class="version">
+                master (1.0.0 )
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -39,9 +45,25 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/agent_training.html">Agent Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/agent_eval.html">Agent Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/benchmarking.html">Benchmarking</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.fleet_env.html">Fleet Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.data_logger.html">Data logger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.load_calculation.html">Load calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.normalization.html">Normalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.observation.html">Observation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.schedule.html">Schedule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.time_picker.html">Time picker</a></li>
 </ul>
 
         </div>
@@ -149,7 +171,7 @@
                  <span class="n">include_building</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                  <span class="n">include_pv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                  <span class="n">include_price</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-                 <span class="n">time_picker_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;static&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;eval&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span>
+                 <span class="n">time_picker</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;static&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;eval&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span>
                  <span class="n">target_soc</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.85</span><span class="p">,</span>
                  <span class="n">max_batt_cap_in_all_use_cases</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
                  <span class="n">init_soh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
@@ -182,7 +204,7 @@
 <span class="sd">        :param include_building: Flag to include building or not</span>
 <span class="sd">        :param include_pv: Flag to include pv or not</span>
 <span class="sd">        :param include_price: Flag to include price or not</span>
-<span class="sd">        :param time_picker_name: Specify whether to pick time &quot;static&quot;, &quot;random&quot; or &quot;eval&quot; (train vs validation set)</span>
+<span class="sd">        :param time_picker: Specify whether to pick time &quot;static&quot;, &quot;random&quot; or &quot;eval&quot; (train vs validation set)</span>
 <span class="sd">        :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip</span>
 <span class="sd">        :param max_batt_cap_in_all_use_cases: The largest battery size to be considered in the model</span>
 <span class="sd">        :param init_soh: Initial state of health of batteries. SOH=1 -&gt; no degradation</span>
@@ -315,8 +337,8 @@
         <span class="c1"># Class simulating EV charging</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ev_charger</span><span class="p">:</span> <span class="n">EvCharger</span> <span class="o">=</span> <span class="n">EvCharger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="p">)</span>
 
-        <span class="c1"># Choose time picker based on input string time_picker_name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time_picker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">choose_time_picker</span><span class="p">(</span><span class="n">time_picker_name</span><span class="p">)</span>
+        <span class="c1"># Choose time picker based on input string time_picker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_picker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">choose_time_picker</span><span class="p">(</span><span class="n">time_picker</span><span class="p">)</span>
 
         <span class="c1"># Choose the right observer module based on the environment settings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">observer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">choose_observer</span><span class="p">()</span>

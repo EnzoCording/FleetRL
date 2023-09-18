@@ -30,6 +30,7 @@ Unique Implementations:
    :maxdepth: 2
    :caption: User Guide
 
+   guide/overview
    guide/installation
    guide/agent_training
    guide/agent_eval

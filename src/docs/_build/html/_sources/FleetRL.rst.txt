@@ -13,14 +13,6 @@ Subpackages
 Submodules
 ----------
 
-FleetRL.main module
--------------------
-
-.. automodule:: FleetRL.main
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 
