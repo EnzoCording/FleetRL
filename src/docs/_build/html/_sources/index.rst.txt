@@ -4,11 +4,13 @@
    contain the root `toctree` directive.
 
 FleetRL - Realistic RL environments for commercial EV fleets
-===================================
+============================================================
+
 Github: https://github.com/EnzoCording/FleetRL
 
 Software features:
---------------
+------------------
+
 - Base-derived class architecture and easily interchangeable configurations
 - Modular implementation approach for easily extendable model and methods
 - PEP8 compliant (unified code style)
@@ -17,7 +19,8 @@ Software features:
 - Extensive data logging and evaluation possibilities
 
 Unique Implementations:
--------------
+-----------------------
+
 - Non-linear battery degradation
 - Fleet schedule generation - inspired by emobpy and applied to commercial fleets
 - Bi-directional charging
@@ -41,16 +44,15 @@ Unique Implementations:
    :caption: Modules
 
    FleetRL.fleet_env
-   FleetRL.utils.battery_degradation
    FleetRL.utils.data_logger
-   FleetRL.utils.data_processing
-   FleetRL.utils.ev_charging
    FleetRL.utils.load_calculation
    FleetRL.utils.normalization
    FleetRL.utils.observation
    FleetRL.utils.schedule
    FleetRL.utils.time_picker
-
+   FleetRL.utils.data_processing
+   FleetRL.utils.ev_charging
+   FleetRL.utils.battery_degradation
 
 Indices and tables
 ==================
