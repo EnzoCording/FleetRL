@@ -1,7 +1,7 @@
 .. _benchmarking:
 
 Benchmarking
-============
+=============
 
 Below, the logic of the three static benchmarks is presented, along with the linear optimization model.
 On github, fully implemented benchmarking notebooks are uploaded for each benchmark.

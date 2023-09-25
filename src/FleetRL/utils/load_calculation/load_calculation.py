@@ -4,6 +4,7 @@ class CompanyType(Enum):
     Delivery = 1
     Caretaker = 2
     Utility = 3
+    Custom = 4
 
 class LoadCalculation:
     """
@@ -17,7 +18,7 @@ class LoadCalculation:
         The grid connection is either 1.1 * max_load, or such that a simultaneous charging of 50% of EVs would overload
         the trafo at max building load.
 
-        :param company_type: Utility, Last-mile delivery, or caretaker
+        :param company_type: Utility, Last-mile delivery, or caretaker, custom
         :param max_load: The max building load of the use-case in kW
         :param num_cars: Number of EVs
         :return: Grid connection in kW, EVSE power in kW, batt_cap in kWh
@@ -42,6 +43,11 @@ class LoadCalculation:
             grid_connection = max(max_load*1.1, max_load + 0.5*num_cars*evse_power)
             batt_cap = 16.7  # smart eq
 
+        elif company_type == CompanyType.Custom:
+            evse_power = 11.0
+            grid_connection = 500
+            batt_cap = 35.0
+
         else:
             grid_connection = 200
             evse_power = 3.7
@@ -54,7 +60,7 @@ class LoadCalculation:
         """
         Initialise load calculation module
 
-        :param company_type: LMD, CT, UT
+        :param company_type: LMD, CT, UT, Custom
         :param max_load: Max building load
         :param num_cars: Number of EVs
         """

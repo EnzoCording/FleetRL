@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Agent Evaluation" href="agent_eval.html" />
-    <link rel="prev" title="Installation" href="installation.html" /> 
+    <link rel="prev" title="Creating a custom environment" href="custom_env.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,6 +52,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_env.html">Creating a custom environment</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Agent Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agent_eval.html">Agent Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarking.html">Benchmarking</a></li>
@@ -59,15 +60,15 @@
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../FleetRL.fleet_env.html">Fleet Environment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.data_logger.html">Data logger</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.data_processing.html">Data processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.ev_charging.html">EV charging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.load_calculation.html">Load calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.normalization.html">Normalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.observation.html">Observation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.schedule.html">Schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.time_picker.html">Time picker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
 </ul>
 
         </div>
@@ -96,6 +97,13 @@
              
   <section id="agent-training">
 <span id="id1"></span><h1>Agent Training<a class="headerlink" href="#agent-training" title="Link to this heading"></a></h1>
+<p>This section walks through the process of creating a FleetRL env object, and training an RL agent on it.
+The creation of the environment walks through important parameters, generating custom schedules, and additional
+parameters that can be used to customize the environment.</p>
+<p>For training, stable-baselines3 is used, in this case the PPO agent. Progress is logged via tensorboard, as well
+as a progress bar. Agent artifacts are saved, so they can be reused at a different point in time or on another
+machine. Note that it is possible to create wandb callbacks with SB3, which enable advanced logging and
+progress visualization, as well as automatic storing of model artifacts.</p>
 <p><strong>Importing dependencies</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -369,7 +377,7 @@ The instantiated callbacks must be included here.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="custom_env.html" class="btn btn-neutral float-left" title="Creating a custom environment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="agent_eval.html" class="btn btn-neutral float-right" title="Agent Evaluation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -47,7 +47,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guide/custom_env.html">Creating a custom environment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../guide/agent_training.html">Agent Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../guide/agent_eval.html">Agent Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../guide/benchmarking.html">Benchmarking</a></li>
@@ -55,15 +57,15 @@
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.fleet_env.html">Fleet Environment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.data_logger.html">Data logger</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.data_processing.html">Data processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.ev_charging.html">EV charging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.load_calculation.html">Load calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.normalization.html">Normalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.observation.html">Observation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.schedule.html">Schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.time_picker.html">Time picker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
 </ul>
 
         </div>
@@ -162,7 +164,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">use_case</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;ct&quot;</span><span class="p">,</span> <span class="s2">&quot;ut&quot;</span><span class="p">,</span> <span class="s2">&quot;lmd&quot;</span><span class="p">],</span>
+                 <span class="n">use_case</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;ct&quot;</span><span class="p">,</span> <span class="s2">&quot;ut&quot;</span><span class="p">,</span> <span class="s2">&quot;lmd&quot;</span><span class="p">,</span> <span class="s2">&quot;custom&quot;</span><span class="p">],</span>
                  <span class="n">building_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                  <span class="n">price_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                  <span class="n">tariff_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -292,6 +294,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">company</span> <span class="o">=</span> <span class="n">CompanyType</span><span class="o">.</span><span class="n">Delivery</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">schedule_type</span> <span class="o">=</span> <span class="n">ScheduleType</span><span class="o">.</span><span class="n">Delivery</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">init_battery_cap</span> <span class="o">=</span> <span class="mf">60.0</span>
+        <span class="k">elif</span> <span class="n">use_case</span> <span class="o">==</span> <span class="s2">&quot;custom&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">company</span> <span class="o">=</span> <span class="n">CompanyType</span><span class="o">.</span><span class="n">Custom</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schedule_type</span> <span class="o">=</span> <span class="n">ScheduleType</span><span class="o">.</span><span class="n">Custom</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_conf</span><span class="o">.</span><span class="n">init_battery_cap</span> <span class="o">=</span> <span class="mf">35.0</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Company not recognised.&quot;</span><span class="p">)</span>
 

@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Normalization" href="FleetRL.utils.normalization.html" />
-    <link rel="prev" title="EV charging" href="FleetRL.utils.ev_charging.html" /> 
+    <link rel="prev" title="Data logger" href="FleetRL.utils.data_logger.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,7 +50,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/custom_env.html">Creating a custom environment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/agent_training.html">Agent Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/agent_eval.html">Agent Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/benchmarking.html">Benchmarking</a></li>
@@ -58,13 +60,11 @@
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">Fleet Environment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">Data logger</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Load calculation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType"><code class="docutils literal notranslate"><span class="pre">CompanyType</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Caretaker"><code class="docutils literal notranslate"><span class="pre">CompanyType.Caretaker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Custom"><code class="docutils literal notranslate"><span class="pre">CompanyType.Custom</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Delivery"><code class="docutils literal notranslate"><span class="pre">CompanyType.Delivery</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Utility"><code class="docutils literal notranslate"><span class="pre">CompanyType.Utility</span></code></a></li>
 </ul>
@@ -79,6 +79,9 @@
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">Observation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">Schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">Time picker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
 </ul>
 
         </div>
@@ -115,6 +118,11 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="FleetRL.utils.load_calculation.load_calculation.CompanyType.Caretaker">
 <span class="sig-name descname"><span class="pre">Caretaker</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Caretaker" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="FleetRL.utils.load_calculation.load_calculation.CompanyType.Custom">
+<span class="sig-name descname"><span class="pre">Custom</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#FleetRL.utils.load_calculation.load_calculation.CompanyType.Custom" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -163,7 +171,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="FleetRL.utils.ev_charging.html" class="btn btn-neutral float-left" title="EV charging" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FleetRL.utils.data_logger.html" class="btn btn-neutral float-left" title="Data logger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="FleetRL.utils.normalization.html" class="btn btn-neutral float-right" title="Normalization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -22,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Battery degradation" href="FleetRL.utils.battery_degradation.html" />
+    <link rel="next" title="Data logger" href="FleetRL.utils.data_logger.html" />
     <link rel="prev" title="Fleet Environment" href="FleetRL.fleet_env.html" /> 
 </head>
 
@@ -50,7 +50,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/custom_env.html">Creating a custom environment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/agent_training.html">Agent Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/agent_eval.html">Agent Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/benchmarking.html">Benchmarking</a></li>
@@ -72,15 +74,15 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_logger.html">Data logger</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">Load calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">Normalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">Observation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">Schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">Time picker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
 </ul>
 
         </div>
@@ -152,12 +154,8 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FleetRL.fleet_env.config.time_config.</span></span><span class="sig-name descname"><span class="pre">TimeConfig</span></span><a class="reference internal" href="_modules/FleetRL/fleet_env/config/time_config.html#TimeConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FleetRL.fleet_env.config.time_config.TimeConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>The Time config sets parameters for the episode and MDP dynamics.
-- end_cutoff: Default at 60. The last two months are not regarding in the training observations</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>The last two months are used as a validation set during training</p></li>
-</ul>
-</div></blockquote>
+- end_cutoff: Default at 60. The last two months are not regarding in the training observations
+- The last two months are used as a validation set during training</p>
 </dd></dl>
 
 </section>
@@ -168,7 +166,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="FleetRL.fleet_env.html" class="btn btn-neutral float-left" title="Fleet Environment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="FleetRL.utils.battery_degradation.html" class="btn btn-neutral float-right" title="Battery degradation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="FleetRL.utils.data_logger.html" class="btn btn-neutral float-right" title="Data logger" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

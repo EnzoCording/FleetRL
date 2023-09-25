@@ -1,7 +1,7 @@
 .. _agent_eval:
 
 Agent Evaluation
-============
+================
 
 Agent evaluation requires a trained RL agent, in form of a .zip artifact generated from SB3.
 The evaluation features a comparison with uncontrolled charging to allow for a first basic
@@ -47,6 +47,7 @@ generated schedule is used that the agent did not see during training.
     n_evs = 1
     n_envs = 1
     file_name_comment = "comment"  # added to log pickle file names
+
 **Environment creation**
 
 The testing environment is created. The parameters are the same as for training - only

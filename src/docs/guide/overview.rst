@@ -1,7 +1,7 @@
 .. _overview:
 
 Overview
-============
+===========
 
 FleetRL is a Reinforcement Learning (RL) environment for EV charging optimization with a special focus on commercial
 vehicle fleets. Its main function is the modelling of real-world charging processes. FleetRL was

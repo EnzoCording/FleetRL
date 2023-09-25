@@ -1,7 +1,16 @@
 .. _agent_training:
 
 Agent Training
-============
+==============
+
+This section walks through the process of creating a FleetRL env object, and training an RL agent on it.
+The creation of the environment walks through important parameters, generating custom schedules, and additional
+parameters that can be used to customize the environment.
+
+For training, stable-baselines3 is used, in this case the PPO agent. Progress is logged via tensorboard, as well
+as a progress bar. Agent artifacts are saved, so they can be reused at a different point in time or on another
+machine. Note that it is possible to create wandb callbacks with SB3, which enable advanced logging and
+progress visualization, as well as automatic storing of model artifacts.
 
 **Importing dependencies**
 

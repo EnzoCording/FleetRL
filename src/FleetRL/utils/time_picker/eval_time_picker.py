@@ -7,8 +7,10 @@ from FleetRL.utils.time_picker.time_picker import TimePicker
 
 
 class EvalTimePicker(TimePicker):
+
     """
     Time picker for validation set. The amount of days and thus the train/validation split is set in time config.
+
     """
 
     def __init__(self, ep_len):
@@ -23,6 +25,7 @@ class EvalTimePicker(TimePicker):
         and Dec are the validation set.
         :return: start time, pd.TimeStamp
         """
+
         # possible start times: remove last X days based on end_cutoff
         possible_start_times = pd.date_range(start=(db["date"].max() - np.timedelta64(end_cutoff, 'D')),
                                              end=(db["date"].max() - np.timedelta64(2 * self.episode_length, 'h')),

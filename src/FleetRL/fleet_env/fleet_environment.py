@@ -67,7 +67,7 @@ class FleetEnv(gym.Env):
     """
 
     def __init__(self,
-                 use_case: Literal["ct", "ut", "lmd"],
+                 use_case: Literal["ct", "ut", "lmd", "custom"],
                  building_name: str,
                  price_name: str,
                  tariff_name: str,
@@ -197,6 +197,10 @@ class FleetEnv(gym.Env):
             self.company = CompanyType.Delivery
             self.schedule_type = ScheduleType.Delivery
             self.ev_conf.init_battery_cap = 60.0
+        elif use_case == "custom":
+            self.company = CompanyType.Custom
+            self.schedule_type = ScheduleType.Custom
+            self.ev_conf.init_battery_cap = 35.0
         else:
             raise TypeError("Company not recognised.")
 

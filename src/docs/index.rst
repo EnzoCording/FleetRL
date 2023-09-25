@@ -35,6 +35,7 @@ Unique Implementations:
 
    guide/overview
    guide/installation
+   guide/custom_env
    guide/agent_training
    guide/agent_eval
    guide/benchmarking

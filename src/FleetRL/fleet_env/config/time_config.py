@@ -3,7 +3,7 @@ class TimeConfig:
     """
     The Time config sets parameters for the episode and MDP dynamics.
     - end_cutoff: Default at 60. The last two months are not regarding in the training observations
-        - The last two months are used as a validation set during training
+    - The last two months are used as a validation set during training
     """
 
     def __init__(self):

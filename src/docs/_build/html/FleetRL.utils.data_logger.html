@@ -22,8 +22,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Data processing" href="FleetRL.utils.data_processing.html" />
-    <link rel="prev" title="Battery degradation" href="FleetRL.utils.battery_degradation.html" /> 
+    <link rel="next" title="Load calculation" href="FleetRL.utils.load_calculation.html" />
+    <link rel="prev" title="Environment Config" href="FleetRL.fleet_env.config.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,7 +50,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/custom_env.html">Creating a custom environment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/agent_training.html">Agent Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/agent_eval.html">Agent Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/benchmarking.html">Benchmarking</a></li>
@@ -58,7 +60,6 @@
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.fleet_env.html">Fleet Environment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Data logger</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#FleetRL.utils.data_logger.data_logger.DataLogger"><code class="docutils literal notranslate"><span class="pre">DataLogger</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#FleetRL.utils.data_logger.data_logger.DataLogger.log_data"><code class="docutils literal notranslate"><span class="pre">DataLogger.log_data()</span></code></a></li>
@@ -66,13 +67,14 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.load_calculation.html">Load calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.normalization.html">Normalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.observation.html">Observation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.schedule.html">Schedule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.time_picker.html">Time picker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.data_processing.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.ev_charging.html">EV charging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FleetRL.utils.battery_degradation.html">Battery degradation</a></li>
 </ul>
 
         </div>
@@ -143,8 +145,8 @@ A dict is created with the required values, and then appended to the log datafra
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="FleetRL.utils.battery_degradation.html" class="btn btn-neutral float-left" title="Battery degradation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="FleetRL.utils.data_processing.html" class="btn btn-neutral float-right" title="Data processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="FleetRL.fleet_env.config.html" class="btn btn-neutral float-left" title="Environment Config" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FleetRL.utils.load_calculation.html" class="btn btn-neutral float-right" title="Load calculation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
