@@ -1,3 +1,5 @@
+[![Documentation Status](https://readthedocs.org/projects/fleetrl/badge/?version=latest)](https://fleetrl.readthedocs.io/en/latest/?badge=latest)
+
 **Overview**
 
 FleetRL is a Reinforcement Learning (RL) environment for EV charging optimization with a 
@@ -12,7 +14,6 @@ electricity prices can be switched by changing a csv file, episode length, time
 resolution, and EV charging-specific parameters can be changed in their respective config files.
 
 [Documentation](https://fleetrl.readthedocs.io/)
-
 
 **Physical model**
 
