@@ -43,6 +43,12 @@ Building load was taken from the [NREL TMY-3 dataset](https://doi.org/10.25984/1
 
 **Installation via Github repository**
 
+```
+git clone https://github.com/EnzoCording/FleetRL.git
+cd FleetRL
+pip install -r requirements.txt
+```
+
 - Unzip the package
 - Rename directory from FleetRL-master to FleetRL
 - cd into /FleetRL
