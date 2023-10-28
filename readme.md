@@ -1,6 +1,6 @@
 [![Documentation Status](https://readthedocs.org/projects/fleetrl/badge/?version=latest)](https://fleetrl.readthedocs.io/en/latest/?badge=latest)
 
-<img width="100" src="https://github.com/EnzoCording/FleetRL/blob/master/docs/_static/FleetRL_logo.jpg">
+<img width="200" src="https://github.com/EnzoCording/FleetRL/blob/master/docs/_static/FleetRL_logo.jpg">
 
 **Overview**
 
