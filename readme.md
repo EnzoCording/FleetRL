@@ -29,7 +29,7 @@ Electricity prices are taken from the EPEX spot market. PV production data is ta
 from the MERRA-2 open data set, available [here](https://www.renewables.ninja/).
 Building load was taken from the [NREL TMY-3 dataset](https://doi.org/10.25984/1876417).
 
-<img width="600" src="https://github.com/EnzoCording/FleetRL/blob/master/FleetRL_overview.jpg">
+<img width="600" src="https://github.com/EnzoCording/FleetRL/blob/master/docs/_static/FleetRL_overview.jpg">
 
 **Installation**
 
