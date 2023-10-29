@@ -156,5 +156,5 @@ cython_debug/
 .idea/
 
 FleetRL/Final_Inputs/big_schedules/*
-Benchmarks/logs/*
+FleetRL/Benchmarks/logs/*
 FleetRL/Internal_Files/*
