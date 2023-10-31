@@ -1,6 +1,4 @@
-[![Documentation Status](https://readthedocs.org/projects/fleetrl/badge/?version=latest)](https://fleetrl.readthedocs.io/en/latest/?badge=latest)
-
-[![HitCount](https://hits.dwyl.com/EnzoCording/FleetRL.svg?style=flat)](http://hits.dwyl.com/EnzoCording/FleetRL)
+[![Documentation Status](https://readthedocs.org/projects/fleetrl/badge/?version=latest)](https://fleetrl.readthedocs.io/en/latest/?badge=latest) [![Hits](https://hits.sh/github.com/EnzoCording/FleetRL.svg)](https://hits.sh/github.com/EnzoCording/FleetRL/)
 
 <img width="200" src="https://github.com/EnzoCording/FleetRL/blob/master/docs/_static/FleetRL_logo.jpg">
 
