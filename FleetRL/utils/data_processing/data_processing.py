@@ -21,7 +21,7 @@ class DataLoader:
                  spot_name, tariff_name,
                  building_name, pv_name,
                  time_conf: TimeConfig, ev_conf: EvConfig,
-                 target_soc, building_flag, pv_flag):
+                 target_soc, building_flag, pv_flag, real_time: bool):
 
         """
         Initial information that is required for loading data
@@ -48,13 +48,16 @@ class DataLoader:
         # setting the index of the df to the date for resampling
         self.schedule.set_index("date", inplace=True, drop=False)
 
-        # resampling the df. consumption and distance are summed, power rating mean like in emobpy
-        # group by ID is needed so the different cars don't get overwritten (they have the same dates)
-        # NB: up-sampling is not going to work
-        self.schedule = self.schedule.groupby("ID").resample(time_conf.freq).agg(
-            {'Location': 'first', 'ID': 'first', 'Consumption_kWh': 'sum',
-             'ChargingStation': 'first', 'PowerRating_kW': 'mean',
-             'Distance_km': 'sum', 'date': 'first'})
+        # TODO: edge case of duplicate data still possible
+
+        if not real_time:  # if real_time, data is not resampled and used as is
+            # resampling the df. consumption and distance are summed, power rating mean like in emobpy
+            # group by ID is needed so the different cars don't get overwritten (they have the same dates)
+            # NB: up-sampling is not going to work
+            self.schedule = self.schedule.groupby("ID").resample(time_conf.freq).agg(
+                {'Location': 'first', 'ID': 'first', 'Consumption_kWh': 'sum',
+                 'ChargingStation': 'first', 'PowerRating_kW': 'mean',
+                 'Distance_km': 'sum', 'date': 'first'})
 
         # resetting the index to a numerical value
         self.schedule.index = range(len(self.schedule))
@@ -65,10 +68,16 @@ class DataLoader:
         # create a date range with the chosen frequency
         # Given the desired frequency, create a (down-sampled) column of timestamps
         self.date_range = pd.DataFrame()
-        self.date_range["date"] = pd.date_range(start=self.schedule["date"].min(),
-                                                end=self.schedule["date"].max(),
-                                                freq=time_conf.freq
-                                                )
+
+        if not real_time:
+            # date_range according to model frequency
+            self.date_range["date"] = pd.date_range(start=self.schedule["date"].min(),
+                                                    end=self.schedule["date"].max(),
+                                                    freq=time_conf.freq
+                                                    )
+        else:
+            # date_range according to dataset
+            self.date_range["date"] = self.schedule["date"]
 
         # load csv files
         self.spot_price = DataLoader.load_prices(path_name, spot_name, self.date_range)

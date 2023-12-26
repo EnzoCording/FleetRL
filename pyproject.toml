@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "FleetRL_enzocording"
+version = "0.0.1"
+authors = [
+  { name="Enzo Cording", email="cording@kth.se" },
+]
+description = "RL environment for EV charging optimization with a special focus on commercial vehicle fleets"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU GPL v3.0",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/EnzoCording/FleetRL"
+"Bug Tracker" = "https://github.com/EnzoCording/FleetRL/issues"

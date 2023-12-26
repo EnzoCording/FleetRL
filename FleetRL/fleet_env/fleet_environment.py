@@ -270,12 +270,14 @@ class FleetEnv(gym.Env):
         # Loading data logger for analysing results and everything else
         self.data_logger: DataLogger = DataLogger(self.time_conf.episode_length * self.time_conf.time_steps_per_hour)
 
+        self.real_time = True
+
         # Loading the inputs
         self.data_loader: DataLoader = DataLoader(self.path_name, self.schedule_name,
                                                   self.spot_name, self.tariff_name,
                                                   self.building_name, self.pv_name,
                                                   self.time_conf, self.ev_conf, self.ev_conf.target_soc,
-                                                  self.include_building_load, self.include_pv
+                                                  self.include_building_load, self.include_pv, self.real_time
                                                   )
 
         # get the total database
