@@ -3,6 +3,9 @@ import gymnasium as gym
 import numpy as np
 import pandas as pd
 from typing import Literal
+import datetime
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 from FleetRL.fleet_env.config.ev_config import EvConfig
 from FleetRL.fleet_env.config.score_config import ScoreConfig
@@ -35,10 +38,13 @@ from FleetRL.utils.battery_degradation.empirical_degradation import EmpiricalDeg
 from FleetRL.utils.battery_degradation.rainflow_sei_degradation import RainflowSeiDegradation
 from FleetRL.utils.battery_degradation.log_data_deg import LogDataDeg
 
+from FleetRL.utils.event_manager.event_manager import EventManager
+
 from FleetRL.utils.data_logger.data_logger import DataLogger
 
 from FleetRL.utils.schedule.schedule_generator import ScheduleGenerator, ScheduleType
 
+from FleetRL.utils.rendering.render import ParkingLotRenderer
 
 class FleetEnv(gym.Env):
 
@@ -243,6 +249,9 @@ class FleetEnv(gym.Env):
         self.calc_deg = calculate_degradation
         self.log_data = log_data
 
+        # Event manager to check if a relevant event took place to pass to the agent
+        self.event_manager: EventManager = EventManager()
+
         # Class simulating EV charging
         self.ev_charger: EvCharger = EvCharger(self.ev_conf)
 
@@ -349,6 +358,9 @@ class FleetEnv(gym.Env):
             low=-1,
             high=1,
             shape=(self.num_cars,), dtype=np.float32)
+
+        self.render_mode = "human"
+        self.pl_render: ParkingLotRenderer = ParkingLotRenderer()
 
     def reset(self, **kwargs) -> tuple[np.array, dict]:
 
@@ -472,88 +484,116 @@ class FleetEnv(gym.Env):
         :return: Tuple containing next observation, reward, done, truncated and info dictionary
         """
 
-        # define variables that are newly used every iteration
-        cum_soc_missing = 0  # cumulative soc missing for each step
-        there = self.db["There"][self.db["date"] == self.episode.time].values  # plugged in y/n (before next time step)
+        self.episode.current_actions = actions
 
-        # parse the action to the charging function and receive the soc, next soc, reward and cashflow
-        self.episode.soc, self.episode.next_soc, reward, cashflow, self.charge_log = self.ev_charger.charge(
-            self.db, self.num_cars, actions, self.episode, self.load_calculation,
-            self.ev_conf, self.time_conf, self.score_conf, self.print_updates, self.target_soc)
+        while True:
 
-        # set the soc to the next soc
-        self.episode.old_soc = self.episode.soc.copy()
-        self.episode.soc = self.episode.next_soc.copy()
+            self.episode.time_conf.dt = self.get_next_dt()  # get next dt in case time frequency changes
+            self.episode.time_conf.time_steps_per_hour = int(1 / np.copy(self.episode.time_conf.dt))
+            self.episode.time_conf.minutes = self.get_next_minutes()  # get next minutes in case time freq changes
 
-        # save cashflow for print function
-        self.episode.current_charging_expense = cashflow
+            # define variables that are newly used every iteration
+            cum_soc_missing = 0  # cumulative soc missing for each step
+            there = self.db["There"][self.db["date"] == self.episode.time].values  # plugged in y/n (before next time step)
 
-        # calling the print function
-        if self.print_function:
-            self.print(actions)
+            # parse the action to the charging function and receive the soc, next soc, reward and cashflow
+            self.episode.soc, self.episode.next_soc, reward, cashflow, self.charge_log, self.episode.events = self.ev_charger.charge(
+                self.db, self.num_cars, actions, self.episode, self.load_calculation,
+                self.ev_conf, self.time_conf, self.score_conf, self.print_updates, self.target_soc)
 
-        # check current load and pv for violation check
-        if self.include_building_load:
-            current_load = self.db.loc[self.db["date"] == self.episode.time, "load"].values[0]
-        else:
-            current_load = 0
+            # set the soc to the next soc
+            self.episode.old_soc = self.episode.soc.copy()
+            self.episode.soc = self.episode.next_soc.copy()
 
-        if self.include_pv:
-            current_pv = self.db.loc[self.db["date"] == self.episode.time, "pv"].values[0]
-        else:
-            current_pv = 0
+            # save cashflow for print function
+            self.episode.current_charging_expense = cashflow
 
-        # correct actions for spots where no car is plugged in
-        corrected_actions = actions * there
-        # check if connection has been overloaded and by how much
-        overloaded_flag, overload_amount = self.load_calculation.check_violation(corrected_actions,
-                                                                                 self.db,
-                                                                                 current_load, current_pv)
-        relative_loading = overload_amount / self.load_calculation.grid_connection + 1
-        # overload_penalty is calculated from a sigmoid function in score_conf
-        if overloaded_flag:
-            overload_penalty = self.score_conf.overloading_penalty(relative_loading)
-            reward += overload_penalty
-            self.episode.penalty_record += overload_penalty
-            if self.print_updates:
-                print(f"Grid connection of {self.load_calculation.grid_connection} kW has been overloaded:"
-                      f" {abs(overload_amount)} kW. Penalty: {round(overload_penalty, 3)}")
+            # calling the print function
+            if self.print_function:
+                self.print(actions)
 
-        # advance one time step
-        self.episode.time += np.timedelta64(self.time_conf.minutes, 'm')
+            # check current load and pv for violation check
+            if self.include_building_load:
+                current_load = self.db.loc[self.db["date"] == self.episode.time, "load"].values[0]
+            else:
+                current_load = 0
 
-        # get the next observation entry from the dataset to get new arrivals or departures
-        next_obs = self.observer.get_obs(self.db,
-                                         self.time_conf.price_lookahead,
-                                         self.time_conf.bl_pv_lookahead,
-                                         self.episode.time,
-                                         ev_conf=self.ev_conf,
-                                         load_calc=self.load_calculation,
-                                         aux=self.aux_flag,
-                                         target_soc=self.target_soc)
-        next_obs_soc = next_obs["soc"]
-        next_obs_time_left = next_obs["hours_left"]
-        if self.include_price:
-            next_obs_price = next_obs["price"]
-            self.episode.price = next_obs_price
-            next_obs_tariff = next_obs["tariff"]
-            self.episode.tariff = next_obs_tariff
+            if self.include_pv:
+                current_pv = self.db.loc[self.db["date"] == self.episode.time, "pv"].values[0]
+            else:
+                current_pv = 0
 
-        # go through the stations and check whether the same car is still there, no car, or a new arrival
-        for car in range(self.num_cars):
+            # correct actions for spots where no car is plugged in
+            corrected_actions = actions * there
+            # check if connection has been overloaded and by how much
+            overloaded_flag, overload_amount = self.load_calculation.check_violation(corrected_actions,
+                                                                                     self.db,
+                                                                                     current_load, current_pv)
+            relative_loading = overload_amount / self.load_calculation.grid_connection + 1
+            # overload_penalty is calculated from a sigmoid function in score_conf
+            if overloaded_flag:
+                self.episode.events += 1  # relevant event detected
+                overload_penalty = self.score_conf.overloading_penalty(relative_loading)
+                reward += overload_penalty
+                self.episode.penalty_record += overload_penalty
+                if self.print_updates:
+                    print(f"Grid connection of {self.load_calculation.grid_connection} kW has been overloaded:"
+                          f" {abs(overload_amount)} kW. Penalty: {round(overload_penalty, 3)}")
 
-            # check if a car just left and didn't fully charge
-            if (self.episode.hours_left[car] != 0) and (next_obs_time_left[car] == 0):
+            # advance one time step
+            self.episode.time += np.timedelta64(self.time_conf.minutes, 'm')
 
-                # caretaker is a special case because of the lunch break
-                # it is not long enough to fully recharge, so a different target soc is applied
-                if self.company == CompanyType.Caretaker:
-                    # lunch break case
-                    if (self.episode.time.hour > 11) and (self.episode.time.hour < 15):
-                        # check for soc violation
-                        if self.ev_conf.target_soc_lunch - self.episode.soc[car] > self.eps:
-                            # penalty for not fulfilling charging requirement, square difference, scale and clip
-                            soc_missing = self.ev_conf.target_soc_lunch - self.episode.soc[car]
+            # get the next observation entry from the dataset to get new arrivals or departures
+            next_obs = self.observer.get_obs(self.db,
+                                             self.time_conf.price_lookahead,
+                                             self.time_conf.bl_pv_lookahead,
+                                             self.episode.time,
+                                             ev_conf=self.ev_conf,
+                                             load_calc=self.load_calculation,
+                                             aux=self.aux_flag,
+                                             target_soc=self.target_soc)
+            next_obs_soc = next_obs["soc"]
+            next_obs_time_left = next_obs["hours_left"]
+            if self.include_price:
+                next_obs_price = next_obs["price"]
+                self.episode.price = next_obs_price
+                next_obs_tariff = next_obs["tariff"]
+                self.episode.tariff = next_obs_tariff
+
+            # go through the stations and check whether the same car is still there, no car, or a new arrival
+            for car in range(self.num_cars):
+
+                # checks if a car just left and if rules were violated, e.g. didn't fully charge
+                if (self.episode.hours_left[car] != 0) and (next_obs_time_left[car] == 0):
+                    self.episode.events += 1  # relevant event detected
+
+                    # caretaker is a special case because of the lunch break
+                    # it is not long enough to fully recharge, so a different target soc is applied
+                    if self.company == CompanyType.Caretaker:
+                        # lunch break case
+                        if (self.episode.time.hour > 11) and (self.episode.time.hour < 15):
+                            # check for soc violation
+                            if self.ev_conf.target_soc_lunch - self.episode.soc[car] > self.eps:
+                                # penalty for not fulfilling charging requirement, square difference, scale and clip
+                                self.episode.events += 1  # relevant event detected
+                                soc_missing = self.ev_conf.target_soc_lunch - self.episode.soc[car]
+                                cum_soc_missing += soc_missing
+                                #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
+                                #current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
+                                current_soc_pen = self.score_conf.soc_violation_penalty(soc_missing)
+                                reward += current_soc_pen
+                                self.episode.penalty_record += current_soc_pen
+                                if self.print_updates:
+                                    print(f"A car left the station without reaching the target SoC."
+                                          f" Penalty: {round(current_soc_pen, 3)}")
+
+                            else: reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
+
+                        # caretaker, other operation times, check for violation
+                        elif self.target_soc[car] - self.episode.soc[car] > self.eps:
+                            # current_soc_pen is calculated from a sigmoid function in score_conf
+                            self.episode.events += 1  # relevant event detected
+                            soc_missing = self.target_soc[car] - self.episode.soc[car]
                             cum_soc_missing += soc_missing
                             #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
                             #current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
@@ -564,10 +604,12 @@ class FleetEnv(gym.Env):
                                 print(f"A car left the station without reaching the target SoC."
                                       f" Penalty: {round(current_soc_pen, 3)}")
 
-                        else: reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
+                        else:
+                            reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
 
-                    # caretaker, other operation times, check for violation
+                    # other companies: if charging requirement wasn't met (with some tolerance eps)
                     elif self.target_soc[car] - self.episode.soc[car] > self.eps:
+                        self.episode.events += 1  # relevant event detected
                         # current_soc_pen is calculated from a sigmoid function in score_conf
                         soc_missing = self.target_soc[car] - self.episode.soc[car]
                         cum_soc_missing += soc_missing
@@ -583,119 +625,114 @@ class FleetEnv(gym.Env):
                     else:
                         reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
 
-                # other companies: if charging requirement wasn't met (with some tolerance eps)
-                elif self.target_soc[car] - self.episode.soc[car] > self.eps:
-                    # current_soc_pen is calculated from a sigmoid function in score_conf
-                    soc_missing = self.target_soc[car] - self.episode.soc[car]
-                    cum_soc_missing += soc_missing
-                    #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
-                    #current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
-                    current_soc_pen = self.score_conf.soc_violation_penalty(soc_missing)
-                    reward += current_soc_pen
-                    self.episode.penalty_record += current_soc_pen
-                    if self.print_updates:
-                        print(f"A car left the station without reaching the target SoC."
-                              f" Penalty: {round(current_soc_pen, 3)}")
+                # still charging
+                if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
+                    self.episode.hours_left[car] -= self.time_conf.dt
 
+                # no car in the next time step
+                elif next_obs_time_left[car] == 0:
+                    self.episode.hours_left[car] = next_obs_time_left[car]
+                    self.episode.soc[car] = next_obs_soc[car]
+
+                # new arrival in the next time step
+                elif (self.episode.hours_left[car] == 0) and (next_obs_time_left[car] != 0):
+                    self.episode.events += 1  # relevant event
+                    self.episode.hours_left[car] = next_obs_time_left[car]
+                    self.episode.old_soc[car] = self.episode.soc[car]
+                    self.episode.soc[car] = next_obs_soc[car]
+
+                # this shouldn't happen but if it does, an error is thrown
                 else:
-                    reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
+                    raise TypeError("Observation format not recognized")
 
-            # still charging
-            if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
-                self.episode.hours_left[car] -= self.time_conf.dt
+                # if battery degradation >= 10%, target SOC is increased to ensure sufficient kWh in the battery
+                if self.episode.soh[car] <= 0.9:
+                    self.target_soc[car] = 0.9
+                    self.episode.events += 1  # relevant event detected
+                    if self.print_updates and self.target_soc[car] != 0.9:
+                        print(f"Target SOC of Car {car} has been adjusted to 0.9 due to high battery degradation."
+                              f"Current SOH: {self.episode.soh[car]}")
 
-            # no car in the next time step
-            elif next_obs_time_left[car] == 0:
-                self.episode.hours_left[car] = next_obs_time_left[car]
-                self.episode.soc[car] = next_obs_soc[car]
+            # Update SOH value for degradation calculations, wherever a car is plugged in
+            for car in range(self.num_cars):
+                if self.episode.hours_left[car] != 0:
+                    self.episode.soc_deg[car] = self.episode.soc[car]
 
-            # new arrival in the next time step
-            elif (self.episode.hours_left[car] == 0) and (next_obs_time_left[car] != 0):
-                self.episode.hours_left[car] = next_obs_time_left[car]
-                self.episode.old_soc[car] = self.episode.soc[car]
-                self.episode.soc[car] = next_obs_soc[car]
+            # if the finish time is reached, set done to True
+            # The RL_agents agent then resets the environment
+            if self.episode.time == self.episode.finish_time:
+                self.episode.done = True
+                self.episode.events += 1  # relevant event detected
+                if self.calc_deg:
+                    self.deg_data_logger.add_log_entry()
+                if self.print_updates:
+                    print(f"Episode done: {self.episode.done}")
+                    self.logged_data = self.data_logger.log
 
-            # this shouldn't happen but if it does, an error is thrown
-            else:
-                raise TypeError("Observation format not recognized")
+            # append to the reward history
+            self.episode.cumulative_reward += reward
+            self.episode.reward_history.append((self.episode.time, self.episode.cumulative_reward))
 
-            # if battery degradation >= 10%, target SOC is increased to ensure sufficient kWh in the battery
-            if self.episode.soh[car] <= 0.9:
-                self.target_soc[car] = 0.9
-                if self.print_updates and self.target_soc[car] != 0.9:
-                    print(f"Target SOC of Car {car} has been adjusted to 0.9 due to high battery degradation."
-                          f"Current SOH: {self.episode.soh[car]}")
+            if self.print_reward:
+                print(f"Reward signal: {round(reward, 3)}")
+                print("---------")
+                print("\n")
 
-        # Update SOH value for degradation calculations, wherever a car is plugged in
-        for car in range(self.num_cars):
-            if self.episode.hours_left[car] != 0:
-                self.episode.soc_deg[car] = self.episode.soc[car]
+            next_obs["soc"] = self.episode.soc
+            next_obs["hours_left"] = self.episode.hours_left
+            if self.include_price:
+                next_obs["price"] = self.episode.price
+                next_obs["tariff"] = self.episode.tariff
 
-        # if the finish time is reached, set done to True
-        # The RL_agents agent then resets the environment
-        if self.episode.time == self.episode.finish_time:
-            self.episode.done = True
+            # normalize next observation
+            norm_next_obs = self.normalizer.normalize_obs(next_obs)
+
+            # Log soc for battery degradation
             if self.calc_deg:
-                self.deg_data_logger.add_log_entry()
-            if self.print_updates:
-                print(f"Episode done: {self.episode.done}")
-                self.logged_data = self.data_logger.log
+                self.deg_data_logger.log_soc(self.episode.soc_deg)
 
-        # append to the reward history
-        self.episode.cumulative_reward += reward
-        self.episode.reward_history.append((self.episode.time, self.episode.cumulative_reward))
+            # for logging: calculate penalty amount, grid overloading in kW and percentage points of SOC violated
+            penalty = reward - (cashflow * self.score_conf.price_multiplier)
+            grid = abs(overload_amount)
+            soc_v = abs(cum_soc_missing)
 
-        if self.print_reward:
-            print(f"Reward signal: {round(reward, 3)}")
-            print("---------")
-            print("\n")
+            # Calculate degradation and state of health based on chosen method
+            # calculate degradation once per day
+            if self.calc_deg and ((self.episode.time.hour == 14) and (self.episode.time.minute == 45)):
+                degradation = self.sei_deg.calculate_degradation(self.deg_data_logger.soc_log,
+                                                                 self.load_calculation.evse_max_power,
+                                                                 self.time_conf,
+                                                                 self.ev_conf.temperature)
+                # calculate SOH from current degradation
+                self.episode.soh = np.subtract(self.episode.soh, degradation)
+                # calculate new resulting battery capacity after degradation
+                self.episode.battery_cap = self.episode.soh * self.ev_conf.init_battery_cap
+            # otherwise set degradation to 0 for logging purposes
+            else:
+                degradation = 0.0
 
-        next_obs["soc"] = self.episode.soc
-        next_obs["hours_left"] = self.episode.hours_left
-        if self.include_price:
-            next_obs["price"] = self.episode.price
-            next_obs["tariff"] = self.episode.tariff
+            # log data if episode is not done, otherwise first observation of next episode would be returned
+            if self.log_data and not self.episode.done:
+                self.data_logger.log_data(self.episode.time,
+                                          norm_next_obs,
+                                          actions,
+                                          reward,
+                                          cashflow,
+                                          penalty,
+                                          grid,
+                                          soc_v,
+                                          degradation,
+                                          self.charge_log,
+                                          self.episode.soh)
 
-        # normalize next observation
-        norm_next_obs = self.normalizer.normalize_obs(next_obs)
+            if not self.real_time:
+                break
 
-        # Log soc for battery degradation
-        if self.calc_deg:
-            self.deg_data_logger.log_soc(self.episode.soc_deg)
-
-        # for logging: calculate penalty amount, grid overloading in kW and percentage points of SOC violated
-        penalty = reward - (cashflow * self.score_conf.price_multiplier)
-        grid = abs(overload_amount)
-        soc_v = abs(cum_soc_missing)
-
-        # Calculate degradation and state of health based on chosen method
-        # calculate degradation once per day
-        if self.calc_deg and ((self.episode.time.hour == 14) and (self.episode.time.minute == 45)):
-            degradation = self.sei_deg.calculate_degradation(self.deg_data_logger.soc_log,
-                                                             self.load_calculation.evse_max_power,
-                                                             self.time_conf,
-                                                             self.ev_conf.temperature)
-            # calculate SOH from current degradation
-            self.episode.soh = np.subtract(self.episode.soh, degradation)
-            # calculate new resulting battery capacity after degradation
-            self.episode.battery_cap = self.episode.soh * self.ev_conf.init_battery_cap
-        # otherwise set degradation to 0 for logging purposes
-        else:
-            degradation = 0.0
-
-        # log data if episode is not done, otherwise first observation of next episode would be returned
-        if self.log_data and not self.episode.done:
-            self.data_logger.log_data(self.episode.time,
-                                      norm_next_obs,
-                                      actions,
-                                      reward,
-                                      cashflow,
-                                      penalty,
-                                      grid,
-                                      soc_v,
-                                      degradation,
-                                      self.charge_log,
-                                      self.episode.soh)
+            if self.event_manager.check_event(self.episode):
+                if self.print_updates:
+                    print("Relevant event recognised. Will pass to RL agent.")
+                self.episode.events = 0
+                break
 
         # return according to openAI gym core API
         return norm_next_obs, reward, self.episode.done, False, self.info
@@ -726,9 +763,15 @@ class FleetEnv(gym.Env):
         print("--------------------------")
 
     def render(self):
-        # TODO: graph of rewards for example, or charging power or sth like that
-        # TODO: Maybe a bar graph, centered at 0, n bars for n vehicles and height changes with power
-        pass
+        if self.render_mode == "human":
+            there = self.db["There"][self.db["date"] == self.episode.time].values
+            kw = np.multiply(self.episode.current_actions, self.load_calculation.evse_max_power)
+            soc = self.episode.soc
+            if there is None:
+                there = np.zeros(self.num_cars)
+                kw = np.zeros(self.num_cars)
+                soc = np.zeros(self.num_cars)
+            self.pl_render.render(there=there, kw = kw, soc = soc)
 
     # functions that can be called through vec_envs via env_method()
     def get_log(self):
@@ -990,3 +1033,15 @@ class FleetEnv(gym.Env):
         complete_schedule.to_csv(self.path_name + self.gen_name)
         print(f"Schedule generation complete. Saved in Inputs path. File name: {self.gen_name}")
         self.schedule_name = self.gen_name
+
+    def get_next_dt(self):
+        current_time = self.episode.time
+        next_time = self.db["date"][self.db["date"].searchsorted(current_time) + 1]
+        delta = (next_time - current_time).total_seconds()/3600
+        return delta
+
+    def get_next_minutes(self):
+        current_time = self.episode.time
+        next_time = self.db["date"][self.db["date"].searchsorted(current_time) + 1]
+        delta = (next_time - current_time).total_seconds()/60
+        return int(delta)

@@ -43,3 +43,6 @@ class Episode:
         self.total_charging_energy: float = None  # The amount of energy used per action
         self.log: pd.DataFrame = None  # DataFrame that logs what happens during the episode
 
+        self.events: int = 0  # Variable that counts up if relevant events have been detected
+
+        self.current_actions = None

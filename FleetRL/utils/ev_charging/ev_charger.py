@@ -104,6 +104,7 @@ class EvCharger:
                     current_oc_pen = score_conf.penalty_overcharging * (demanded_charge - ev_total_energy_demand) ** 2
                     current_oc_pen = max(current_oc_pen, score_conf.clip_overcharging)
                     overcharging_penalty += current_oc_pen
+                    episode.events += 1  # relevant event detected
                     if print_updates:
                         print(f"Overcharged, penalty of: {current_oc_pen}")
 
@@ -118,6 +119,7 @@ class EvCharger:
                     if np.abs(actions[car]) > 0.05:
                         current_inv_pen = score_conf.penalty_invalid_action * (actions[car] ** 2)
                         invalid_action_penalty += current_inv_pen
+                        episode.events += 1  # relevant event detected
                         if print_updates:
                             print(f"Invalid action, penalty given: {round(current_inv_pen, 3)}.")
 
@@ -160,6 +162,7 @@ class EvCharger:
                 if (demanded_discharge * ev_conf.discharging_eff < ev_total_energy_left) and (there != 0):
                     current_oc_pen = score_conf.penalty_overcharging * (ev_total_energy_left - demanded_discharge) ** 2
                     overcharging_penalty += current_oc_pen
+                    episode.events += 1  # relevant event detected
                     if print_updates:
                         print(f"Overcharged, penalty of: {round(current_oc_pen,3)}")
 
@@ -174,6 +177,7 @@ class EvCharger:
                     if np.abs(actions[car]) > 0.05:
                         current_inv_pen = score_conf.penalty_invalid_action * (actions[car] ** 2)
                         invalid_action_penalty += current_inv_pen
+                        episode.events += 1  # relevant event detected
                         if print_updates:
                             print(f"Invalid action, penalty given: {round(current_inv_pen, 3)}.")
 
@@ -221,4 +225,4 @@ class EvCharger:
         reward = charging_reward + discharging_reward + invalid_action_penalty + overcharging_penalty
 
         # return soc, next soc and the value of reward (remove the index)
-        return episode.soc, episode.next_soc, float(reward), float(cashflow), charge_log
+        return episode.soc, episode.next_soc, float(reward), float(cashflow), charge_log, episode.events

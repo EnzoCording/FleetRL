@@ -77,7 +77,7 @@ class DataLoader:
                                                     )
         else:
             # date_range according to dataset
-            self.date_range["date"] = self.schedule["date"]
+            self.date_range["date"] = self.schedule["date"].unique()
 
         # load csv files
         self.spot_price = DataLoader.load_prices(path_name, spot_name, self.date_range)
