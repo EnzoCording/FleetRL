@@ -105,7 +105,8 @@ class FleetEnv(gym.Env):
                  spot_markup: float=None,
                  spot_mul: float=None,
                  feed_in_ded: float=None,
-                 seed: int = None
+                 seed: int = None,
+                 real_time = False
                  ):
 
         """
@@ -140,6 +141,7 @@ class FleetEnv(gym.Env):
         :param spot_mul: Multiplied on the price: New price = (spot + markup) * (1+X)
         :param feed_in_ded: Deduction of the feed-in tariff: new_feed_in = (1-X) * feed_in
         :param seed: seed for random number generators
+        :param real_time Bool for specifying real time flag
         """
 
         # call __init__() of parent class to ensure inheritance chain
@@ -279,7 +281,7 @@ class FleetEnv(gym.Env):
         # Loading data logger for analysing results and everything else
         self.data_logger: DataLogger = DataLogger(self.time_conf.episode_length * self.time_conf.time_steps_per_hour)
 
-        self.real_time = False
+        self.real_time = real_time
 
         # Loading the inputs
         self.data_loader: DataLoader = DataLoader(self.path_name, self.schedule_name,
