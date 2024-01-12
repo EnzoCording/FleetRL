@@ -29,6 +29,8 @@ class BasicEvaluation(Evaluation):
                        model_path: str,
                        seed: int = None):
 
+        env_kwargs["episode_length"] = self.n_steps
+
         eval_vec_env = make_vec_env(FleetEnv,
                                     n_envs=self.n_envs,
                                     vec_env_cls=SubprocVecEnv,
@@ -150,8 +152,8 @@ class BasicEvaluation(Evaluation):
         rescaled_benchmark_log.index = date_range[:len(benchmark_log)]
 
         # Plot the data
-        ax.plot(rescaled_benchmark_log.index, rescaled_benchmark_log['SOH'], label='Dumb', color='red')
-        ax.plot(rescaled_rl_log.index, rescaled_rl_log['SOH'], label='RL', color='blue')
+        ax.plot(rescaled_benchmark_log.index, rescaled_benchmark_log['SOH'].apply(lambda x: x[0]), label='Dumb', color='red')
+        ax.plot(rescaled_rl_log.index, rescaled_rl_log['SOH'].apply(lambda x: x[0]), label='RL', color='blue')
 
         # Set the title and labels
         ax.set_title('State of Health Over Time')
