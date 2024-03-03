@@ -1,5 +1,13 @@
 Schedule
-=============================
+==============================
+
+.. automodule:: FleetRL.utils.schedule
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
 
 Schedule config
 ----------------------------------------------

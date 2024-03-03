@@ -1037,12 +1037,30 @@ class FleetEnv(gym.Env):
         self.schedule_name = self.gen_name
 
     def get_next_dt(self):
+
+        """
+        Calculates the time delta from the current time step and the next one. This allows for csv input files that
+        have irregular time intervals. Energy calculations will automatically adjust for the dynamic time differences
+        through kWh = kW * dt
+
+        :return: next time delta in hours
+        """
+
         current_time = self.episode.time
         next_time = self.db["date"][self.db["date"].searchsorted(current_time) + 1]
         delta = (next_time - current_time).total_seconds()/3600
         return delta
 
     def get_next_minutes(self):
+
+        """
+        Calculates the integer of minutes until the next time step. This therefore limits the framework's current
+        maximum resolution to discrete time steps of 1 min. This will be improved soon, as well as the dependency to
+        know the future value beforehand.
+
+        :return: Integer of minutes until next timestep
+        """
+
         current_time = self.episode.time
         next_time = self.db["date"][self.db["date"].searchsorted(current_time) + 1]
         delta = (next_time - current_time).total_seconds()/60

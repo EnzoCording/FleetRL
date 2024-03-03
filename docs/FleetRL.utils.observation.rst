@@ -1,5 +1,13 @@
 Observation
-================================
+=================================
+
+.. automodule:: FleetRL.utils.observation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
 
 Observer parent class
 -----------------------------------------
@@ -9,7 +17,7 @@ Observer parent class
    :undoc-members:
    :show-inheritance:
 
-Building and PV
+Building load and PV
 -------------------------------------------------
 
 .. automodule:: FleetRL.utils.observation.observer_bl_pv
@@ -25,7 +33,7 @@ Price only
    :undoc-members:
    :show-inheritance:
 
-Time only
+SOC and Time only
 ----------------------------------------------------------
 
 .. automodule:: FleetRL.utils.observation.observer_soc_time_only

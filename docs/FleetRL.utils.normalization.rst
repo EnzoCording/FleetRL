@@ -1,5 +1,13 @@
 Normalization
-==================================
+===================================
+
+.. automodule:: FleetRL.utils.normalization
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
 
 Normalization parent class
 ------------------------------------------------

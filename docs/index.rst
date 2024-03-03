@@ -45,6 +45,8 @@ Unique Implementations:
    :caption: Modules
 
    FleetRL.fleet_env
+   FleetRL.benchmarking
+   FleetRL.agent_eval
    FleetRL.utils.data_logger
    FleetRL.utils.load_calculation
    FleetRL.utils.normalization
@@ -54,6 +56,8 @@ Unique Implementations:
    FleetRL.utils.data_processing
    FleetRL.utils.ev_charging
    FleetRL.utils.battery_degradation
+   FleetRL.utils.event_manager
+   FleetRL.utils.rendering
 
 Indices and tables
 ===================

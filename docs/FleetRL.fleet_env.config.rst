@@ -1,5 +1,13 @@
-Environment Config
-================================
+Environment config
+=================================
+
+.. automodule:: FleetRL.fleet_env.config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
 
 EV config
 -------------------------------------------

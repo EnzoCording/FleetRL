@@ -5,6 +5,15 @@ class ParkingLotRenderer:
 
     @staticmethod
     def render(there, kw, soc):
+        """
+        This function provides a basic graphical overview of the current charging situation. Currently done via
+        Matplotlib but will be expanded to pygame soon.
+
+        :param there: Vector with booleans if spot is taken or not
+        :param kw: Vector with amount of kW in each spot
+        :param soc: Vector with SOC in each spot
+        :return: None - plots a graphical representation of the current charging situation
+        """
         fig, ax = plt.subplots()
 
         # Number of parking spots is determined by the length of the 'there' array
