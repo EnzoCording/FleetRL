@@ -65,11 +65,11 @@ except ImportError:
 sys.path.insert(0, os.path.abspath(".."))
 
 # Read version from file
-version_file = os.path.join(os.path.dirname(__file__), "../FleetRL", "version.txt")
+version_file = os.path.join(os.path.dirname(__file__), "../fleetrl", "version.txt")
 with open(version_file) as file_handler:
     __version__ = file_handler.read().strip()
 
-project = 'FleetRL'
+project = 'fleetrl'
 copyright = '2023, Enzo Alexander Cording, GNU GPL v3.0'
 author = 'Enzo Alexander Cording'
 

@@ -44,20 +44,20 @@ Unique Implementations:
    :maxdepth: 1
    :caption: Modules
 
-   FleetRL.fleet_env
-   FleetRL.benchmarking
-   FleetRL.agent_eval
-   FleetRL.utils.data_logger
-   FleetRL.utils.load_calculation
-   FleetRL.utils.normalization
-   FleetRL.utils.observation
-   FleetRL.utils.schedule
-   FleetRL.utils.time_picker
-   FleetRL.utils.data_processing
-   FleetRL.utils.ev_charging
-   FleetRL.utils.battery_degradation
-   FleetRL.utils.event_manager
-   FleetRL.utils.rendering
+   fleetrl.fleet_env
+   fleetrl.benchmarking
+   fleetrl.agent_eval
+   fleetrl.utils.data_logger
+   fleetrl.utils.load_calculation
+   fleetrl.utils.normalization
+   fleetrl.utils.observation
+   fleetrl.utils.schedule
+   fleetrl.utils.time_picker
+   fleetrl.utils.data_processing
+   fleetrl.utils.ev_charging
+   fleetrl.utils.battery_degradation
+   fleetrl.utils.event_manager
+   fleetrl.utils.rendering
 
 Indices and tables
 ===================

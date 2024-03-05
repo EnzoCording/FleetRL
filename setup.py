@@ -1,6 +1,6 @@
 from setuptools import setup
 
-setup(name='FleetRL',
+setup(name='fleetrl',
       version='0.0.1',
-      include=["FleetRL*"]
+      include=["fleetrl*"]
       )

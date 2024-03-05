@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "FleetRL_enzocording"
+name = "fleetrl"
 version = "0.0.1"
 authors = [
   { name="Enzo Cording", email="cording@kth.se" },
