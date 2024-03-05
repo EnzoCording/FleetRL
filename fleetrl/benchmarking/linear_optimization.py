@@ -11,20 +11,20 @@ import datetime as dt
 
 import pyomo.environ as pyo
 
-class Uncontrolled(Benchmark):
+class LinearOptimization(Benchmark):
 
     def __init__(self,
                  n_steps: int,
                  n_evs: int,
                  n_episodes: int = 1,
                  n_envs: int = 1,
-                 timesteps_per_hour: int = 4):
+                 time_steps_per_hour: int = 4):
 
         self.n_steps = n_steps
         self.n_evs = n_evs
         self.n_episodes = n_episodes
         self.n_envs = n_envs
-        self.timesteps_per_hour = timesteps_per_hour
+        self.time_steps_per_hour = time_steps_per_hour
 
     def run_benchmark(self,
                       use_case: str,
@@ -213,22 +213,22 @@ class Uncontrolled(Benchmark):
         timestep_set = pyo.RangeSet(0, length_time_load_pv - 1)
 
         def obj_fun(m):
-            return (sum([((m.charging_signal[i, ev] * evse_max_power - m.used_pv[i, ev]) / time_steps_per_hour) *
+            return (sum([((m.charging_signal[i, ev] * evse_max_power - m.used_pv[i, ev]) / self.time_steps_per_hour) *
                          m.price[i] +
-                         ((m.discharging_signal[i, ev] * evse_max_power * discharging_eff) / time_steps_per_hour) *
+                         ((m.discharging_signal[i, ev] * evse_max_power * discharging_eff) / self.time_steps_per_hour) *
                          m.tariff[i]
-                         for i in m.timestep for ev in range(n_evs)]))
+                         for i in m.timestep for ev in range(self.n_evs)]))
 
         model.obj = pyo.Objective(rule=obj_fun, sense=pyo.minimize)
         opt = pyo.SolverFactory(
-            'gurobi')  # , executable="/home/enzo/Downloads/gurobi10.0.2_linux64/gurobi1002/linux64/")
+            'glpk')  # , executable="/home/enzo/Downloads/gurobi10.0.2_linux64/gurobi1002/linux64/")
         opt.options['mipgap'] = 0.005
 
         res = opt.solve(model, tee=True)
         print(res)
 
         actions = [
-            np.array([model.charging_signal[i, j].value + model.discharging_signal[i, j].value for j in range(n_evs)])
+            np.array([model.charging_signal[i, j].value + model.discharging_signal[i, j].value for j in range(self.n_evs)])
             for i in range(length_time_load_pv)]
         actions = pd.DataFrame({"action": actions})
 

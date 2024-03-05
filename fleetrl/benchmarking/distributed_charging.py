@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class NightCharging(Benchmark):
+class DistributedCharging(Benchmark):
 
     def __init__(self,
                  n_steps: int,
