@@ -160,4 +160,4 @@ fleetrl/Benchmarks/logs/*
 fleetrl/Internal_Files/*
 tests/
 
-./MANIFEST.in
+MANIFEST.in
