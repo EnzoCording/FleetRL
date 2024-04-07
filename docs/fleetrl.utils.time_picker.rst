@@ -9,6 +9,14 @@ Time picker
 Submodules
 ----------
 
+Time picker base class
+----------------------------------------------
+
+.. automodule:: fleetrl.utils.time_picker.time_picker
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Eval time picker
 ----------------------------------------------------
 
@@ -29,14 +37,6 @@ Static time picker
 ------------------------------------------------------
 
 .. automodule:: fleetrl.utils.time_picker.static_time_picker
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Time picker parent class
-----------------------------------------------
-
-.. automodule:: fleetrl.utils.time_picker.time_picker
    :members:
    :undoc-members:
    :show-inheritance:

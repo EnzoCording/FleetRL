@@ -25,7 +25,7 @@ Distributed charging
    :undoc-members:
    :show-inheritance:
 
-Linear optimization
+Linear optimisation
 ------------------------------------------------
 
 .. automodule:: fleetrl.benchmarking.linear_optimization

@@ -1,4 +1,4 @@
-FleetRL
+fleetrl
 =======
 
 .. toctree::

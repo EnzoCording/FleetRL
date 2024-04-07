@@ -1,4 +1,4 @@
-Utils
+fleetrl.utils package
 =====================
 
 .. automodule:: fleetrl.utils

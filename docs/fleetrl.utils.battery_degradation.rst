@@ -1,4 +1,4 @@
-Batter degradation
+Battery degradation
 ==========================================
 
 .. automodule:: fleetrl.utils.battery_degradation
@@ -9,7 +9,7 @@ Batter degradation
 Submodules
 ----------
 
-Degradation parent class
+Degradation base class
 ---------------------------------------------------
 
 .. automodule:: fleetrl.utils.battery_degradation.batt_deg
@@ -41,7 +41,7 @@ Degradation logger
    :undoc-members:
    :show-inheritance:
 
-Non-linear degradation
+Non-linear degradation (Rainflow SEI)
 --------------------------------------------------------------------
 
 .. automodule:: fleetrl.utils.battery_degradation.rainflow_sei_degradation

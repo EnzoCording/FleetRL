@@ -9,7 +9,7 @@ Observation
 Submodules
 ----------
 
-Observer parent class
+Observer base class
 -----------------------------------------
 
 .. automodule:: fleetrl.utils.observation.observer
@@ -33,7 +33,7 @@ Price only
    :undoc-members:
    :show-inheritance:
 
-SOC and Time only
+SOC and time only
 ----------------------------------------------------------
 
 .. automodule:: fleetrl.utils.observation.observer_soc_time_only

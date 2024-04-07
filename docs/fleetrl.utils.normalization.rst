@@ -1,4 +1,4 @@
-Normalization
+Normalisation
 ===================================
 
 .. automodule:: fleetrl.utils.normalization
@@ -9,7 +9,7 @@ Normalization
 Submodules
 ----------
 
-Normalization parent class
+Normalisation base class
 ------------------------------------------------
 
 .. automodule:: fleetrl.utils.normalization.normalization
@@ -17,7 +17,7 @@ Normalization parent class
    :undoc-members:
    :show-inheritance:
 
-Oracle normalization
+Oracle normalisation
 --------------------------------------------------------
 
 .. automodule:: fleetrl.utils.normalization.oracle_normalization
@@ -25,7 +25,7 @@ Oracle normalization
    :undoc-members:
    :show-inheritance:
 
-Unit normalization
+Unit normalisation
 ------------------------------------------------------
 
 .. automodule:: fleetrl.utils.normalization.unit_normalization

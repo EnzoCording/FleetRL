@@ -1,4 +1,4 @@
-Environment config
+fleetrl.fleet\_env.config package
 =================================
 
 .. automodule:: fleetrl.fleet_env.config
@@ -9,7 +9,7 @@ Environment config
 Submodules
 ----------
 
-EV config
+fleetrl.fleet\_env.config.ev\_config module
 -------------------------------------------
 
 .. automodule:: fleetrl.fleet_env.config.ev_config
@@ -17,7 +17,7 @@ EV config
    :undoc-members:
    :show-inheritance:
 
-Score config
+fleetrl.fleet\_env.config.score\_config module
 ----------------------------------------------
 
 .. automodule:: fleetrl.fleet_env.config.score_config
@@ -25,7 +25,7 @@ Score config
    :undoc-members:
    :show-inheritance:
 
-Time config
+fleetrl.fleet\_env.config.time\_config module
 ---------------------------------------------
 
 .. automodule:: fleetrl.fleet_env.config.time_config

@@ -1,4 +1,4 @@
-FleetRL package
+fleetrl package
 ===============
 
 .. automodule:: fleetrl
