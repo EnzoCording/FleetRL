@@ -44,40 +44,37 @@ class LinearOptimization(Benchmark):
                                         training=True,
                                         clip_reward=10.0)
 
-        env = FleetEnv(use_case=use_case,
-                       schedule_name=env_kwargs["schedule_name"],
-                       tariff_name=env_kwargs["tariff_name"],
-                       price_name=env_kwargs["price_name"],
-                       episode_length=self.n_steps,
-                       time_picker=env_kwargs["time_picker"],
-                       building_name=env_kwargs["building_name"],
-                       spot_markup=env_kwargs["spot_markup"],
-                       spot_mul=env_kwargs["spot_mul"],
-                       feed_in_ded=env_kwargs["feed_in_ded"],
-                       seed=seed)
+        env_config = env_kwargs["env_config"]
+
+        env = FleetEnv(env_config)
 
         # reading the input file as a pandas DataFrame
         df: pd.DataFrame = env.db
+
+        # adjust length of df for n_steps
+        last_date = df["date"].min() + dt.timedelta(hours=self.n_steps) - dt.timedelta(minutes=15)
+        df = df[df.groupby(by="ID").date.transform(lambda x: x <= last_date)]
 
         # Extracting information from the df
         ev_data = [df.loc[df["ID"] == i, "There"] for i in range(self.n_evs)]
         building_data = df["load"]  # building load in kW
 
-        length_time_load_pv = 8760 * 4
+        # quarter hour resolution, n_steps is in hours
+        length_time_load_pv = self.n_steps * 4
 
-        price_data = np.multiply(np.add(df["DELU"], env.ev_conf.fixed_markup), env.ev_conf.variable_multiplier) / 1000
-        tariff_data = np.multiply(df["tariff"], 1 - env.ev_conf.feed_in_deduction) / 1000
+        price_data = np.multiply(np.add(df["DELU"], env.ev_config.fixed_markup), env.ev_config.variable_multiplier) / 1000
+        tariff_data = np.multiply(df["tariff"], 1 - env.ev_config.feed_in_deduction) / 1000
 
         pv_data = df["pv"]  # pv power in kW
         soc_on_return = [df.loc[df["ID"] == i, "SOC_on_return"] for i in range(self.n_evs)]
 
-        battery_capacity = env.ev_conf.init_battery_cap  # EV batt size in kWh
+        battery_capacity = env.ev_config.init_battery_cap  # EV batt size in kWh
         p_trafo = env.load_calculation.grid_connection  # Transformer rating in kW
 
-        charging_eff = env.ev_conf.charging_eff  # charging losses
-        discharging_eff = env.ev_conf.discharging_eff  # discharging losses
+        charging_eff = env.ev_config.charging_eff  # charging losses
+        discharging_eff = env.ev_config.discharging_eff  # discharging losses
 
-        init_soc = env.ev_conf.def_soc  # init SoC
+        init_soc = env.ev_config.def_soc  # init SoC
 
         evse_max_power = env.load_calculation.evse_max_power  # kW, max rating of the charger
 
@@ -103,7 +100,7 @@ class LinearOptimization(Benchmark):
 
         # decision variables
         # this assumes only charging, I could also make bidirectional later
-        model.soc = pyo.Var(model.time_batt, model.ev_id, bounds=(0, env.ev_conf.target_soc))
+        model.soc = pyo.Var(model.time_batt, model.ev_id, bounds=(0, env.ev_config.target_soc))
         model.charging_signal = pyo.Var(model.timestep, model.ev_id, within=pyo.NonNegativeReals, bounds=(0, 1))
         model.discharging_signal = pyo.Var(model.timestep, model.ev_id, within=pyo.NonPositiveReals, bounds=(-1, 0))
         model.positive_action = pyo.Var(model.timestep, model.ev_id, within=pyo.Binary)
@@ -150,7 +147,7 @@ class LinearOptimization(Benchmark):
 
             # departure in next time step
             elif (m.ev_availability[i, ev] == 1) and (m.ev_availability[i + 1, ev] == 0):
-                return m.soc[i, ev] == env.ev_conf.target_soc
+                return m.soc[i, ev] == env.ev_config.target_soc
 
             else:
                 return pyo.Constraint.Feasible
@@ -232,7 +229,7 @@ class LinearOptimization(Benchmark):
             for i in range(length_time_load_pv)]
         actions = pd.DataFrame({"action": actions})
 
-        actions.index = pd.date_range(start="2020-01-01 00:00", end="2020-12-30 23:59", freq="15T")
+        actions.index = pd.date_range(start="2020-01-01 00:00", end=last_date, freq="15T")
 
         actions["hid"] = actions.index.hour + actions.index.minute / 60
 

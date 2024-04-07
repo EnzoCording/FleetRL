@@ -8,18 +8,18 @@ class ScoreConfig:
     - The SOC violation and overloading are calculated using sigmoid functions
     """
 
-    def __init__(self):
-        self.price_multiplier = 3.33
-        self.price_exponent = 1
-        self.fully_charged_reward = 1
+    def __init__(self, env_config):
+        self.price_multiplier = env_config.get('price_multiplier', 3.33)
+        self.price_exponent = env_config.get('price_exponent', 1)
+        self.fully_charged_reward = env_config.get('fully_charged_reward', 1)
         # in cold weather trafo can operate >100%
         # TODO give overcharging/underloading penalty not only when the car departs, but
         # also in realtime when the battery dips below or goes above the healthy range
         # And maybe increase the penalty the farther the agent gets away from these boundaries
-        self.penalty_invalid_action = -0.2
-        self.penalty_overcharging = -0.0055
-        self.penalty_overloading = 1
-        self.clip_overcharging = -0.2
+        self.penalty_invalid_action = env_config.get('penalty_invalid_action', -0.2)
+        self.penalty_overcharging = env_config.get('penalty_overcharging', -0.0055)
+        self.penalty_overloading = env_config.get('penalty_overloading', 1)
+        self.clip_overcharging = env_config.get('clip_overcharging', -0.2)
 
     @staticmethod
     # Define the soc_violation_penalty function using the parameters of the fitted sigmoid function for the reward function

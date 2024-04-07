@@ -29,7 +29,7 @@ class BasicEvaluation(Evaluation):
                        model_path: str,
                        seed: int = None):
 
-        env_kwargs["episode_length"] = self.n_steps
+        env_kwargs["env_config"]["episode_length"] = self.n_steps
 
         eval_vec_env = make_vec_env(FleetEnv,
                                     n_envs=self.n_envs,
@@ -190,8 +190,9 @@ class BasicEvaluation(Evaluation):
 
     def plot_action_dist(self, rl_log, benchmark_log):
 
-        rl_log['Action'] = rl_log['Action'].apply(lambda x: x[0])
-        benchmark_log['Action'] = benchmark_log['Action'].apply(lambda x: x[0])
+        if rl_log['Action'][0].__class__ == np.ndarray:
+            rl_log['Action'] = rl_log['Action'].apply(lambda x: x[0])
+            benchmark_log['Action'] = benchmark_log['Action'].apply(lambda x: x[0])
 
         # Create a figure with two subplots side by side
         fig, axs = plt.subplots(1, 2, figsize=(8, 3))

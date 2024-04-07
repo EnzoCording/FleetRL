@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fleetrl"
-version = "0.0.1"
+version = "0.0.4"
 authors = [
   { name="Enzo Cording", email="cording@kth.se" },
 ]
@@ -13,7 +13,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU GPL v3.0",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
 ]
 

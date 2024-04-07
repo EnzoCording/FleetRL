@@ -1,4 +1,5 @@
 import os
+import json
 import gymnasium as gym
 import numpy as np
 import pandas as pd
@@ -72,143 +73,121 @@ class FleetEnv(gym.Env):
     the SOC and time left at the charger, regardless of whether the vehicle is matching the charger one-to-one or not.
     """
 
-    def __init__(self,
-                 use_case: Literal["ct", "ut", "lmd", "custom"],
-                 building_name: str,
-                 price_name: str,
-                 tariff_name: str,
-                 schedule_name: str = "lmd_sched_single.csv",
-                 pv_name: str = None,
-                 include_building: bool = True,
-                 include_pv: bool = True,
-                 include_price: bool = True,
-                 time_picker: Literal["static", "random", "eval"] = "random",
-                 target_soc: float = 0.85,
-                 max_batt_cap_in_all_use_cases = 60,
-                 init_soh: float = 1.0,
-                 deg_emp: bool = False,
-                 ignore_price_reward=False,
-                 ignore_overloading_penalty=False,
-                 ignore_invalid_penalty=False,
-                 ignore_overcharging_penalty=False,
-                 episode_length: int = 48,
-                 log_data: bool = True,
-                 calculate_degradation: bool = True,
-                 verbose: bool = 1,
-                 normalize_in_env=False,
-                 aux=True,
-                 gen_schedule: bool = False,
-                 gen_start_date = None,
-                 gen_end_date = None,
-                 gen_name: str = None,
-                 gen_n_evs: int = None,
-                 spot_markup: float=None,
-                 spot_mul: float=None,
-                 feed_in_ded: float=None,
-                 seed: int = None,
-                 real_time = False
-                 ):
+    def __init__(self, env_config: str | dict):
 
         """
-        :param schedule_name: String to specify file name of schedule
-        :param building_name: String to specify building load data, includes pv as well
-        :param pv_name: String to optionally specify own pv dataset
-        :param include_building: Flag to include building or not
-        :param include_pv: Flag to include pv or not
-        :param include_price: Flag to include price or not
-        :param time_picker: Specify whether to pick time "static", "random" or "eval" (train vs validation set)
-        :param target_soc: Target SOC that needs to be fulfilled before leaving for next trip
-        :param max_batt_cap_in_all_use_cases: The largest battery size to be considered in the model
-        :param init_soh: Initial state of health of batteries. SOH=1 -> no degradation
-        :param deg_emp: Flag to use empirical degradation. Default False
-        :param ignore_price_reward: Flag to ignore price reward
-        :param ignore_overloading_penalty: Flag to ignore overloading penalty
-        :param ignore_invalid_penalty: Flag to ignore invalid action penalty
-        :param ignore_overcharging_penalty: Flag to ignore overcharging the battery penalty
-        :param episode_length: Length of episode in hours
-        :param log_data: Log SOC and SOH to csv files
-        :param calculate_degradation: Calculate degradation flag
-        :param verbose: Print statements
-        :param normalize_in_env: Conduct normalization in environment
-        :param use_case: String to specify the use-case
-        :param aux: Flag to include auxiliary information in the model
-        :param gen_schedule: Flag to generate schedule or not
-        :param gen_start_date: Start date of the schedule
-        :param gen_end_date: End date of the schedule
-        :param gen_name: File name of the schedule
-        :param gen_n_evs: How many EVs a schedule should be generated for
-        :param spot_markup: markup on the spot price: new_price = spot + X ct/kWh
-        :param spot_mul: Multiplied on the price: New price = (spot + markup) * (1+X)
-        :param feed_in_ded: Deduction of the feed-in tariff: new_feed_in = (1-X) * feed_in
-        :param seed: seed for random number generators
-        :param real_time Bool for specifying real time flag
+        :param env_config: String to specify path of json config file, or dict with config
+
+        The following items are to be specified in the json or dict config:
+        - data_path: String to specify the absolute path of the input folder
+        - schedule_name: String to specify file name of schedule
+        - building_name: String to specify building load data, includes pv as well
+        - pv_name: String to optionally specify own pv dataset
+        - include_building: Flag to include building or not
+        - include_pv: Flag to include pv or not
+        - include_price: Flag to include price or not
+        - time_picker: Specify whether to pick time "static", "random" or "eval"
+        - target_soc: Target SOC that needs to be fulfilled before leaving for next trip
+        - max_batt_cap_in_all_use_cases: The largest battery size to be considered in the model
+        - init_soh: Initial state of health of batteries. SOH=1 -> no degradation
+        - deg_emp: Flag to use empirical degradation. Default False
+        - ignore_price_reward: Flag to ignore price reward
+        - ignore_overloading_penalty: Flag to ignore overloading penalty
+        - ignore_invalid_penalty: Flag to ignore invalid action penalty
+        - ignore_overcharging_penalty: Flag to ignore overcharging the battery penalty
+        - episode_length: Length of episode in hours
+        - log_data: Log SOC and SOH to csv files
+        - calculate_degradation: Calculate degradation flag
+        - verbose: Print statements
+        - normalize_in_env: Conduct normalization in environment
+        - use_case: String to specify the use-case
+        - aux: Flag to include auxiliary information in the model
+        - gen_schedule: Flag to generate schedule or not
+        - gen_start_date: Start date of the schedule
+        - gen_end_date: End date of the schedule
+        - gen_name: File name of the schedule
+        - gen_n_evs: How many EVs a schedule should be generated for
+        - spot_markup: markup on the spot price: new_price = spot + X ct/kWh
+        - spot_mul: Multiplied on the price: New price = (spot + markup) * (1+X)
+        - feed_in_ded: Deduction of the feed-in tariff: new_feed_in = (1-X) * feed_in
+        - seed: seed for random number generators
+        - real_time Bool for specifying real time flag
         """
 
         # call __init__() of parent class to ensure inheritance chain
         super().__init__()
 
+        assert (env_config.__class__ == dict) or (env_config.__class__ == str), 'Invalid config type.'
+        if env_config.__class__ == str:
+            assert os.path.isfile(env_config), f'Config file not found at {env_config}.'
+            self.env_config = self.read_config(conf_path=env_config)
+        else:
+            self.env_config = env_config
+
         # setting seed
-        self.seed = seed
+        self.seed = self.env_config["seed"]
         np.random.seed(self.seed)
 
         # Loading configs
-        self.time_conf = TimeConfig()
-        self.ev_conf = EvConfig()
-        self.score_conf = ScoreConfig()
+        self.time_conf = TimeConfig(self.env_config)
+        self.ev_config = EvConfig(self.env_config)
+        self.score_config = ScoreConfig(self.env_config)
 
         # Setting flags for the type of environment to build
         # NOTE: observations are appended to the db in the order specified here
-        self.include_price = include_price
-        self.include_building_load = include_building
-        self.include_pv = include_pv
-        self.aux_flag = aux  # include auxiliary information
+        self.include_price = self.env_config["include_price"]
+        self.include_building_load = self.env_config["include_building"]
+        self.include_pv = self.env_config["include_pv"]
+        self.aux_flag = self.env_config["aux"]  # include auxiliary information
 
         # conduct normalization of observations
-        self.normalize_in_env = normalize_in_env
+        self.normalize_in_env = self.env_config["normalize_in_env"]
 
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs
-        self.path_name = os.path.dirname(__file__) + '/../inputs/'
+        self.path_name = self.env_config["data_path"]
 
         # EV schedule database
         # generating own schedules or importing them
-        self.generate_schedule = gen_schedule
-        self.schedule_name = schedule_name
-        self.gen_name = gen_name
-        self.gen_start_date = gen_start_date
-        self.gen_end_date = gen_end_date
-        self.gen_n_evs = gen_n_evs
+        self.generate_schedule = self.env_config["gen_schedule"]
+        self.schedule_name = self.env_config["schedule_name"]
+        self.gen_name = self.env_config["gen_name"]
+        self.gen_start_date = self.env_config["gen_start_date"]
+        self.gen_end_date = self.env_config["gen_end_date"]
+        self.gen_n_evs = self.env_config["gen_n_evs"]
 
         # Price databases
-        self.spot_name = price_name
-        self.tariff_name = tariff_name
+        self.spot_name = self.env_config["price_name"]
+        self.tariff_name = self.env_config["tariff_name"]
 
         # Building load database
-        self.building_name = building_name
+        self.building_name = self.env_config["building_name"]
 
         # PV database is the same in this case
-        if pv_name is not None:
-            self.pv_name = pv_name
+        if self.env_config["pv_name"] is not None:
+            self.pv_name = self.env_config["pv_name"]
         else:
-            self.pv_name = building_name
+            self.pv_name = self.env_config["building_name"]
+
+        use_case = self.env_config["use_case"]
 
         # Specify company type and associated battery size in kWh
         if use_case == "ct":
             self.company = CompanyType.Caretaker
             self.schedule_type = ScheduleType.Caretaker
-            self.ev_conf.init_battery_cap = 16.7
+            self.ev_config.init_battery_cap = 16.7
         elif use_case == "ut":
             self.company = CompanyType.Utility
             self.schedule_type = ScheduleType.Utility
-            self.ev_conf.init_battery_cap = 50.0
+            self.ev_config.init_battery_cap = 50.0
         elif use_case == "lmd":
             self.company = CompanyType.Delivery
             self.schedule_type = ScheduleType.Delivery
-            self.ev_conf.init_battery_cap = 60.0
+            self.ev_config.init_battery_cap = 60.0
         elif use_case == "custom":
             self.company = CompanyType.Custom
             self.schedule_type = ScheduleType.Custom
-            self.ev_conf.init_battery_cap = 35.0
+            self.ev_config.init_battery_cap = 35.0
         else:
             raise TypeError("Company not recognised.")
 
@@ -217,48 +196,50 @@ class FleetEnv(gym.Env):
             self.auto_gen()
 
         # Changing markups if specified
-        if spot_markup is not None:
-            self.ev_conf.fixed_markup = spot_markup
-        if spot_mul is not None:
-            self.ev_conf.variable_multiplier = spot_mul
-        if feed_in_ded is not None:
-            self.ev_conf.feed_in_deduction = feed_in_ded
+        if self.env_config["spot_markup"] is not None:
+            self.ev_config.fixed_markup = self.env_config["spot_markup"]
+        if self.env_config["spot_mul"] is not None:
+            self.ev_config.variable_multiplier = self.env_config["spot_mul"]
+        if self.env_config["feed_in_ded"] is not None:
+            self.ev_config.feed_in_deduction = self.env_config["feed_in_ded"]
 
         # scaling price conf with battery capacity. Each use-case has different battery sizes, so a full charge
         # would have different penalty ranges with different battery capacities. Normalized to max capacity (60 kWh)
         # if different use-cases are compared, change 60 to the highest battery capacity in kWh
-        self.score_conf.price_multiplier = (self.score_conf.price_multiplier
-                                            * (max_batt_cap_in_all_use_cases / self.ev_conf.init_battery_cap))
+        max_batt_cap_in_all_use_cases = self.env_config["max_batt_cap_in_all_use_cases"]
+        self.score_config.price_multiplier = (self.score_config.price_multiplier
+                                              * (max_batt_cap_in_all_use_cases / self.ev_config.init_battery_cap))
 
         # Changing parameters, if specified
-        self.time_conf.episode_length = episode_length
-        self.ev_conf.target_soc = target_soc
+        self.time_conf.episode_length = self.env_config["episode_length"]
+        self.ev_config.target_soc = self.env_config["target_soc"]
 
         # Changing ScoreConfig, if specified
-        if ignore_price_reward:
-            self.score_conf.price_multiplier = 0
-        if ignore_overloading_penalty:
-            self.score_conf.penalty_overloading = 0
-        if ignore_invalid_penalty:
-            self.score_conf.penalty_invalid_action = 0
-        if ignore_overcharging_penalty:
-            self.score_conf.penalty_overcharging = 0
+        if self.env_config["ignore_price_reward"]:
+            self.score_config.price_multiplier = 0
+        if self.env_config["ignore_overloading_penalty"]:
+            self.score_config.penalty_overloading = 0
+        if self.env_config["ignore_invalid_penalty"]:
+            self.score_config.penalty_invalid_action = 0
+        if self.env_config["ignore_overcharging_penalty"]:
+            self.score_config.penalty_overcharging = 0
 
+        verbose = self.env_config["verbose"]
         # Set printing and logging parameters, false can increase training fps
         self.print_updates = verbose
         self.print_reward = verbose
         self.print_function = verbose
-        self.calc_deg = calculate_degradation
-        self.log_data = log_data
+        self.calc_deg = self.env_config["calculate_degradation"]
+        self.log_data = self.env_config["log_data"]
 
         # Event manager to check if a relevant event took place to pass to the agent
         self.event_manager: EventManager = EventManager()
 
         # Class simulating EV charging
-        self.ev_charger: EvCharger = EvCharger(self.ev_conf)
+        self.ev_charger: EvCharger = EvCharger(self.ev_config)
 
         # Choose time picker based on input string time_picker
-        self.time_picker = self.choose_time_picker(time_picker)
+        self.time_picker = self.choose_time_picker(self.env_config["time_picker"])
 
         # Choose the right observer module based on the environment settings
         self.observer = self.choose_observer()
@@ -269,8 +250,8 @@ class FleetEnv(gym.Env):
 
         # Setting EV parameters
         self.eps = 0.005  # allowed SOC deviation from target: 0.5%
-        self.initial_soh = init_soh  # initial degree of battery degradation, assumed equal for all cars
-        self.min_laxity: float = self.ev_conf.min_laxity  # How much excess time the car should at least have to charge
+        self.initial_soh = self.env_config["init_soh"]  # initial degree of battery degradation, assumed equal for all cars
+        self.min_laxity: float = self.ev_config.min_laxity  # How much excess time the car should at least have to charge
 
         # initiating variables inside __init__() that are needed for gym.Env
         self.info: dict = {}  # Necessary for gym env (Double check because new implementation doesn't need it)
@@ -281,13 +262,13 @@ class FleetEnv(gym.Env):
         # Loading data logger for analysing results and everything else
         self.data_logger: DataLogger = DataLogger(self.time_conf.episode_length * self.time_conf.time_steps_per_hour)
 
-        self.real_time = real_time
+        self.real_time = self.env_config["real_time"]
 
         # Loading the inputs
         self.data_loader: DataLoader = DataLoader(self.path_name, self.schedule_name,
                                                   self.spot_name, self.tariff_name,
                                                   self.building_name, self.pv_name,
-                                                  self.time_conf, self.ev_conf, self.ev_conf.target_soc,
+                                                  self.time_conf, self.ev_config, self.ev_config.target_soc,
                                                   self.include_building_load, self.include_pv, self.real_time
                                                   )
 
@@ -301,9 +282,9 @@ class FleetEnv(gym.Env):
         self.num_cars = self.db["ID"].max() + 1
 
         # Target SoC - Vehicles should always leave with this SoC
-        self.target_soc = np.ones(self.num_cars) * self.ev_conf.target_soc
+        self.target_soc = np.ones(self.num_cars) * self.ev_config.target_soc
 
-        if include_building:
+        if self.env_config["include_building"]:
             max_load = max(self.db["load"])
         else:
             max_load = 0  # building load not considered in that case
@@ -319,14 +300,14 @@ class FleetEnv(gym.Env):
         self.load_calculation = LoadCalculation(self.company, num_cars=self.num_cars, max_load=max_load)
 
         # choosing degradation methodology: empirical linear or non-linear mathematical model
-        if deg_emp:
+        if self.env_config["deg_emp"]:
             self.emp_deg: BatteryDegradation = EmpiricalDegradation(self.initial_soh, self.num_cars)
         else:
             self.sei_deg: BatteryDegradation = RainflowSeiDegradation(self.initial_soh, self.num_cars)
 
         # de-trend prices to make them usable as agent rewards
         if self.include_price:
-            self.db = DataLoader.shape_price_reward(self.db, self.ev_conf)
+            self.db = DataLoader.shape_price_reward(self.db, self.ev_config)
 
         """
         - Normalizing observations (Oracle) or just concatenating (Unit)
@@ -342,7 +323,7 @@ class FleetEnv(gym.Env):
                                                                  self.include_pv,
                                                                  self.include_price,
                                                                  aux=self.aux_flag,
-                                                                 ev_conf=self.ev_conf,
+                                                                 ev_conf=self.ev_config,
                                                                  load_calc=self.load_calculation)
         else:
             self.normalizer: Normalization = UnitNormalization()
@@ -382,7 +363,7 @@ class FleetEnv(gym.Env):
         self.episode.soh = np.ones(self.num_cars) * self.initial_soh
 
         # based on soh, instantiate battery capacity
-        self.episode.battery_cap = self.episode.soh * self.ev_conf.init_battery_cap
+        self.episode.battery_cap = self.episode.soh * self.ev_config.init_battery_cap
 
         # choose a start time based on the type of choice: same, random, deterministic
         self.episode.start_time = self.time_picker.choose_time(self.db, self.time_conf.freq,
@@ -400,7 +381,7 @@ class FleetEnv(gym.Env):
                                     self.time_conf.price_lookahead,
                                     self.time_conf.bl_pv_lookahead,
                                     self.episode.time,
-                                    ev_conf=self.ev_conf,
+                                    ev_conf=self.ev_config,
                                     load_calc=self.load_calculation,
                                     aux=self.aux_flag,
                                     target_soc=self.target_soc)
@@ -418,14 +399,14 @@ class FleetEnv(gym.Env):
         """
 
         for car in range(self.num_cars):
-            p_avail = min([self.ev_conf.obc_max_power, self.load_calculation.evse_max_power])
+            p_avail = min([self.ev_config.obc_max_power, self.load_calculation.evse_max_power])
             time_needed = (self.target_soc[car] - self.episode.soc[car]) * self.episode.battery_cap[car] / p_avail
 
             # Gives some tolerance, check if hours_left > 0 because car has to be plugged in
             # Makes sure that enough laxity is present, in this case 50% is default
-            if (self.episode.hours_left[car] > 0) and (self.ev_conf.min_laxity * time_needed > self.episode.hours_left[car]):
+            if (self.episode.hours_left[car] > 0) and (self.ev_config.min_laxity * time_needed > self.episode.hours_left[car]):
                 self.episode.soc[car] = (self.target_soc[car] -
-                                         (time_needed * p_avail / self.episode.battery_cap[car]) / self.ev_conf.min_laxity)
+                                         (time_needed * p_avail / self.episode.battery_cap[car]) / self.ev_config.min_laxity)
                 if self.print_updates:
                     print("Initial SOC modified due to unfavourable starting condition.")
 
@@ -434,7 +415,7 @@ class FleetEnv(gym.Env):
         # for battery degradation adjust to default soc, if soc is unknown in the beginning
         for car in range(self.num_cars):
             if self.episode.soc_deg[car] == 0:
-                self.episode.soc_deg[car] = self.ev_conf.def_soc
+                self.episode.soc_deg[car] = self.ev_config.def_soc
 
         # set the reward history back to an empty list, set cumulative reward to 0
         self.episode.reward_history = []
@@ -501,7 +482,7 @@ class FleetEnv(gym.Env):
             # parse the action to the charging function and receive the soc, next soc, reward and cashflow
             self.episode.soc, self.episode.next_soc, reward, cashflow, self.charge_log, self.episode.events = self.ev_charger.charge(
                 self.db, self.num_cars, actions, self.episode, self.load_calculation,
-                self.ev_conf, self.time_conf, self.score_conf, self.print_updates, self.target_soc)
+                self.ev_config, self.time_conf, self.score_config, self.print_updates, self.target_soc)
 
             # set the soc to the next soc
             self.episode.old_soc = self.episode.soc.copy()
@@ -535,7 +516,7 @@ class FleetEnv(gym.Env):
             # overload_penalty is calculated from a sigmoid function in score_conf
             if overloaded_flag:
                 self.episode.events += 1  # relevant event detected
-                overload_penalty = self.score_conf.overloading_penalty(relative_loading)
+                overload_penalty = self.score_config.overloading_penalty(relative_loading)
                 reward += overload_penalty
                 self.episode.penalty_record += overload_penalty
                 if self.print_updates:
@@ -550,7 +531,7 @@ class FleetEnv(gym.Env):
                                              self.time_conf.price_lookahead,
                                              self.time_conf.bl_pv_lookahead,
                                              self.episode.time,
-                                             ev_conf=self.ev_conf,
+                                             ev_conf=self.ev_config,
                                              load_calc=self.load_calculation,
                                              aux=self.aux_flag,
                                              target_soc=self.target_soc)
@@ -575,21 +556,21 @@ class FleetEnv(gym.Env):
                         # lunch break case
                         if (self.episode.time.hour > 11) and (self.episode.time.hour < 15):
                             # check for soc violation
-                            if self.ev_conf.target_soc_lunch - self.episode.soc[car] > self.eps:
+                            if self.ev_config.target_soc_lunch - self.episode.soc[car] > self.eps:
                                 # penalty for not fulfilling charging requirement, square difference, scale and clip
                                 self.episode.events += 1  # relevant event detected
-                                soc_missing = self.ev_conf.target_soc_lunch - self.episode.soc[car]
+                                soc_missing = self.ev_config.target_soc_lunch - self.episode.soc[car]
                                 cum_soc_missing += soc_missing
                                 #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
                                 #current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
-                                current_soc_pen = self.score_conf.soc_violation_penalty(soc_missing)
+                                current_soc_pen = self.score_config.soc_violation_penalty(soc_missing)
                                 reward += current_soc_pen
                                 self.episode.penalty_record += current_soc_pen
                                 if self.print_updates:
                                     print(f"A car left the station without reaching the target SoC."
                                           f" Penalty: {round(current_soc_pen, 3)}")
 
-                            else: reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
+                            else: reward += self.score_config.fully_charged_reward  # reward for fully charging the car
 
                         # caretaker, other operation times, check for violation
                         elif self.target_soc[car] - self.episode.soc[car] > self.eps:
@@ -599,7 +580,7 @@ class FleetEnv(gym.Env):
                             cum_soc_missing += soc_missing
                             #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
                             #current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
-                            current_soc_pen = self.score_conf.soc_violation_penalty(soc_missing)
+                            current_soc_pen = self.score_config.soc_violation_penalty(soc_missing)
                             reward += current_soc_pen
                             self.episode.penalty_record += current_soc_pen
                             if self.print_updates:
@@ -607,7 +588,7 @@ class FleetEnv(gym.Env):
                                       f" Penalty: {round(current_soc_pen, 3)}")
 
                         else:
-                            reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
+                            reward += self.score_config.fully_charged_reward  # reward for fully charging the car
 
                     # other companies: if charging requirement wasn't met (with some tolerance eps)
                     elif self.target_soc[car] - self.episode.soc[car] > self.eps:
@@ -617,7 +598,7 @@ class FleetEnv(gym.Env):
                         cum_soc_missing += soc_missing
                         #current_soc_pen = self.score_conf.penalty_soc_violation * soc_missing ** 2
                         #current_soc_pen = max(current_soc_pen, self.score_conf.clip_soc_violation)
-                        current_soc_pen = self.score_conf.soc_violation_penalty(soc_missing)
+                        current_soc_pen = self.score_config.soc_violation_penalty(soc_missing)
                         reward += current_soc_pen
                         self.episode.penalty_record += current_soc_pen
                         if self.print_updates:
@@ -625,7 +606,7 @@ class FleetEnv(gym.Env):
                                   f" Penalty: {round(current_soc_pen, 3)}")
 
                     else:
-                        reward += self.score_conf.fully_charged_reward  # reward for fully charging the car
+                        reward += self.score_config.fully_charged_reward  # reward for fully charging the car
 
                 # still charging
                 if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
@@ -694,7 +675,7 @@ class FleetEnv(gym.Env):
                 self.deg_data_logger.log_soc(self.episode.soc_deg)
 
             # for logging: calculate penalty amount, grid overloading in kW and percentage points of SOC violated
-            penalty = reward - (cashflow * self.score_conf.price_multiplier)
+            penalty = reward - (cashflow * self.score_config.price_multiplier)
             grid = abs(overload_amount)
             soc_v = abs(cum_soc_missing)
 
@@ -704,11 +685,11 @@ class FleetEnv(gym.Env):
                 degradation = self.sei_deg.calculate_degradation(self.deg_data_logger.soc_log,
                                                                  self.load_calculation.evse_max_power,
                                                                  self.time_conf,
-                                                                 self.ev_conf.temperature)
+                                                                 self.ev_config.temperature)
                 # calculate SOH from current degradation
                 self.episode.soh = np.subtract(self.episode.soh, degradation)
                 # calculate new resulting battery capacity after degradation
-                self.episode.battery_cap = self.episode.soh * self.ev_conf.init_battery_cap
+                self.episode.battery_cap = self.episode.soh * self.ev_config.init_battery_cap
             # otherwise set degradation to 0 for logging purposes
             else:
                 degradation = 0.0
@@ -829,7 +810,7 @@ class FleetEnv(gym.Env):
                                     self.time_conf.price_lookahead,
                                     self.time_conf.bl_pv_lookahead,
                                     self.episode.time,
-                                    ev_conf=self.ev_conf,
+                                    ev_conf=self.ev_config,
                                     load_calc=self.load_calculation,
                                     aux=self.aux_flag,
                                     target_soc=self.target_soc)
@@ -999,8 +980,8 @@ class FleetEnv(gym.Env):
 
         self.db.loc[((self.db["date"].dt.hour >= 0) & (self.db["date"].dt.hour <= 10))
                     | ((self.db["date"].dt.hour >= 15) & (self.db["date"].dt.hour <= 23)), "SOC_on_return"] \
-            = (self.ev_conf.target_soc_lunch
-               - afternoon_trips["last_trip_total_consumption"].div(self.ev_conf.init_battery_cap))
+            = (self.ev_config.target_soc_lunch
+               - afternoon_trips["last_trip_total_consumption"].div(self.ev_config.init_battery_cap))
 
         self.db.loc[self.db["There"] == 0, "SOC_on_return"] = 0
 
@@ -1065,3 +1046,10 @@ class FleetEnv(gym.Env):
         next_time = self.db["date"][self.db["date"].searchsorted(current_time) + 1]
         delta = (next_time - current_time).total_seconds()/60
         return int(delta)
+
+    def read_config(self, conf_path: str):
+
+        with open(f'{conf_path}', 'r') as file:
+            env_config = json.load(file)
+            return env_config
+

@@ -155,7 +155,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-fleetrl/inputs/big_schedules/*
+inputs/big_schedules/*
 fleetrl/Benchmarks/logs/*
 fleetrl/Internal_Files/*
 tests/

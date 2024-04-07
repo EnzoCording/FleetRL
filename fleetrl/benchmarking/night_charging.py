@@ -60,9 +60,9 @@ class NightCharging(Benchmark):
         earliest_dep = earliest_dep_time.hour + earliest_dep_time.minute / 60
 
         evse = env.load_calculation.evse_max_power
-        cap = env.ev_conf.init_battery_cap
-        target_soc = env.ev_conf.target_soc
-        eff = env.ev_conf.charging_eff
+        cap = env.ev_config.init_battery_cap
+        target_soc = env.ev_config.target_soc
+        eff = env.ev_config.charging_eff
 
         max_time_needed = target_soc * cap / eff / evse  # time needed to charge to target soc from 0
         difference = earliest_dep - max_time_needed
