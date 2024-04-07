@@ -20,3 +20,6 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/EnzoCording/FleetRL"
 "Bug Tracker" = "https://github.com/EnzoCording/FleetRL/issues"
+
+[tool.setuptools]
+packages = ["fleetrl"]
