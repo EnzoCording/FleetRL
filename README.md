@@ -60,6 +60,11 @@ pip install -r requirements.txt
 > **_NOTE:_** On remote environments on vast.ai it can be necessary to run 
 > pip install -U numpy prior to installing FleetRL
 
+> **_NOTE:_** You might need to set the cloned folder "FleetRL" to
+> "Sources Root" - otherwise you might get issues where the package name
+> cannot be resolved (right-click the folder and set its property to Sources
+> Root).
+
 **Installation via Miniconda on Windows**
 
 In this example, FleetRL can be installed completely from scratch, only Miniconda is required.
