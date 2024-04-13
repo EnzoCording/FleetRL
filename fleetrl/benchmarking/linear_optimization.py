@@ -237,8 +237,8 @@ class LinearOptimization(Benchmark):
         action_plot = []
         for i in range(len_day):
             action_plot.append(actions.groupby("hid").mean()["action"].reset_index(drop=True)[i].mean())
-        plt.plot(action_plot)
-        plt.show()
+        # plt.plot(action_plot)
+        # plt.show()
 
         lin_norm_vec_env.reset()
         start_time = lin_norm_vec_env.env_method("get_start_time")[0]

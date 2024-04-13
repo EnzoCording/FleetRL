@@ -19,13 +19,13 @@ class DistributedCharging(Benchmark):
                  n_evs: int,
                  n_episodes: int = 1,
                  n_envs: int = 1,
-                 timesteps_per_hour: int = 4):
+                 time_steps_per_hour: int = 4):
 
         self.n_steps = n_steps
         self.n_evs = n_evs
         self.n_episodes = n_episodes
         self.n_envs = n_envs
-        self.timesteps_per_hour = timesteps_per_hour
+        self.time_steps_per_hour = time_steps_per_hour
 
     def run_benchmark(self,
                       use_case: str,
@@ -46,7 +46,7 @@ class DistributedCharging(Benchmark):
 
         dist_norm_vec_env.reset()
 
-        for i in range(self.episode_length * self.timesteps_per_hour * self.n_episodes):
+        for i in range(self.n_steps * self.time_steps_per_hour * self.n_episodes):
             if dist_norm_vec_env.env_method("is_done")[0]:
                 dist_norm_vec_env.reset()
             dist_norm_vec_env.step(

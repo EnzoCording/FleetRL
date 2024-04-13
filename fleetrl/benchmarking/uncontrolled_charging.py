@@ -15,13 +15,13 @@ class Uncontrolled(Benchmark):
                  n_evs: int,
                  n_episodes: int = 1,
                  n_envs: int = 1,
-                 timesteps_per_hour: int = 4):
+                 time_steps_per_hour: int = 4):
 
         self.n_steps = n_steps
         self.n_evs = n_evs
         self.n_episodes = n_episodes
         self.n_envs = n_envs
-        self.timesteps_per_hour = timesteps_per_hour
+        self.time_steps_per_hour = time_steps_per_hour
 
     def run_benchmark(self,
                       use_case: str,
@@ -45,7 +45,7 @@ class Uncontrolled(Benchmark):
         n_episodes = self.n_episodes
         dumb_norm_vec_env.reset()
 
-        for i in range(episode_length * self.timesteps_per_hour * n_episodes):
+        for i in range(episode_length * self.time_steps_per_hour * n_episodes):
             if dumb_norm_vec_env.env_method("is_done")[0]:
                 dumb_norm_vec_env.reset()
             dumb_norm_vec_env.step([np.ones(self.n_evs)])

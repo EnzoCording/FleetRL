@@ -18,13 +18,13 @@ class NightCharging(Benchmark):
                  n_evs: int,
                  n_episodes: int = 1,
                  n_envs: int = 1,
-                 timesteps_per_hour: int = 4):
+                 time_steps_per_hour: int = 4):
 
         self.n_steps = n_steps
         self.n_evs = n_evs
         self.n_episodes = n_episodes
         self.n_envs = n_envs
-        self.timesteps_per_hour = timesteps_per_hour
+        self.time_steps_per_hour = time_steps_per_hour
 
     def run_benchmark(self,
                       use_case: str,
@@ -44,14 +44,9 @@ class NightCharging(Benchmark):
                                           training=True,
                                           clip_reward=10.0)
 
-        env = FleetEnv(use_case=use_case,
-                       schedule_name=env_kwargs["schedule_name"],
-                       tariff_name=env_kwargs["tariff_name"],
-                       price_name=env_kwargs["price_name"],
-                       episode_length=self.n_steps,
-                       time_picker=env_kwargs["time_picker"],
-                       building_name=env_kwargs["building_name"],
-                       seed=seed)
+        env_config = env_kwargs["env_config"]
+
+        env = FleetEnv(env_config)
 
         df = env.db
         df_leaving_home = df[(df['Location'].shift() == 'home') & (df['Location'] == 'driving')]
@@ -82,7 +77,7 @@ class NightCharging(Benchmark):
 
         charging = False
 
-        for i in range(episode_length * self.timesteps_per_hour * n_episodes):
+        for i in range(episode_length * self.time_steps_per_hour * n_episodes):
             if night_norm_vec_env.env_method("is_done")[0]:
                 night_norm_vec_env.reset()
             time: pd.Timestamp = night_norm_vec_env.env_method("get_time")[0]
