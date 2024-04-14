@@ -10,3 +10,5 @@ matplotlib >= 3.7.1
 pyomo >= 6.6.1
 sphinx-autodoc-typehints
 sphinx-rtd-theme
+plotly
+seaborn
