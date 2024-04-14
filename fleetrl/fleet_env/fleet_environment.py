@@ -146,7 +146,6 @@ class FleetEnv(gym.Env):
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs
         self.path_name = self.env_config["data_path"]
-        assert os.path.isdir(self.path_name), "Inputs path does not exist."
 
         # EV schedule database
         # generating own schedules or importing them
@@ -172,43 +171,24 @@ class FleetEnv(gym.Env):
 
         use_case = self.env_config["use_case"]
 
-        # TODO: refactor init to include method calls, check files exist, sanity checks
+        # Make sure that data paths are correct and point to existing files
+        self.check_data_paths(self.path_name, self.schedule_name, self.spot_name, self.building_name, self.pv_name)
 
-        # Specify company type and associated battery size in kWh
-        if use_case == "ct":
-            self.company = CompanyType.Caretaker
-            self.schedule_type = ScheduleType.Caretaker
-            self.ev_config.init_battery_cap = 16.7
-        elif use_case == "ut":
-            self.company = CompanyType.Utility
-            self.schedule_type = ScheduleType.Utility
-            self.ev_config.init_battery_cap = 50.0
-        elif use_case == "lmd":
-            self.company = CompanyType.Delivery
-            self.schedule_type = ScheduleType.Delivery
-            self.ev_config.init_battery_cap = 60.0
-        elif use_case == "custom":
-            self.company = CompanyType.Custom
-            self.schedule_type = ScheduleType.Custom
-            self.ev_config.init_battery_cap = 35.0
-        else:
-            raise TypeError("Company not recognised.")
+        # Specify the company type and size of the battery
+        self.company = None
+        self.schedule_type = None
+        self.specify_company_and_battery_size(use_case)
 
         # Automatic schedule generation if specified
         if self.generate_schedule:
             self.auto_gen()
 
-        # Changing markups if specified
-        if self.env_config["spot_markup"] is not None:
-            self.ev_config.fixed_markup = self.env_config["spot_markup"]
-        if self.env_config["spot_mul"] is not None:
-            self.ev_config.variable_multiplier = self.env_config["spot_mul"]
-        if self.env_config["feed_in_ded"] is not None:
-            self.ev_config.feed_in_deduction = self.env_config["feed_in_ded"]
+        # Changing markups on spot prices if specified in config file (e.g. 20% on top on spot prices)
+        self.change_markups()
 
         # scaling price conf with battery capacity. Each use-case has different battery sizes, so a full charge
         # would have different penalty ranges with different battery capacities. Normalized to max capacity (60 kWh)
-        # if different use-cases are compared, change 60 to the highest battery capacity in kWh
+        # if different use-cases are compared, change max_batt_cap to the highest battery capacity in kWh
         max_batt_cap_in_all_use_cases = self.env_config["max_batt_cap_in_all_use_cases"]
         self.score_config.price_multiplier = (self.score_config.price_multiplier
                                               * (max_batt_cap_in_all_use_cases / self.ev_config.init_battery_cap))
@@ -217,15 +197,8 @@ class FleetEnv(gym.Env):
         self.time_conf.episode_length = self.env_config["episode_length"]
         self.ev_config.target_soc = self.env_config["target_soc"]
 
-        # Changing ScoreConfig, if specified
-        if self.env_config["ignore_price_reward"]:
-            self.score_config.price_multiplier = 0
-        if self.env_config["ignore_overloading_penalty"]:
-            self.score_config.penalty_overloading = 0
-        if self.env_config["ignore_invalid_penalty"]:
-            self.score_config.penalty_invalid_action = 0
-        if self.env_config["ignore_overcharging_penalty"]:
-            self.score_config.penalty_overcharging = 0
+        # Changing ScoreConfig, if specified, e.g. setting some penalties to zero
+        self.adjust_score_config()
 
         verbose = self.env_config["verbose"]
         # Set printing and logging parameters, false can increase training fps
@@ -285,7 +258,7 @@ class FleetEnv(gym.Env):
         self.num_cars = self.db["ID"].max() + 1
 
         # Target SoC - Vehicles should always leave with this SoC
-        self.target_soc = np.ones(self.num_cars) * self.ev_config.target_soc
+        self.target_soc: np.ndarray = np.ones(self.num_cars) * self.ev_config.target_soc
 
         if self.env_config["include_building"]:
             max_load = max(self.db["load"])
@@ -1055,4 +1028,54 @@ class FleetEnv(gym.Env):
         with open(f'{conf_path}', 'r') as file:
             env_config = json.load(file)
             return env_config
+
+    def check_data_paths(self, input_path, schedule_path, spot_path, load_path, pv_path):
+
+        schedule = os.path.join(input_path, schedule_path) if schedule_path is not None else None
+        spot = os.path.join(input_path, spot_path) if spot_path is not None else None
+        load = os.path.join(input_path, load_path) if load_path is not None else None
+        pv = os.path.join(input_path, pv_path) if pv_path is not None else None
+
+        for path in [schedule, spot, load, pv]:
+            if path is not None:
+                assert(os.path.isfile(path)), f"Path does not exist: {path}"
+
+    def specify_company_and_battery_size(self, use_case):
+        # Specify company type and associated battery size in kWh
+        if use_case == "ct":
+            self.company = CompanyType.Caretaker
+            self.schedule_type = ScheduleType.Caretaker
+            self.ev_config.init_battery_cap = 16.7
+        elif use_case == "ut":
+            self.company = CompanyType.Utility
+            self.schedule_type = ScheduleType.Utility
+            self.ev_config.init_battery_cap = 50.0
+        elif use_case == "lmd":
+            self.company = CompanyType.Delivery
+            self.schedule_type = ScheduleType.Delivery
+            self.ev_config.init_battery_cap = 60.0
+        elif use_case == "custom":
+            self.company = CompanyType.Custom
+            self.schedule_type = ScheduleType.Custom
+            self.ev_config.init_battery_cap = 35.0
+        else:
+            raise TypeError("Company not recognised.")
+
+    def change_markups(self):
+        if self.env_config["spot_markup"] is not None:
+            self.ev_config.fixed_markup = self.env_config["spot_markup"]
+        if self.env_config["spot_mul"] is not None:
+            self.ev_config.variable_multiplier = self.env_config["spot_mul"]
+        if self.env_config["feed_in_ded"] is not None:
+            self.ev_config.feed_in_deduction = self.env_config["feed_in_ded"]
+
+    def adjust_score_config(self):
+        if self.env_config["ignore_price_reward"]:
+            self.score_config.price_multiplier = 0
+        if self.env_config["ignore_overloading_penalty"]:
+            self.score_config.penalty_overloading = 0
+        if self.env_config["ignore_invalid_penalty"]:
+            self.score_config.penalty_invalid_action = 0
+        if self.env_config["ignore_overcharging_penalty"]:
+            self.score_config.penalty_overcharging = 0
 
