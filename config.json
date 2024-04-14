@@ -1,5 +1,5 @@
 {
-  "data_path": "/home/enzo/Desktop/FleetRL/inputs/",
+  "data_path": "inputs",
   "use_case": "lmd",
   "building_name": "load_lmd.csv",
   "price_name": "spot_2021_new.csv",

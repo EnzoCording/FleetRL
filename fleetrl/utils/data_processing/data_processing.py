@@ -1,4 +1,5 @@
 import datetime
+import os
 
 import numpy as np
 import pandas as pd
@@ -43,7 +44,7 @@ class DataLoader:
 
         # schedule import from excel
         # db = pd.read_excel(os.path.dirname(__file__) + '/test_simple.xlsx')
-        self.schedule = pd.read_csv(path_name + schedule_name, parse_dates=["date"])
+        self.schedule = pd.read_csv(os.path.join(path_name, schedule_name), parse_dates=["date"])
 
         # setting the index of the df to the date for resampling
         self.schedule.set_index("date", inplace=True, drop=False)
@@ -233,7 +234,7 @@ class DataLoader:
         :return: spot price dataframe
         """
         # load csv
-        spot = pd.read_csv(path_name + spot_name, delimiter=";", decimal=",")
+        spot = pd.read_csv(os.path.join(path_name, spot_name), delimiter=";", decimal=",")
 
         # drop price information of other countries
         spot = spot.drop(columns=spot.columns[4:20])
@@ -267,7 +268,7 @@ class DataLoader:
         :return: spot price dataframe
         """
         # load csv
-        spot = pd.read_csv(path_name + spot_name, delimiter=";", decimal=",", parse_dates=["date"])
+        spot = pd.read_csv(os.path.join(path_name, spot_name), delimiter=";", decimal=",", parse_dates=["date"])
 
         # drop price information of other countries
         spot = spot.drop(columns=spot.columns[4:20])
@@ -299,7 +300,7 @@ class DataLoader:
         :return: tariff dataframe
         """
         # load csv
-        df = pd.read_csv(path_name + tariff_name, delimiter=";", decimal=",", parse_dates=["date"])
+        df = pd.read_csv(os.path.join(path_name, tariff_name), delimiter=";", decimal=",", parse_dates=["date"])
 
         tariff = pd.merge_asof(date_range,
                                    df.sort_values("date"),
@@ -322,7 +323,7 @@ class DataLoader:
         :return: load dataframe
         """
 
-        b_load = pd.read_csv(path_name + file_name, delimiter=",", parse_dates=["date"])
+        b_load = pd.read_csv(os.path.join(path_name, file_name), delimiter=",", parse_dates=["date"])
         # b_load["date"] = pd.to_datetime(b_load["date"], format="mixed")
 
         # TODO test if this also works for down-sampling. Right now this up-samples from hourly to quarter-hourly
@@ -345,7 +346,8 @@ class DataLoader:
         EV schedule dates therefore dictate the model's timeframe.
         :return: pv dataframe
         """
-        pv = pd.read_csv(path_name + pv_name, delimiter=",", decimal=",", parse_dates=["date"])
+
+        pv = pd.read_csv(os.path.join(path_name, pv_name), delimiter=",", decimal=",", parse_dates=["date"])
         # pv["date"] = pd.to_datetime(pv["date"], format="mixed")
 
         pv["pv"] = pv["pv"].astype(float)

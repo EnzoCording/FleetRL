@@ -146,6 +146,7 @@ class FleetEnv(gym.Env):
         # Setting paths and file names
         # path for input files, needs to be the same for all inputs
         self.path_name = self.env_config["data_path"]
+        assert os.path.isdir(self.path_name), "Inputs path does not exist."
 
         # EV schedule database
         # generating own schedules or importing them
@@ -170,6 +171,8 @@ class FleetEnv(gym.Env):
             self.pv_name = self.env_config["building_name"]
 
         use_case = self.env_config["use_case"]
+
+        # TODO: refactor init to include method calls, check files exist, sanity checks
 
         # Specify company type and associated battery size in kWh
         if use_case == "ct":
