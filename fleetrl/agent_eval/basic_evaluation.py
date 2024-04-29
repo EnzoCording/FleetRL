@@ -206,7 +206,11 @@ class BasicEvaluation(Evaluation):
         plt.show()
 
     def plot_violations(self, rl_log, benchmark_log):
-        
+
+        if len(rl_log[rl_log["SOC violation"] > 0]) == 0:
+            print("No violations found.")
+            return None
+
         fig, axs = plt.subplots(1, 1, figsize=(3, 3))
 
         # Plot RL data
