@@ -52,6 +52,7 @@ class LinearOptimization(Benchmark):
         df: pd.DataFrame = env.db
 
         # adjust length of df for n_steps
+        first_date = df["date"].min()
         last_date = df["date"].min() + dt.timedelta(hours=self.n_steps) - dt.timedelta(minutes=15)
         df = df[df.groupby(by="ID").date.transform(lambda x: x <= last_date)]
 
@@ -229,7 +230,7 @@ class LinearOptimization(Benchmark):
             for i in range(length_time_load_pv)]
         actions = pd.DataFrame({"action": actions})
 
-        actions.index = pd.date_range(start="2020-01-01 00:00", end=last_date, freq="15T")
+        actions.index = pd.date_range(start=first_date, end=last_date, freq="15T")
 
         actions["hid"] = actions.index.hour + actions.index.minute / 60
 
