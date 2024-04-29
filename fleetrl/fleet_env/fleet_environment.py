@@ -117,6 +117,7 @@ class FleetEnv(gym.Env):
         # call __init__() of parent class to ensure inheritance chain
         super().__init__()
 
+        # Check that the input parameter config is passed properly - either as json or dict
         assert (env_config.__class__ == dict) or (env_config.__class__ == str), 'Invalid config type.'
         if env_config.__class__ == str:
             assert os.path.isfile(env_config), f'Config file not found at {env_config}.'
@@ -171,17 +172,17 @@ class FleetEnv(gym.Env):
 
         use_case = self.env_config["use_case"]
 
-        # Make sure that data paths are correct and point to existing files
-        self.check_data_paths(self.path_name, self.schedule_name, self.spot_name, self.building_name, self.pv_name)
-
         # Specify the company type and size of the battery
-        self.company = None
-        self.schedule_type = None
+        self.company: CompanyType = None
+        self.schedule_type: ScheduleType = None
         self.specify_company_and_battery_size(use_case)
 
         # Automatic schedule generation if specified
         if self.generate_schedule:
             self.auto_gen()
+
+        # Make sure that data paths are correct and point to existing files
+        self.check_data_paths(self.path_name, self.schedule_name, self.spot_name, self.building_name, self.pv_name)
 
         # Changing markups on spot prices if specified in config file (e.g. 20% on top on spot prices)
         self.change_markups()
@@ -189,9 +190,9 @@ class FleetEnv(gym.Env):
         # scaling price conf with battery capacity. Each use-case has different battery sizes, so a full charge
         # would have different penalty ranges with different battery capacities. Normalized to max capacity (60 kWh)
         # if different use-cases are compared, change max_batt_cap to the highest battery capacity in kWh
-        max_batt_cap_in_all_use_cases = self.env_config["max_batt_cap_in_all_use_cases"]
+        self.max_batt_cap_in_all_use_cases = self.env_config["max_batt_cap_in_all_use_cases"]
         self.score_config.price_multiplier = (self.score_config.price_multiplier
-                                              * (max_batt_cap_in_all_use_cases / self.ev_config.init_battery_cap))
+                                              * (self.max_batt_cap_in_all_use_cases / self.ev_config.init_battery_cap))
 
         # Changing parameters, if specified
         self.time_conf.episode_length = self.env_config["episode_length"]
@@ -205,6 +206,7 @@ class FleetEnv(gym.Env):
         self.print_updates = verbose
         self.print_reward = verbose
         self.print_function = verbose
+
         self.calc_deg = self.env_config["calculate_degradation"]
         self.log_data = self.env_config["log_data"]
 
@@ -273,7 +275,11 @@ class FleetEnv(gym.Env):
         - of 50% of EVs at full capacity causes a grid overloading.
         - This can be changed in the load calculation module, e.g. replacing it with a fixed value.
         """
-        self.load_calculation = LoadCalculation(self.company, num_cars=self.num_cars, max_load=max_load)
+
+        self.load_calculation = LoadCalculation(env_config=self.env_config,
+                                                company_type=self.company,
+                                                num_cars=self.num_cars,
+                                                max_load=max_load)
 
         # choosing degradation methodology: empirical linear or non-linear mathematical model
         if self.env_config["deg_emp"]:
@@ -343,8 +349,7 @@ class FleetEnv(gym.Env):
 
         # choose a start time based on the type of choice: same, random, deterministic
         self.episode.start_time = self.time_picker.choose_time(self.db, self.time_conf.freq,
-                                                               self.time_conf.end_cutoff
-                                                               )
+                                                               self.time_conf.end_cutoff)
 
         # calculate the finish time based on the episode length
         self.episode.finish_time = self.episode.start_time + np.timedelta64(self.time_conf.episode_length, 'h')
@@ -970,26 +975,19 @@ class FleetEnv(gym.Env):
         :return: None -> The schedule is generated and placed in the input folder
         """
         gen_sched = []
-        if self.seed is not None:
-            gen_seed = self.seed
-        else:
-            gen_seed = 0
+
         print("Generating schedules... This may take a while.")
         for i in range(self.gen_n_evs):
-            self.schedule_gen = ScheduleGenerator(file_comment=self.gen_name,
-                                                  schedule_dir=self.path_name,
+            self.schedule_gen = ScheduleGenerator(env_config=self.env_config,
                                                   schedule_type=self.schedule_type,
-                                                  starting_date=self.gen_start_date,
-                                                  ending_date=self.gen_end_date,
-                                                  vehicle_id=f"{i}",
-                                                  seed=gen_seed + i,
-                                                  save_schedule=False)
+                                                  vehicle_id=str(i))
+
             gen_sched.append(self.schedule_gen.generate_schedule())
 
         complete_schedule = pd.concat(gen_sched)
         if not self.gen_name.endswith(".csv"):
             self.gen_name = self.gen_name + ".csv"
-        complete_schedule.to_csv(self.path_name + self.gen_name)
+        complete_schedule.to_csv(os.path.join(self.path_name, self.gen_name))
         print(f"Schedule generation complete. Saved in Inputs path. File name: {self.gen_name}")
         self.schedule_name = self.gen_name
 
@@ -1057,7 +1055,7 @@ class FleetEnv(gym.Env):
         elif use_case == "custom":
             self.company = CompanyType.Custom
             self.schedule_type = ScheduleType.Custom
-            self.ev_config.init_battery_cap = 35.0
+            self.ev_config.init_battery_cap = self.env_config["custom_ev_battery_size_in_kwh"]
         else:
             raise TypeError("Company not recognised.")
 
