@@ -14,65 +14,33 @@ class ScheduleGenerator:
     entry. The format is kept similar to emobpy to enable compatability and ease of use.
     """
 
-    def __init__(self, schedule_dir: str, starting_date: str = "01/01/2020 00:00:00",
-                 ending_date: str = "30/12/2020 23:59:59",
-                 freq: str = "15T",
-                 save_schedule: bool = True,
-                 file_comment: str = "",
+    def __init__(self,
+                 env_config: dict,
                  schedule_type: ScheduleType = ScheduleType.Delivery,
-                 vehicle_id: str = "0",
-                 seed: int = None):
+                 vehicle_id: str = "0"):
 
         """
         Initialise seed, directories, and other parameters.
 
-        :param schedule_dir: Folder directory
-        :param starting_date: Starting date for the schedule, should coincide with model start date
-        :param ending_date: Ending date
-        :param freq: Frequency
-        :param save_schedule: Save schedule to csv flag
-        :param file_comment: Comment that appears in the file name
+        :param env_config: Includes all necessary parameters to specify schedule generation
         :param schedule_type: Use-case LMD/UT/CT
         :param vehicle_id: Vehicle ID column
-        :param seed: Seed
         """
 
         # Set seed for reproducibility
+        seed = env_config["seed"]
         np.random.seed(seed)
 
         # define schedule type
         self.schedule_type = schedule_type
-        self.sc = ScheduleConfig(self.schedule_type)
+        self.sc = ScheduleConfig(schedule_type=self.schedule_type, env_config=env_config)
 
         # set starting, ending and frequency
-        self.starting_date = starting_date
-        self.ending_date = ending_date
-        self.freq = freq
+        self.starting_date = env_config["gen_start_date"]
+        self.ending_date = env_config["gen_end_date"]
+        self.freq = env_config["freq"]
 
         self.vehicle_id = vehicle_id
-
-        # flag whether to save the schedule as a csv or not
-        self.save = save_schedule
-
-        # get time to make unique file names
-        self.time_now = int(time.time())
-
-        # same dir as the other schedules
-        self.file_comment = file_comment
-        self.schedule_dir = schedule_dir
-        self.file_name = f"schedule_{self.time_now}_{self.file_comment}.csv"
-        self.path_name = self.schedule_dir + self.file_name
-
-        # make dir if not existing
-        if not os.path.exists(self.schedule_dir):
-            os.makedirs(self.schedule_dir)
-
-    def get_file_name(self):
-        """
-        Get schedule file name
-        :return: File string with csv
-        """
-        return self.file_name
 
     def generate_schedule(self):
 
@@ -88,6 +56,8 @@ class ScheduleGenerator:
             return self.generate_caretaker()
         elif self.schedule_type == self.schedule_type.Utility:
             return self.generate_utility()
+        elif self.schedule_type == self.schedule_type.Custom:
+            return self.generate_custom()
         else:
             raise TypeError("Company type not found!")
 
@@ -101,6 +71,17 @@ class ScheduleGenerator:
         # make DataFrame and a date range, from start to end
         ev_schedule = pd.DataFrame()
         ev_schedule["date"] = pd.date_range(start=self.starting_date, end=self.ending_date, freq = self.freq)
+
+        if ev_schedule["date"][0].weekday() == 6:
+            print("First day is a Sunday, skipping it...")
+
+            while ev_schedule["date"][0].weekday() == 6:
+                ev_schedule.drop(index=0, inplace=True)
+
+            assert ev_schedule["date"][0].weekday != 6, "Error, first day is still a Sunday."
+
+            new_start = ev_schedule["date"][0]
+            print(f"Now starting on date: {new_start}")
 
         # Loop through each date entry and create the other entries
         for step in ev_schedule["date"]:
@@ -209,9 +190,6 @@ class ScheduleGenerator:
                 ev_schedule.loc[ev_schedule["date"] == step, "ChargingStation"] = "home"
                 ev_schedule.loc[ev_schedule["date"] == step, "ID"] = str(self.vehicle_id)
                 ev_schedule.loc[ev_schedule["date"] == step, "PowerRating_kW"] = self.sc.charging_power
-
-        if self.save:
-            ev_schedule.to_csv(self.path_name)
 
         return ev_schedule
 
@@ -416,9 +394,6 @@ class ScheduleGenerator:
                         ev_schedule.loc[ev_schedule["date"] == step, "ID"] = str(self.vehicle_id)
                         ev_schedule.loc[ev_schedule["date"] == step, "PowerRating_kW"] = 0.0
 
-        if self.save:
-            ev_schedule.to_csv(self.path_name)
-
         return ev_schedule
 
     def generate_utility(self):
@@ -431,6 +406,17 @@ class ScheduleGenerator:
         # make DataFrame and a date range, from start to end
         ev_schedule = pd.DataFrame()
         ev_schedule["date"] = pd.date_range(start=self.starting_date, end=self.ending_date, freq = self.freq)
+
+        if ev_schedule["date"][0].weekday() == 6:
+            print("First day is a Sunday, skipping it...")
+
+            while ev_schedule["date"][0].weekday() == 6:
+                ev_schedule.drop(index=0, inplace=True)
+
+            assert ev_schedule["date"][0].weekday != 6, "Error, first day is still a Sunday."
+
+            new_start = ev_schedule["date"][0]
+            print(f"Now starting on date: {new_start}")
 
         # Loop through each date entry and create the other entries
         for step in ev_schedule["date"]:
@@ -570,7 +556,136 @@ class ScheduleGenerator:
                 ev_schedule.loc[ev_schedule["date"] == step, "ID"] = str(self.vehicle_id)
                 ev_schedule.loc[ev_schedule["date"] == step, "PowerRating_kW"] = self.sc.charging_power
 
-        if self.save:
-            ev_schedule.to_csv(self.path_name)
+        return ev_schedule
+
+    def generate_custom(self):
+
+        """
+        Custom schedule generator. Saturdays operations occur but at reduced levels, no operations on Sunday.
+        :return: pd.DataFrame of the schedule
+        """
+
+        # make DataFrame and a date range, from start to end
+        ev_schedule = pd.DataFrame()
+        ev_schedule["date"] = pd.date_range(start=self.starting_date, end=self.ending_date, freq = self.freq)
+
+        if ev_schedule["date"][0].weekday() == 6:
+            print("First day is a Sunday, skipping it...")
+
+            while ev_schedule["date"][0].weekday() == 6:
+                ev_schedule.drop(index=0, inplace=True)
+
+            assert ev_schedule["date"][0].weekday != 6, "Error, first day is still a Sunday."
+
+            new_start = ev_schedule["date"][0]
+            print(f"Now starting on date: {new_start}")
+
+        # Loop through each date entry and create the other entries
+        for step in ev_schedule["date"]:
+
+            # if new day, specify new random values
+            if (step.hour == 0) and (step.minute == 0):
+
+                # weekdays
+                if step.weekday() < 5:
+
+                    # time mean and std dev in config
+                    dep_time = np.random.normal(self.sc.dep_mean_wd, self.sc.dep_dev_wd)
+                    # split number and decimals, use number and turn to int
+                    dep_hour = int(math.modf(dep_time)[1])
+                    dep_hour = min([dep_hour, self.sc.max_dep])
+                    dep_hour = max([dep_hour, self.sc.min_dep])
+                    minutes = np.asarray([0, 15, 30, 45])
+                    # split number and decimals, use decimals and choose the closest minute
+                    closest_index = np.abs(minutes - int(math.modf(dep_time)[0]*60)).argmin()
+                    dep_min = minutes[closest_index]
+
+                    ret_time = np.random.normal(self.sc.ret_mean_wd, self.sc.ret_dev_wd)
+                    ret_hour = int(math.modf(ret_time)[1])
+                    # clip return to a maximum
+                    ret_hour = min([ret_hour, self.sc.max_return_hour])
+                    ret_hour = max([ret_hour, self.sc.min_return])
+                    minutes = np.asarray([0, 15, 30, 45])
+                    closest_index = np.abs(minutes - int(math.modf(ret_time)[0]*60)).argmin()
+                    ret_min = minutes[closest_index]
+
+                    # make dates for easier comparison
+                    dep_date = dt.datetime(step.year, step.month, step.day, hour=dep_hour, minute=dep_min)
+                    ret_date = dt.datetime(step.year, step.month, step.day, hour=ret_hour, minute=ret_min)
+
+                    # amount of time steps per trip
+                    trip_steps = (ret_date - dep_date).total_seconds() / 3600 * 4
+
+                    # total distance travelled that day
+                    total_distance = np.random.normal(self.sc.avg_distance_wd, self.sc.dev_distance_wd)
+                    total_distance = max([total_distance, self.sc.min_distance])
+                    total_distance = min([total_distance, self.sc.max_distance])
+                    if total_distance < 0:
+                        raise ValueError("Distance is negative")
+
+                # weekend
+                elif step.weekday() == 5:
+                    dep_time = np.random.normal(self.sc.dep_mean_we, self.sc.dep_dev_we)
+                    dep_hour = int(math.modf(dep_time)[1])
+                    dep_hour = min([dep_hour, self.sc.max_dep])
+                    dep_hour = max([dep_hour, self.sc.min_dep])
+                    minutes = np.asarray([0, 15, 30, 45])
+                    closest_index = np.abs(minutes - int(math.modf(dep_time)[0]*60)).argmin()
+                    dep_min = minutes[closest_index]
+
+                    ret_time = np.random.normal(self.sc.ret_mean_we, self.sc.ret_dev_we)
+                    ret_hour = int(math.modf(ret_time)[1])
+                    # clip return to a maximum
+                    ret_hour = min([ret_hour, self.sc.max_return_hour])
+                    ret_hour = max([ret_hour, self.sc.min_return])
+                    minutes = np.asarray([0, 15, 30, 45])
+                    closest_index = np.abs(minutes - int(math.modf(ret_time)[0]*60)).argmin()
+                    ret_min = minutes[closest_index]
+
+                    dep_date = dt.datetime(step.year, step.month, step.day, hour=dep_hour, minute=dep_min)
+                    ret_date = dt.datetime(step.year, step.month, step.day, hour=ret_hour, minute=ret_min)
+
+                    if dep_date > ret_date:
+                        raise RuntimeError("Schedule statistics produce unrealistic schedule. dep > ret.")
+
+                    trip_steps = (ret_date - dep_date).total_seconds() / 3600 * 4
+                    total_distance = np.random.normal(self.sc.avg_distance_we, self.sc.dev_distance_we)
+                    total_distance = max([total_distance, self.sc.min_distance])
+                    total_distance = min([total_distance, self.sc.max_distance])
+                    if total_distance < 0:
+                        raise ValueError("Distance is negative")
+
+                # Assuming no operation on Sundays
+
+            # if trip is ongoing
+            if (step >= dep_date) and (step < ret_date):
+
+                # dividing the total distance into equal parts
+                ev_schedule.loc[ev_schedule["date"] == step, "Distance_km"] = total_distance / trip_steps
+
+                # sampling consumption in kWh / km based on Emobpy German case statistics
+                # Clipping to min
+                cons_rating = max([np.random.normal(self.sc.consumption_mean, self.sc.consumption_std),
+                                   self.sc.consumption_min])
+                # Clipping to max
+                cons_rating = min([cons_rating, self.sc.consumption_max])
+                # Clipping such that the maximum amount of energy per trip is not exceeded
+                cons_rating = min([cons_rating, self.sc.total_cons_clip / total_distance])
+
+                ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = (total_distance / trip_steps) * cons_rating
+
+                # set relevant entries
+                ev_schedule.loc[ev_schedule["date"] == step, "Location"] = "driving"
+                ev_schedule.loc[ev_schedule["date"] == step, "ChargingStation"] = "none"
+                ev_schedule.loc[ev_schedule["date"] == step, "ID"] = str(self.vehicle_id)
+                ev_schedule.loc[ev_schedule["date"] == step, "PowerRating_kW"] = 0.0
+
+            else:
+                ev_schedule.loc[ev_schedule["date"] == step, "Distance_km"] = 0.0
+                ev_schedule.loc[ev_schedule["date"] == step, "Consumption_kWh"] = 0.0
+                ev_schedule.loc[ev_schedule["date"] == step, "Location"] = "home"
+                ev_schedule.loc[ev_schedule["date"] == step, "ChargingStation"] = "home"
+                ev_schedule.loc[ev_schedule["date"] == step, "ID"] = str(self.vehicle_id)
+                ev_schedule.loc[ev_schedule["date"] == step, "PowerRating_kW"] = self.sc.charging_power
 
         return ev_schedule
