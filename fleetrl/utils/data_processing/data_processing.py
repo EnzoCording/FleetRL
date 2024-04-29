@@ -81,14 +81,14 @@ class DataLoader:
             self.date_range["date"] = self.schedule["date"].unique()
 
         # load csv files
-        self.spot_price = DataLoader.load_prices(path_name, spot_name, self.date_range)
-        self.tariff = DataLoader.load_feed_in(path_name, tariff_name, self.date_range)
+        self.spot_price = self.load_prices(path_name, spot_name, self.date_range)
+        self.tariff = self.load_feed_in(path_name, tariff_name, self.date_range)
 
         if building_flag:
-            self.building_load = DataLoader.load_building_load(path_name, building_name, self.date_range)
+            self.building_load = self.load_building_load(path_name, building_name, self.date_range)
 
         if pv_flag:
-            self.pv = DataLoader.load_pv(path_name, pv_name, self.date_range)
+            self.pv = self.load_pv(path_name, pv_name, self.date_range)
 
         if not building_flag and not pv_flag:
             self.db = pd.concat([self.schedule,
@@ -223,8 +223,8 @@ class DataLoader:
             ev_conf.init_battery_cap)
         self.schedule.loc[self.schedule["There"] == 0, "SOC_on_return"] = 0
 
-    @staticmethod
-    def load_prices_original(path_name, spot_name, date_range):
+
+    def load_prices_original(self, path_name, spot_name, date_range):
         """
         Load prices from csv
         :param path_name: Parent directory string
@@ -247,6 +247,8 @@ class DataLoader:
         # rename column for accessibility
         spot = spot.rename(columns={"Deutschland/Luxemburg [€/MWh] Original resolutions": "DELU"})
 
+        spot = self._date_checker(df=spot, date_range=date_range)
+
         # TODO test if this also works for down-sampling. Right now this up-samples from hourly to quarter-hourly
         spot_price = pd.merge_asof(date_range,
                                    spot.sort_values("date"),
@@ -257,8 +259,7 @@ class DataLoader:
         # return the spot price at the right granularity
         return spot_price
 
-    @staticmethod
-    def load_prices(path_name, spot_name, date_range):
+    def load_prices(self, path_name, spot_name, date_range):
         """
         Load prices from csv
         :param path_name: Parent directory string
@@ -279,6 +280,11 @@ class DataLoader:
         # rename column for accessibility
         spot = spot.rename(columns={"Deutschland/Luxemburg [€/MWh] Original resolutions": "DELU"})
 
+        # check that the years are the same
+        # otherwise change the year and fix leap year problems
+
+        spot = self._date_checker(df=spot, date_range=date_range)
+
         # TODO test if this also works for down-sampling. Right now this up-samples from hourly to quarter-hourly
         spot_price = pd.merge_asof(date_range,
                                    spot.sort_values("date"),
@@ -289,8 +295,7 @@ class DataLoader:
         # return the spot price at the right granularity
         return spot_price
 
-    @staticmethod
-    def load_feed_in(path_name, tariff_name, date_range):
+    def load_feed_in(self, path_name, tariff_name, date_range):
         """
         Load feedin from csv
         :param path_name: Parent directory string
@@ -302,6 +307,8 @@ class DataLoader:
         # load csv
         df = pd.read_csv(os.path.join(path_name, tariff_name), delimiter=";", decimal=",", parse_dates=["date"])
 
+        df = self._date_checker(df=df, date_range=date_range)
+
         tariff = pd.merge_asof(date_range,
                                    df.sort_values("date"),
                                    on="date",
@@ -311,8 +318,7 @@ class DataLoader:
         # return the tariff at the right granularity
         return tariff
 
-    @staticmethod
-    def load_building_load(path_name, file_name, date_range):
+    def load_building_load(self, path_name, file_name, date_range):
 
         """
         Load building load from csv
@@ -326,6 +332,8 @@ class DataLoader:
         b_load = pd.read_csv(os.path.join(path_name, file_name), delimiter=",", parse_dates=["date"])
         # b_load["date"] = pd.to_datetime(b_load["date"], format="mixed")
 
+        b_load = self._date_checker(df = b_load, date_range=date_range)
+
         # TODO test if this also works for down-sampling. Right now this up-samples from hourly to quarter-hourly
         building_load = pd.merge_asof(date_range,
                                       b_load.sort_values("date"),
@@ -336,8 +344,8 @@ class DataLoader:
         # return building load at right granularity
         return building_load
 
-    @staticmethod
-    def load_pv(path_name, pv_name, date_range):
+
+    def load_pv(self, path_name, pv_name, date_range):
         """
         Load pv from csv
         :param path_name: Parent directory string
@@ -351,6 +359,8 @@ class DataLoader:
         # pv["date"] = pd.to_datetime(pv["date"], format="mixed")
 
         pv["pv"] = pv["pv"].astype(float)
+
+        pv = self._date_checker(df=pv, date_range=date_range)
 
         pv = pd.merge_asof(date_range,
                            pv.sort_values("date"),
@@ -405,3 +415,19 @@ class DataLoader:
         db = pd.concat((db, result["tariff_reward_curve"]), axis=1)
 
         return db
+
+    @staticmethod
+    def _date_checker(df: pd.DataFrame, date_range: pd.DatetimeIndex) -> pd.DataFrame:
+
+        input_start_year = df.iloc[0]["date"].year
+        date_range_start_year = date_range.iloc[0][0].year
+
+        if input_start_year != date_range_start_year:
+            print("Start year of input data doesn't match simulation data range. Adjusting...")
+            df["date"] = df["date"] + pd.DateOffset(years = date_range_start_year - input_start_year)
+
+        assert(df.iloc[0]["date"] == date_range.iloc[0][0]), "Invalid start time."
+        assert(df.iloc[-1]["date"].year == date_range.iloc[-1][0].year), "Invalid end year."
+
+        return df
+
