@@ -12,7 +12,10 @@ class LoadCalculation:
     """
 
     @staticmethod
-    def _import_company(company_type: CompanyType, max_load: float, num_cars: int):
+    def _import_company(env_config: dict,
+                        company_type: CompanyType,
+                        max_load: float,
+                        num_cars: int):
         """
         The grid connection is calculated based on the building load, number of EVs and the EVSE kW power.
         The grid connection is either 1.1 * max_load, or such that a simultaneous charging of 50% of EVs would overload
@@ -44,9 +47,9 @@ class LoadCalculation:
             batt_cap = 16.7  # smart eq
 
         elif company_type == CompanyType.Custom:
-            evse_power = 11.0
-            grid_connection = 500
-            batt_cap = 35.0
+            evse_power = env_config.get("custom_ev_charger_power_in_kw", 120)
+            grid_connection = env_config.get("custom_grid_connection_in_kw", 500)
+            batt_cap = env_config.get("custom_ev_battery_size_in_kwh", 60)
 
         else:
             grid_connection = 200
@@ -56,7 +59,7 @@ class LoadCalculation:
 
         return grid_connection, evse_power, batt_cap
 
-    def __init__(self, company_type: CompanyType, max_load: float, num_cars: int):
+    def __init__(self, env_config: dict, company_type: CompanyType, max_load: float, num_cars: int):
         """
         Initialise load calculation module
 
@@ -72,7 +75,8 @@ class LoadCalculation:
 
         # Grid connection: grid connection point max capacity in kW
         # EVSE (ev supply equipment aka charger) max power in kW
-        self.grid_connection, self.evse_max_power, self.batt_cap = LoadCalculation._import_company(self.company_type,
+        self.grid_connection, self.evse_max_power, self.batt_cap = LoadCalculation._import_company(env_config,
+                                                                                                   self.company_type,
                                                                                                    self.max_load,
                                                                                                    self.num_cars)
 
