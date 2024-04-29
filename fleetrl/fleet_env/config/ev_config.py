@@ -16,4 +16,3 @@ class EvConfig:
         self.fixed_markup: float = env_config.get("fixed_markup", 10)  # fixed cost added in €/MWh
         self.variable_multiplier: float = env_config.get("variable_multiplier", 1.5)  # variable cost multiplier
         self.feed_in_deduction = env_config.get("feed_in_deduction", 0.25)  # 25% deducted for 3rd party services
-
