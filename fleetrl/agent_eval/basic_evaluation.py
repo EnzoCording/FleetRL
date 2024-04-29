@@ -1,3 +1,6 @@
+import os.path
+import json
+
 from fleetrl.fleet_env.fleet_environment import FleetEnv
 from fleetrl.benchmarking.benchmark import Benchmark
 
@@ -29,6 +32,28 @@ class BasicEvaluation(Evaluation):
         self.n_evs = n_evs
         self.n_envs = n_envs
         self.n_episodes = n_episodes
+        self.env_kwargs = None
+
+    @staticmethod
+    def _change_param(env_kwargs: dict, key: str, val):
+        if env_kwargs["env_config"].__class__ == dict:
+            # env_config is a dict which we can modify directly
+            env_kwargs["env_config"][key] = val
+        elif env_kwargs["env_config"].__class__ == str:
+            # env_config is a file path to a json file
+            conf_path = env_kwargs["env_config"]
+            # check that file exists and open json
+            assert os.path.isfile(conf_path), "Config file path not found"
+            with open(f'{conf_path}', 'r') as file:
+                env_config = json.load(file)
+            # write episode length parm into dict
+            env_config[key] = val
+            # replace path string with dict to use modified env_config from now on
+            env_kwargs["env_config"] = env_config
+        else:
+            raise TypeError("Config parameter not specified correctly. Either dict or valid path.")
+        return env_kwargs
+
 
     def evaluate_agent(self,
                        env_kwargs: dict,
@@ -36,7 +61,9 @@ class BasicEvaluation(Evaluation):
                        model_path: str,
                        seed: int = None):
 
-        env_kwargs["env_config"]["episode_length"] = self.n_steps
+        env_kwargs = self._change_param(env_kwargs=env_kwargs, key="episode_length", val=self.n_steps)
+
+        self.env_kwargs = env_kwargs
 
         eval_vec_env = make_vec_env(FleetEnv,
                                     n_envs=self.n_envs,
@@ -227,6 +254,8 @@ class BasicEvaluation(Evaluation):
                               dist_log: pd.DataFrame=None,
                               night_log: pd.DataFrame=None):
 
+        evse_power = self.env_kwargs["env_config"]["custom_ev_charger_power_in_kw"]
+
         assert any(df is not None for df in [rl_log, uc_log, dist_log, night_log]), "No log provided."
 
         chosen_dfs = []
@@ -234,78 +263,36 @@ class BasicEvaluation(Evaluation):
 
         if rl_log is not None:
             rl_log = rl_log[(rl_log["Time"] >= start_date) & (rl_log["Time"] <= end_date)]
-            df = pd.DataFrame({
-                'Date': rl_log["Time"],
-                'SOC': [rl_log["Observation"][i][0:4].mean() for i in range(len(rl_log))],
-                'Load': [rl_log["Observation"][i][29] for i in range(len(rl_log))],
-                'PV': [rl_log["Observation"][i][34] for i in range(len(rl_log))],
-                'Price': [rl_log["Observation"][i][10] / 10 for i in range(len(rl_log))],
-                'Action': [rl_log["Charging energy"][i][0:4].sum() * 4 for i in range(len(rl_log))],
-                'Free cap': [rl_log["Observation"][i][-8] / rl_log["Observation"][i][-9] for i in range(len(rl_log))],
-                'CF': rl_log["Cashflow"]
-            })
-            chosen_dfs.append(df)
+            chosen_dfs.append(self._get_from_obs(rl_log))
             log_names.append("RL-based charging")
 
         if uc_log is not None:
             uc_log = uc_log[(uc_log["Time"] >= start_date) & (uc_log["Time"] <= end_date)]
-            df_dumb = pd.DataFrame({
-                'Date': uc_log["Time"],
-                'SOC': [uc_log["Observation"][i][0:4].mean() for i in range(len(uc_log))],
-                'Load': [uc_log["Observation"][i][29] for i in range(len(uc_log))],
-                'PV': [uc_log["Observation"][i][34] for i in range(len(uc_log))],
-                'Price': [uc_log["Observation"][i][10] for i in range(len(uc_log))],
-                'Action': [uc_log["Charging energy"][i][0:4].sum() * 4 for i in range(len(uc_log))],
-                'Free cap': [uc_log["Observation"][i][-8] / uc_log["Observation"][i][-9] for i in range(len(uc_log))],
-                'CF': uc_log["Cashflow"]
-            })
-            chosen_dfs.append(df_dumb)
+            chosen_dfs.append(self._get_from_obs(uc_log))
             log_names.append("Uncontrolled charging")
 
         if dist_log is not None:
             dist_log = dist_log[(dist_log["Time"] >= start_date) & (dist_log["Time"] <= end_date)]
-            df_dist = pd.DataFrame({
-                'Date': dist_log["Time"],
-                'SOC': [dist_log["Observation"][i][0:4].mean() for i in range(len(dist_log))],
-                'Load': [dist_log["Observation"][i][29] for i in range(len(dist_log))],
-                'PV': [dist_log["Observation"][i][34] for i in range(len(dist_log))],
-                'Price': [dist_log["Observation"][i][10] for i in range(len(dist_log))],
-                'Action': [dist_log["Charging energy"][i][0:4].sum() * 4 for i in range(len(dist_log))],
-                'Free cap': [dist_log["Observation"][i][-8] / dist_log["Observation"][i][-9] for i in range(len(dist_log))],
-                'CF': dist_log["Cashflow"]
-            })
-            chosen_dfs.append(df_dist)
+            chosen_dfs.append(self._get_from_obs(dist_log))
             log_names.append("Distributed charging")
 
         if night_log is not None:
             night_log = night_log[(night_log["Time"] >= start_date) & (night_log["Time"] <= end_date)]
-            df_night = pd.DataFrame({
-                'Date': night_log["Time"],
-                'SOC': [night_log["Observation"][i][0:4].mean() for i in range(len(night_log))],
-                'Load': [night_log["Observation"][i][29] for i in range(len(night_log))],
-                'PV': [night_log["Observation"][i][34] for i in range(len(night_log))],
-                'Price': [night_log["Observation"][i][10] for i in range(len(night_log))],
-                'Action': [night_log["Charging energy"][i][0:4].sum() * 4 for i in range(len(night_log))],
-                'Free cap': [night_log["Observation"][i][-8] / night_log["Observation"][i][-9] for i in
-                             range(len(night_log))],
-                'CF': night_log["Cashflow"]
-            })
-            chosen_dfs.append(df_night)
+            chosen_dfs.append(self._get_from_obs(log=night_log))
             log_names.append("Night charging")
 
         # Create a subplot with 3 rows and 1 column, without sharing the x-axis
-        fig = make_subplots(rows=len(chosen_dfs)+1, cols=1, shared_xaxes=False, vertical_spacing=0.04,
+        fig = make_subplots(rows=len(chosen_dfs)+1, cols=1, shared_xaxes=False, vertical_spacing=0.1,
                             specs=[[{'secondary_y': True}] for _ in range(len(chosen_dfs)+1)],
                             subplot_titles=(["Load, PV and Price",
                                              *[f"{log_names[i]} - Money spent: €" + str(np.round(chosen_dfs[i]["CF"].sum() * -1, 1))
                                              for i in range(len(chosen_dfs))]]),
-                            column_widths=[1200], row_heights=[270 for _ in range(len(chosen_dfs)+1)])
+                            column_widths=[1000], row_heights=[270 for _ in range(len(chosen_dfs)+1)])
 
         # Add traces for the first subplot
         fig.add_trace(go.Scatter(x=chosen_dfs[0]["Date"], y=chosen_dfs[0]["Load"], name='Building Load', legendgroup="1"), row=1, col=1)
         fig.add_trace(go.Scatter(x=chosen_dfs[0]["Date"], y=chosen_dfs[0]["PV"], name='PV', legendgroup="1"), row=1, col=1)
-        fig.add_trace(go.Scatter(x=chosen_dfs[0]["Date"], y=chosen_dfs[0]["Price"], name='Price', legendgroup="1"), row=1, col=1,
-                      secondary_y=True)
+        fig.add_trace(go.Scatter(x=chosen_dfs[0]["Date"], y=chosen_dfs[0]["Price"], name='Price', legendgroup="1"), row=1, col=1, secondary_y=True)
 
         # # Add traces for the second subplot (you can change these as needed)
         # fig.add_trace(go.Scatter(x=df["Date"], y=df_real["Action"], name='Charging power', legendgroup="2"), row=2, col=1)
@@ -324,7 +311,7 @@ class BasicEvaluation(Evaluation):
                                      y=chosen_dfs[i]["SOC"],
                                      name='SOC',
                                      legendgroup=f"{i+2}"),
-                          row=i+2, col=1,secondary_y=True)
+                          row=i+2, col=1, secondary_y=True)
 
         fig.update_xaxes(row=1, range=[start_date, end_date], matches="x")
         fig.update_xaxes(row=2, range=[start_date, end_date], matches="x")
@@ -334,8 +321,8 @@ class BasicEvaluation(Evaluation):
 
         for i in range(1, len(chosen_dfs)+1):
             fig.update_yaxes(
-                tickvals=[-20, 0, 20],  # Values at which ticks on this axis appear
-                ticktext=['-20', '0', '20'],  # Text that appears at the ticks
+                tickvals=[-evse_power, 0, evse_power],  # Values at which ticks on this axis appear
+                ticktext=[f'-{evse_power}', '0', f'{evse_power}'],  # Text that appears at the ticks
                 row=i + 1, col=1,  # Row and column of the subplot to update (adjust as needed)
                 secondary_y=False  # Set to True if updating the secondary y-axis
             )
@@ -348,17 +335,20 @@ class BasicEvaluation(Evaluation):
                 secondary_y=True  # Set to True if updating the secondary y-axis
             )
 
+        min_price = chosen_dfs[0]["Price"].min()
+        max_price = chosen_dfs[0]["Price"].max()
+
         for i in range(1):
             fig.update_yaxes(
-                tickvals=[-5, 0, 5, 10, 15],  # Values at which ticks on this axis appear
-                ticktext=['-5', '0', "5", "10", "15"],  # Text that appears at the ticks
-                row=i + 1, col=1,  # Row and column of the subplot to update (adjust as needed)
-                secondary_y=True  # Set to True if updating the secondary y-axis
+                tickvals = [min_price, max_price],  # Values at which ticks on this axis appear
+                ticktext = [f'{np.round(min_price, 0)}', f'{np.round(max_price, 0)}'],  # Text that appears at the ticks
+                row = i + 1, col=1,  # Row and column of the subplot to update (adjust as needed)
+                secondary_y = True  # Set to True if updating the secondary y-axis
             )
 
-        fig.update_yaxes(row=1, col=1, range=[-6.5, 18], secondary_y=True)
+        fig.update_yaxes(row=1, col=1, range=[min_price-2, max_price+2], secondary_y=True)
         for i in range(1, len(chosen_dfs)+1):
-            fig.update_yaxes(row=i+1, col=1, range=[-23, 23], secondary_y=False)
+            fig.update_yaxes(row=i+1, col=1, range=[-evse_power*1.1, evse_power*1.1], secondary_y=False)
 
         # Labels for primary y-axes
         primary_labels = ["kW" for _ in range(len(chosen_dfs)+1)]
@@ -375,14 +365,14 @@ class BasicEvaluation(Evaluation):
             fig.update_yaxes(title_text=label, row=i + 1, col=1, secondary_y=True)
 
         fig.update_layout(
-            width=1050,
-            height=1400,
+            # width=1050,
+            # height=1400,
             margin=dict(l=35, r=45, t=25, b=25),
             font=dict(size=16)
         )
 
         fig.update_layout(
-            legend_tracegroupgap=250,
+            legend_tracegroupgap=275,
 
         )
 
@@ -399,3 +389,73 @@ class BasicEvaluation(Evaluation):
 
         # return the plot
         return fig
+
+    def _get_from_obs(self, log: dict):
+
+        obs = log["Observation"]
+        act = log["Charging energy"]
+        cf = log["Cashflow"]
+        env_config = self.env_kwargs["env_config"]
+
+        bl_pv_lookahead = env_config["bl_pv_lookahead"]
+        pr_lookahead = env_config["price_lookahead"]
+
+        length = len(log)
+
+        # Check observer class to see how observation list is built up
+
+        date = log["Time"]
+        first = 0  # first entry has index 0
+        last = self.n_evs - 1  # soc for each car
+        if self.n_evs > 1:
+            soc = [obs[i][first:last].mean() for i in range(length)]
+        else:
+            soc = [obs[i][first] for i in range(length)]
+
+        first = self.n_evs
+        last = self.n_evs * 2 - 1  # hours left at charger for each car
+        if self.n_evs > 1:
+            hours_left = [obs[i][first:last].mean() for i in range(length)]
+        else:
+            hours_left = [obs[i][first] for i in range(length)]
+
+        first = self.n_evs * 2
+        last = self.n_evs * 2 + pr_lookahead  # price lookahead gives price in hour, hour+1, etc.
+        price = [obs[i][first] for i in range(length)]
+
+        first = self.n_evs * 2 + pr_lookahead + 1
+        last = self.n_evs * 2 + pr_lookahead * 2 + 1  # tariff paid when discharging, with lookahead
+        tariff = [obs[i][first] for i in range(length)]
+
+        first = self.n_evs * 2 + pr_lookahead * 2 + 2
+        last = self.n_evs * 2 + pr_lookahead * 2 + 2 + bl_pv_lookahead  # building load lookahead
+        building_load = [obs[i][first] for i in range(length)]
+
+        first = self.n_evs * 2 + pr_lookahead * 2 + 2 + bl_pv_lookahead + 1
+        last = self.n_evs * 2 + pr_lookahead * 2 + bl_pv_lookahead * 2 + 1  # pv has same lookahead as building
+        pv = [obs[i][first] for i in range(length)]
+
+        free_cap = [obs[i][-8] / obs[i][-9] for i in range(length)]  # free grid capacity in MW / total grid capacity
+
+        time_steps_per_hour = env_config["time_steps_per_hour"]
+
+        # act is charging energy in kWh, we want to display the currently drawn power in kW
+        first = 0  # first entry has index 0
+        last = self.n_evs - 1  # soc for each car
+        if self.n_evs > 1:
+            action = [act[i][first:last].sum() * time_steps_per_hour for i in range(length)]  # Going from kWh to kW
+        else:
+            action = [act[i][first] * time_steps_per_hour for i in range(length)]  # Going from kWh to kW
+
+        df = pd.DataFrame({
+            'Date': date,
+            'SOC': soc,
+            'Load': building_load,
+            'PV': pv,
+            'Price': price,
+            'Action': action,
+            'Free cap': free_cap,
+            'CF': cf
+        })
+
+        return df
