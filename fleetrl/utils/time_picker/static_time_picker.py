@@ -9,7 +9,7 @@ class StaticTimePicker(TimePicker):
     Picks a static / always the same starting time.
     """
 
-    def __init__(self, start_time: str = "01/01/2020 00:00"):
+    def __init__(self, start_time: str = "01/01/2021 00:00"):
         """
         :param start_time: When initialised, start time is specified
         """
@@ -24,6 +24,7 @@ class StaticTimePicker(TimePicker):
 
         # keep month, day and time but set the right year to match with schedule database
         if (chosen_year < first_year) or (chosen_year > last_year):
+            print(f"Chosen start year: {chosen_year}, Start year in database: {first_year}")
             print("Chosen year does not match db years. Adjusting to match start year in db...")
             chosen_start_time = chosen_start_time + pd.DateOffset(years=first_year-chosen_year)
 

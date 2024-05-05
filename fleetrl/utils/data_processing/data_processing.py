@@ -54,7 +54,7 @@ class DataLoader:
         if not real_time:  # if real_time, data is not resampled and used as is
             # resampling the df. consumption and distance are summed, power rating mean like in emobpy
             # group by ID is needed so the different cars don't get overwritten (they have the same dates)
-            # NB: up-sampling is not going to work
+            # NB: up-sampling does not work here, would require filling the empty cells with new data (e.g. ffill)
             self.schedule = self.schedule.groupby("ID").resample(time_conf.freq).agg(
                 {'Location': 'first', 'ID': 'first', 'Consumption_kWh': 'sum',
                  'ChargingStation': 'first', 'PowerRating_kW': 'mean',
@@ -74,8 +74,7 @@ class DataLoader:
             # date_range according to model frequency
             self.date_range["date"] = pd.date_range(start=self.schedule["date"].min(),
                                                     end=self.schedule["date"].max(),
-                                                    freq=time_conf.freq
-                                                    )
+                                                    freq=time_conf.freq)
         else:
             # date_range according to dataset
             self.date_range["date"] = self.schedule["date"].unique()
@@ -116,14 +115,14 @@ class DataLoader:
 
         else:
             self.db = None
-            raise RuntimeError("Problem with components. Check building and PV flags.")
+            raise RuntimeError("Problem with building database. Check building and PV flags.")
 
     def compute_from_schedule(self, ev_conf, time_conf, target_soc):
         """
         This function pre-processes the input data and adds additional rows to the file.
         There flag, time left at charger, soc on return, consumption, etc.
 
-        Use of merge_asof and vectorized operations for performance gains
+        Use merge_asof and vectorized operations for performance gains
     
         :return: None
         """
@@ -297,7 +296,7 @@ class DataLoader:
 
     def load_feed_in(self, path_name, tariff_name, date_range):
         """
-        Load feedin from csv
+        Load feed-in from csv
         :param path_name: Parent directory string
         :param tariff_name: file name with .csv ending
         :param date_range: pd.date_range which was defined from the "date" column in the EV schedules. Note that the
@@ -430,4 +429,3 @@ class DataLoader:
         assert(df.iloc[-1]["date"].year == date_range.iloc[-1][0].year), "Invalid end year."
 
         return df
-
