@@ -28,7 +28,8 @@ class Evaluation:
                               rl_log: pd.DataFrame=None,
                               uc_log: pd.DataFrame=None,
                               dist_log: pd.DataFrame=None,
-                              night_log: pd.DataFrame=None):
+                              night_log: pd.DataFrame=None,
+                              lp_log: pd.DataFrame=None):
 
         raise NotImplementedError("This is an abstract class")
 
