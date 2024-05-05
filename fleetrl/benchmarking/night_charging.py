@@ -25,6 +25,7 @@ class NightCharging(Benchmark):
         self.n_episodes = n_episodes
         self.n_envs = n_envs
         self.time_steps_per_hour = time_steps_per_hour
+        self.env_config = None
 
     def run_benchmark(self,
                       use_case: str,
@@ -101,6 +102,8 @@ class NightCharging(Benchmark):
         night_log.reset_index(drop=True, inplace=True)
         night_log = night_log.iloc[0:-2]
 
+        self.env_config = env_kwargs["env_config"]
+
         return night_log
 
     def plot_benchmark(self,
@@ -128,7 +131,11 @@ class NightCharging(Benchmark):
         plt.grid(alpha=0.2)
 
         plt.ylabel("Charging power in kW")
-        max = night_log.loc[0, "Observation"][-10]
-        plt.ylim([-max * 1.2, max * 1.2])
-
+        price_lookahead = self.env_config["price_lookahead"] * int(self.env_config["include_price"])
+        bl_pv_lookahead = self.env_config["bl_pv_lookahead"]
+        number_of_lookaheads = sum([int(self.env_config["include_pv"]), int(self.env_config["include_building"])])
+        # check observer module for building of observation list
+        power_index = self.n_evs * 6 + 2 * (price_lookahead+1) + number_of_lookaheads * (bl_pv_lookahead+1) + 1
+        max_val = night_log.loc[0, "Observation"][power_index]
+        plt.ylim([-max_val * 1.2, max_val * 1.2])
         plt.show()

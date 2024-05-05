@@ -25,6 +25,7 @@ class LinearOptimization(Benchmark):
         self.n_episodes = n_episodes
         self.n_envs = n_envs
         self.time_steps_per_hour = time_steps_per_hour
+        self.env_config = None
 
     def run_benchmark(self,
                       use_case: str,
@@ -47,11 +48,15 @@ class LinearOptimization(Benchmark):
         env_config = env_kwargs["env_config"]
 
         env = FleetEnv(env_config)
+        # config needed for later use in plotting
+        self.env_config = env_config
 
         # reading the input file as a pandas DataFrame
         df: pd.DataFrame = env.db
 
         # adjust length of df for n_steps
+        # We don't need to optimise over an entire year if the eval period is just 48 hours
+        # Lambda function filters out unnecessary data, but preserves database structure
         first_date = df["date"].min()
         last_date = df["date"].min() + dt.timedelta(hours=self.n_steps) - dt.timedelta(minutes=15)
         df = df[df.groupby(by="ID").date.transform(lambda x: x <= last_date)]
@@ -89,14 +94,19 @@ class LinearOptimization(Benchmark):
         # model parameters
         model.building_load = pyo.Param(model.timestep,
                                         initialize={i: building_data[i] for i in range(length_time_load_pv)})
+
         model.pv = pyo.Param(model.timestep, initialize={i: pv_data[i] for i in range(length_time_load_pv)})
+
         model.ev_availability = pyo.Param(model.timestep, model.ev_id,
-                                          initialize={(i, j): ev_data[j].iloc[i] for i in range(length_time_load_pv) for
-                                                      j in range(self.n_evs)})
+                                          initialize={(i, j): ev_data[j].iloc[i] for i in range(length_time_load_pv)
+                                                      for j in range(self.n_evs)})
+
         model.soc_on_return = pyo.Param(model.timestep, model.ev_id,
                                         initialize={(i, j): soc_on_return[j].iloc[i] for i in range(length_time_load_pv)
                                                     for j in range(self.n_evs)})
+
         model.price = pyo.Param(model.timestep, initialize={i: price_data[i] for i in range(length_time_load_pv)})
+
         model.tariff = pyo.Param(model.timestep, initialize={i: tariff_data[i] for i in range(length_time_load_pv)})
 
         # decision variables
@@ -218,8 +228,7 @@ class LinearOptimization(Benchmark):
                          for i in m.timestep for ev in range(self.n_evs)]))
 
         model.obj = pyo.Objective(rule=obj_fun, sense=pyo.minimize)
-        opt = pyo.SolverFactory(
-            'glpk')  # , executable="/home/enzo/Downloads/gurobi10.0.2_linux64/gurobi1002/linux64/")
+        opt = pyo.SolverFactory('glpk')  # you can specify where a solver lies with the parameter 'executable'
         opt.options['mipgap'] = 0.005
 
         res = opt.solve(model, tee=True)
@@ -269,7 +278,7 @@ class LinearOptimization(Benchmark):
             mean_all_lin.append(np.mean(mean_per_hid_lin[i]))
 
         mean = pd.DataFrame()
-        mean["Distributed charging"] = np.multiply(mean_all_lin, 4)
+        mean["Linear optimization"] = np.multiply(mean_all_lin, 4)
 
         mean.plot()
 
@@ -282,7 +291,12 @@ class LinearOptimization(Benchmark):
         plt.grid(alpha=0.2)
 
         plt.ylabel("Charging power in kW")
-        max = lin_log.loc[0, "Observation"][-10]
-        plt.ylim([-max * 1.2, max * 1.2])
+        price_lookahead = self.env_config["price_lookahead"] * int(self.env_config["include_price"])
+        bl_pv_lookahead = self.env_config["bl_pv_lookahead"]
+        number_of_lookaheads = sum([int(self.env_config["include_pv"]), int(self.env_config["include_building"])])
+        # check observer module for building of observation list
+        power_index = self.n_evs * 6 + 2 * (price_lookahead+1) + number_of_lookaheads * (bl_pv_lookahead+1) + 1
+        max_val = lin_log.loc[0, "Observation"][power_index]
+        plt.ylim([-max_val * 1.2, max_val * 1.2])
 
         plt.show()

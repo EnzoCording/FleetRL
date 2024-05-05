@@ -22,6 +22,7 @@ class Uncontrolled(Benchmark):
         self.n_episodes = n_episodes
         self.n_envs = n_envs
         self.time_steps_per_hour = time_steps_per_hour
+        self.env_config = None
 
     def run_benchmark(self,
                       use_case: str,
@@ -44,6 +45,8 @@ class Uncontrolled(Benchmark):
         episode_length = self.n_steps
         n_episodes = self.n_episodes
         dumb_norm_vec_env.reset()
+
+        self.env_config = env_kwargs["env_config"]
 
         for i in range(episode_length * self.time_steps_per_hour * n_episodes):
             if dumb_norm_vec_env.env_method("is_done")[0]:
@@ -82,7 +85,11 @@ class Uncontrolled(Benchmark):
         plt.grid(alpha=0.2)
 
         plt.ylabel("Charging power in kW")
-        max = dumb_log.loc[0, "Observation"][-10]
-        plt.ylim([-max * 1.2, max * 1.2])
-
+        price_lookahead = self.env_config["price_lookahead"] * int(self.env_config["include_price"])
+        bl_pv_lookahead = self.env_config["bl_pv_lookahead"]
+        number_of_lookaheads = sum([int(self.env_config["include_pv"]), int(self.env_config["include_building"])])
+        # check observer module for building of observation list
+        power_index = self.n_evs * 6 + 2 * (price_lookahead+1) + number_of_lookaheads * (bl_pv_lookahead+1) + 1
+        max_val = dumb_log.loc[0, "Observation"][power_index]
+        plt.ylim([-max_val * 1.2, max_val * 1.2])
         plt.show()
