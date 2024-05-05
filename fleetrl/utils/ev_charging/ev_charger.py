@@ -93,18 +93,19 @@ class EvCharger:
 
             # max possible power in kW depends on the onboard charger equipment and the charging station
             possible_power = min([ev_conf.obc_max_power, load_calculation.evse_max_power])
+
             # car is charging
             if actions[car] >= 0:
                 # the charging energy depends on the maximum chargeable energy and the desired charging amount
                 ev_total_energy_demand = (target_soc[car] - episode.soc[car]) * episode.battery_cap[car]  # total energy demand in kWh
                 demanded_charge = possible_power * actions[car] * time_conf.dt  # demanded energy in kWh by the agent
 
-                # if the agent wants to charge more than the battery can hold
+                # if the agent wants to charge more than the battery can hold, give a small penalty
                 if demanded_charge * ev_conf.charging_eff > ev_total_energy_demand:
                     current_oc_pen = score_conf.penalty_overcharging * (demanded_charge - ev_total_energy_demand) ** 2
                     current_oc_pen = max(current_oc_pen, score_conf.clip_overcharging)
                     overcharging_penalty += current_oc_pen
-                    episode.events += 1  # relevant event detected
+                    episode.events += 1  # relevant event detected - car fully charged and/or penalty triggered
                     if print_updates:
                         print(f"Overcharged, penalty of: {current_oc_pen}")
 
@@ -133,16 +134,18 @@ class EvCharger:
                     current_pv_energy = (db.loc[db["date"] == episode.time, "pv"].values[0]) * time_conf.dt  # in kWh
                 except KeyError:
                     current_pv_energy = 0.0  # kWh
+
                 connected_cars = db.loc[(db["date"] == episode.time), "There"].sum()
                 # for the case that no car is connected, to avoid division by 0
                 connected_cars = max(connected_cars, 1)
-                # energy drawn from grid after deducting pv self-consumption
+                # energy drawn from grid at each charging station after deducting pv self-consumption
                 grid_energy_demand = max(0, charging_energy - (current_pv_energy / connected_cars))  # kWh
 
                 # get current spot price, div by 1000 to go from €/MWh to €/kWh
                 current_spot = (db.loc[db["date"] == episode.time, "DELU"].values[0]) / 1000.0
 
-                # calculate charging cost for this ev and add it to the total charging cost of the step
+                # calculate charging cost for this EV and add it to the total charging cost of the step
+                # offset and multiplier transfer spot to commercial tariff, if specified "tariff" use-case
                 episode.charging_cost += (grid_energy_demand * (current_spot + self.spot_offset) * self.spot_multiplier)
 
                 # save the total charging energy in a variable
@@ -185,8 +188,8 @@ class EvCharger:
                 # efficiency not taken into account here -> but you get out less (see below)
                 episode.next_soc.append(episode.soc[car] + discharging_energy / episode.battery_cap[car])
 
-                # Discharged energy renumerated at PV feed-in minus 30%
-                # Efficiency taken into account here
+                # If "tariff" scenario, discharged energy remunerated at PV feed-in minus a mark-up (handling fees)
+                # Discharging efficiency taken into account here
 
                 current_tariff = db.loc[db["date"] == episode.time, "tariff"].values[0]
 
@@ -208,7 +211,7 @@ class EvCharger:
             # append total charging energy of the car to the charge log, used in post-processing
             charge_log = np.append(charge_log, charging_energy + discharging_energy)
 
-            # Print if SOC is actually negative
+            # Print if SOC is actually negative or bigger than 1
             if (np.round(episode.soc[car], 5) < 0) or (np.round(episode.soc[car], 5) > 1):
                 print(f"SOC negative: {episode.soc[car]}"
                       f"Date: {episode.time}"
