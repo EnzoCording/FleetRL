@@ -256,7 +256,8 @@ class BasicEvaluation(Evaluation):
                               rl_log: pd.DataFrame=None,
                               uc_log: pd.DataFrame=None,
                               dist_log: pd.DataFrame=None,
-                              night_log: pd.DataFrame=None):
+                              night_log: pd.DataFrame=None,
+                              lp_log: pd.DataFrame=None):
 
         evse_power = self.env_kwargs["env_config"]["custom_ev_charger_power_in_kw"]
 
@@ -285,6 +286,11 @@ class BasicEvaluation(Evaluation):
             chosen_dfs.append(self._get_from_obs(log=night_log))
             log_names.append("Night charging")
 
+        if lp_log is not None:
+            lp_log = lp_log[(lp_log["Time"] >= start_date) & (lp_log["Time"] <= end_date)]
+            chosen_dfs.append(self._get_from_obs(log=lp_log))
+            log_names.append("Linear optimization")
+
         # Create a subplot with 3 rows and 1 column, without sharing the x-axis
         fig = make_subplots(rows=len(chosen_dfs)+1, cols=1, shared_xaxes=False, vertical_spacing=0.1,
                             specs=[[{'secondary_y': True}] for _ in range(len(chosen_dfs)+1)],
@@ -294,9 +300,15 @@ class BasicEvaluation(Evaluation):
                             column_widths=[1000], row_heights=[270 for _ in range(len(chosen_dfs)+1)])
 
         # Add traces for the first subplot
-        fig.add_trace(go.Scatter(x=chosen_dfs[0]["Date"], y=chosen_dfs[0]["Load"], name='Building Load', legendgroup="1"), row=1, col=1)
-        fig.add_trace(go.Scatter(x=chosen_dfs[0]["Date"], y=chosen_dfs[0]["PV"], name='PV', legendgroup="1"), row=1, col=1)
-        fig.add_trace(go.Scatter(x=chosen_dfs[0]["Date"], y=chosen_dfs[0]["Price"], name='Price', legendgroup="1"), row=1, col=1, secondary_y=True)
+        fig.add_trace(go.Scatter(x=chosen_dfs[0]["Date"], y=chosen_dfs[0]["Load"],
+                                 name='Building Load', legendgroup="1"), row=1, col=1)
+
+        fig.add_trace(go.Scatter(x=chosen_dfs[0]["Date"], y=chosen_dfs[0]["PV"],
+                                 name='PV', legendgroup="1"), row=1, col=1)
+
+        fig.add_trace(go.Scatter(x=chosen_dfs[0]["Date"], y=chosen_dfs[0]["Price"],
+                                 name='Price', legendgroup="1",
+                                 legendgrouptitle=dict(text="Use-case info")), row=1, col=1, secondary_y=True)
 
         # # Add traces for the second subplot (you can change these as needed)
         # fig.add_trace(go.Scatter(x=df["Date"], y=df_real["Action"], name='Charging power', legendgroup="2"), row=2, col=1)
@@ -308,7 +320,8 @@ class BasicEvaluation(Evaluation):
             fig.add_trace(go.Scatter(x=chosen_dfs[i]["Date"],
                                      y=chosen_dfs[i]["Action"],
                                      name='Charging power',
-                                     legendgroup=f"{i+2}"),
+                                     legendgroup=f"{i+2}",
+                                     legendgrouptitle=dict(text=log_names[i])),
                           row=i+2, col=1)
 
             fig.add_trace(go.Scatter(x=chosen_dfs[i]["Date"],
@@ -376,8 +389,7 @@ class BasicEvaluation(Evaluation):
         )
 
         fig.update_layout(
-            legend_tracegroupgap=275,
-
+            legend_tracegroupgap=20,
         )
 
         # Update the x-axis to show the date without the year
