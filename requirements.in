@@ -1,0 +1,12 @@
+stable-baselines3[extra]~=2.0.0
+gymnasium~=0.28.1
+pandas~=2.0.2
+rainflow~=3.2.0
+pink-noise-rl~=2.0.1
+optuna~=3.2.0
+numpy >= 1.24.3
+matplotlib >= 3.7.1
+pyomo >= 6.6.1
+plotly
+seaborn
+pyjob-todo

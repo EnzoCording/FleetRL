@@ -1,10 +1,11 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-requirements-txt"]
+build-backend = "hatchling.build"
 
 [project]
-name = "fleetrl"
-version = "0.0.4"
+name = "fleetrl-2"
+version = "0.0.1"
+dynamic = ["dependencies"]#, "optional-dependencies"]
 authors = [
   { name="Enzo Cording", email="cording@kth.se" },
 ]
@@ -17,9 +18,15 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
+
+#[tool.hatch.metadata.hooks.requirements_txt.optional-dependencies]
+#extra = ["requirements-extra.txt"]
+
 [project.urls]
 "Homepage" = "https://github.com/EnzoCording/FleetRL"
 "Bug Tracker" = "https://github.com/EnzoCording/FleetRL/issues"
 
-[tool.setuptools]
-packages = ["fleetrl"]
+[project.scripts]
+fleet-rl = "fleetrl_2.__main__:main"

@@ -1,0 +1,19 @@
+[rl_environment]
+_external_fleet_rl_dataset_job = "path"
+_external_reward_function_job = "path"
+_external_site_paramaters_job = "path"
+
+# recommended, improves performance by adding redundant information to the observation space
+use_auxiliary_data = true
+
+normalization_strategy = "MIN_MAX" # NONE, MIN_MAX or ROLLING, todo explain
+
+[rl_environment.episode]
+episode_length = 24 # in hours
+end_cutoff_days = 60 # todo describe
+price_lookahead = 8 # in hours, maximum 12
+building_load_lookahead = 4 # in hours
+pv_production_lookahead = 4 # in hours
+
+[rl_environment.misc]
+battery_degradation_type = "NONLINEAR" # NONE, NONLINEAR, EMPIRICAL

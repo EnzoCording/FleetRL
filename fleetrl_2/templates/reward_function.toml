@@ -1,0 +1,18 @@
+[reward_function]
+price_multiplier = 3.33
+price_exponent = 1
+
+[reward_function.reward]
+fully_charged = 1
+
+[reward_function.penalty]
+invalid_action = -0.2
+overcharging = -0.0055
+overloading_multiplier = 1
+clip_overcharging = -0.2
+
+[reward_function.ignore]
+invalid_action = false
+overcharging = false
+overloading = false
+price = false

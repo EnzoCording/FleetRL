@@ -43,7 +43,7 @@ from fleetrl.utils.event_manager.event_manager import EventManager
 
 from fleetrl.utils.data_logger.data_logger import DataLogger
 
-from fleetrl.utils.schedule.schedule_generator import ScheduleGenerator, ScheduleType
+from fleetrl.utils.schedule.schedule_generator import ScheduleGenerator, ScheduleAlgorithm
 
 from fleetrl.utils.rendering.render import ParkingLotRenderer
 
@@ -174,7 +174,7 @@ class FleetEnv(gym.Env):
 
         # Specify the company type and size of the battery
         self.company: CompanyType = None
-        self.schedule_type: ScheduleType = None
+        self.schedule_type: ScheduleAlgorithm = None
         self.specify_company_and_battery_size(use_case)
 
         # Automatic schedule generation if specified
@@ -1042,19 +1042,19 @@ class FleetEnv(gym.Env):
         # Specify company type and associated battery size in kWh
         if use_case == "ct":
             self.company = CompanyType.Caretaker
-            self.schedule_type = ScheduleType.Caretaker
+            self.schedule_type = ScheduleAlgorithm.Caretaker
             self.ev_config.init_battery_cap = 16.7
         elif use_case == "ut":
             self.company = CompanyType.Utility
-            self.schedule_type = ScheduleType.Utility
+            self.schedule_type = ScheduleAlgorithm.Utility
             self.ev_config.init_battery_cap = 50.0
         elif use_case == "lmd":
             self.company = CompanyType.Delivery
-            self.schedule_type = ScheduleType.Delivery
+            self.schedule_type = ScheduleAlgorithm.Delivery
             self.ev_config.init_battery_cap = 60.0
         elif use_case == "custom":
             self.company = CompanyType.Custom
-            self.schedule_type = ScheduleType.Custom
+            self.schedule_type = ScheduleAlgorithm.Custom
             self.ev_config.init_battery_cap = self.env_config["custom_ev_battery_size_in_kwh"]
         else:
             raise TypeError("Company not recognised.")
