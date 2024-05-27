@@ -1,6 +1,6 @@
-from pyjob_todo.job import registered_job
+from tomlchef.job import registered_job
 
-from schedule_statistics_job import ScheduleStatisticsJob
+from .schedule_statistics_job import ScheduleStatisticsJob
 
 
 @registered_job

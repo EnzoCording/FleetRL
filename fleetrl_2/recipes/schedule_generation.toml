@@ -6,9 +6,9 @@ schedule_frequency = "15min"
 num_evs = 5
 _external_schedule_csv = "" # specify if you have an existing CSV file to use
 _external_schedule_job = "path" # otherwise specify a schedule job here
-output_schedule_name = "schedule.csv"
-starting_date = "2020-01-24 20:14"
-ending_date = "2022-01-24 18:45"
+schedule_output_name = "schedule.csv"
+starting_date = "2020-01-24 00:00"
+ending_date = "2020-02-24 23:45"
 schedule_algorithm = "delivery.DeliveryScheduleGenerator" # delivery, caretaker, utility, TODO custom
 
 [schedule_generation.kwargs]

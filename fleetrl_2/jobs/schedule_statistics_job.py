@@ -1,5 +1,5 @@
-from pyjob_todo.job import Job
-from pyjob_todo.job import registered_job
+from tomlchef.job import Job
+from tomlchef.job import registered_job
 
 class DepartureTime:
     def __init__(self,
@@ -10,12 +10,12 @@ class DepartureTime:
                  min_dep: int,
                  max_dep: int
                  ):
-        self.dep_mean_wd = dep_mean_wd
-        self.dep_dev_wd = dep_dev_wd
-        self.dep_mean_we = dep_mean_we
-        self.dep_dev_we = dep_dev_we
-        self.min_dep = min_dep
-        self.max_dep = max_dep
+        self.mean_wd = dep_mean_wd
+        self.dev_wd = dep_dev_wd
+        self.mean_we = dep_mean_we
+        self.dev_we = dep_dev_we
+        self.min = min_dep
+        self.max = max_dep
 
 
 class ReturnTime:
@@ -27,12 +27,12 @@ class ReturnTime:
                  min_return: int,
                  max_return: int
                  ):
-        self.ret_mean_wd = ret_mean_wd
-        self.ret_dev_wd = ret_dev_wd
-        self.ret_mean_we = ret_mean_we
-        self.ret_dev_we = ret_dev_we
-        self.min_return = min_return
-        self.max_return = max_return
+        self.mean_wd = ret_mean_wd
+        self.dev_wd = ret_dev_wd
+        self.mean_we = ret_mean_we
+        self.dev_we = ret_dev_we
+        self.min = min_return
+        self.max = max_return
 
 
 class DistanceTravelled:
@@ -44,12 +44,12 @@ class DistanceTravelled:
                  min_distance: int,
                  max_distance: int
                  ):
-        self.avg_distance_wd = avg_distance_wd
-        self.dev_distance_wd = dev_distance_wd
-        self.avg_distance_we = avg_distance_we
-        self.dev_distance_we = dev_distance_we
-        self.min_distance = min_distance
-        self.max_distance = max_distance
+        self.mean_wd = avg_distance_wd
+        self.dev_wd = dev_distance_wd
+        self.mean_we = avg_distance_we
+        self.dev_we = dev_distance_we
+        self.min = min_distance
+        self.max = max_distance
 
 
 class Consumption:
@@ -74,7 +74,6 @@ class Charger:
         self.charging_power = charging_power
 
 
-@registered_job
 class ScheduleStatisticsJob(Job):
 
     def __init__(self,

@@ -50,7 +50,7 @@ class ScheduleGenerator(ABC):
         for i in range(self.num_evs):
             schedules.append(self._generate(i))
 
-        return pd.concat(schedules, axis=1)
+        return pd.concat(schedules, axis=0)
 
     @abstractmethod
     def _generate(self, ev_id: int) -> pd.DataFrame:

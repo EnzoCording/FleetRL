@@ -1,12 +1,11 @@
 from pathlib import Path
 
-from pyjob_todo.application import Application
+from tomlchef.application import Application
 
 
 def main():
     here = Path(__file__).parent
-    app = Application(here, here / "templates",
-                      full_package_name="FleetRL")
+    app = Application(here, here / "recipes")
     app.run()
 
 

@@ -159,5 +159,7 @@ inputs/big_schedules/*
 fleetrl/Benchmarks/logs/*
 fleetrl/Internal_Files/*
 tests/
+test-runs/
+generated/
 
 MANIFEST.in

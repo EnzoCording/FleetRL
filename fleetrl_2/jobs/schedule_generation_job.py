@@ -4,13 +4,14 @@ from pathlib import Path
 from typing import Type
 
 import pandas as pd
-from pyjob_todo.job import Job
-from pyjob_todo.job import registered_job
-from pyjob_todo.package_manager import PackageManager
+from tomlchef.job import Job
+from tomlchef.job import registered_job
+from tomlchef.package_manager import PackageManager
 
 from fleetrl.utils.schedule_generation.schedule_generator import \
     ScheduleGenerator
-from schedule_statistics_job import ScheduleStatisticsJob
+from .delivery_statistics_job import DeliveryStatisticsJob
+from .schedule_statistics_job import ScheduleStatisticsJob
 
 logger = logging.getLogger(PackageManager.get_name())
 
@@ -63,7 +64,7 @@ class ScheduleGenerationJob(Job):
 
         self.schedule_output_name = schedule_output_name
 
-        self.schedule_output_csv: Path
+        self.schedule_output_csv: Path | None = None
         self.schedule_statistics_job: ScheduleStatisticsJob
         self.schedule_generator: ScheduleGenerator
 
@@ -75,7 +76,7 @@ class ScheduleGenerationJob(Job):
         if self._external_schedule_csv is not None:
             self.schedule_output_csv = self._external_schedule_csv
         else:
-            self.schedule_statistics_job: ScheduleStatisticsJob = Job.from_job_directory(
+            self.schedule_statistics_job = DeliveryStatisticsJob.from_job_directory(
                 self._external_schedule_job)
 
             try:
@@ -86,7 +87,7 @@ class ScheduleGenerationJob(Job):
                     f"fleetrl.utils.schedule_generation.{module_name}")
                 # get the specific class of the schedule generator
                 _class: Type[ScheduleGenerator] = getattr(module, class_name)
-                # instantiate algorithm object with all needed paramaters
+                # instantiate algorithm object with all needed parameters
                 self.schedule_generator = _class(
                     starting_date=self.starting_date,
                     ending_date=self.ending_date,
@@ -99,6 +100,7 @@ class ScheduleGenerationJob(Job):
                     distance_travelled=self.schedule_statistics_job.distance_travelled,
                     seed=self.seed,
                     **self.schedule_generation_kwargs)
+                pass
             except ImportError as e:
                 raise ValueError(
                     f"Invalid schedule algorithm: {self.schedule_algorithm}.\n"
@@ -126,4 +128,4 @@ class ScheduleGenerationJob(Job):
         p = self._dir_root / self.schedule_output_name
         complete_schedule.to_csv(p)
         logger.info(f"Schedule generation complete. Saved in: {p}")
-        self.schedule_name = p
+        self.schedule_output_csv = p

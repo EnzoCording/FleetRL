@@ -1,5 +1,5 @@
-from pyjob_todo.job import Job
-from pyjob_todo.job import registered_job
+from tomlchef.job import Job
+from tomlchef.job import registered_job
 
 
 @registered_job
