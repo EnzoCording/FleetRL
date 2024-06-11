@@ -90,3 +90,26 @@ As of now, the repository uses the GPL 3.0 License. If this is
 significantly constricting you, please reach out to me!
 
 [License](LICENSE)
+
+**Citation**
+
+If you find this work useful, please cite it:
+
+DOI: https://doi.org/10.1016/j.softx.2024.101671
+
+Bibtex:
+```
+@article{cording_fleetrl_2024,
+	title = {{FleetRL}: {Realistic} reinforcement learning environments for commercial vehicle fleets},
+	volume = {26},
+	issn = {2352-7110},
+	url = {https://www.sciencedirect.com/science/article/pii/S2352711024000426},
+	doi = {https://doi.org/10.1016/j.softx.2024.101671},
+	abstract = {Reinforcement Learning for EV charging optimization has gained significant academic attention in recent years, due to its ability to handle uncertainty, non-linearity, and real-time problem-solving. While the number of articles published on the matter has surged, the number of open-source environments for EV charging optimization remains small, and a research gap still exists when it comes to customizable frameworks for commercial vehicle fleets. To bridge the gap between research and real-world deployment of RL-based charging optimization, this paper introduces FleetRL as the first customizable RL environment for fleet charging optimization. Researchers and fleet operators can easily adapt the framework to fit their use-cases, and assess the impact of RL-based charging on economic feasibility, battery degradation, and operations.},
+	journal = {SoftwareX},
+	author = {Cording, Enzo and Thakur, Jagruti},
+	year = {2024},
+	keywords = {Dynamic load management, Electric vehicles, EV charging optimization, Reinforcement learning},
+	pages = {101671},
+}
+```
