@@ -10,8 +10,7 @@ from tomlchef.package_manager import PackageManager
 
 from fleetrl.utils.schedule_generation.schedule_generator import \
     ScheduleGenerator
-from .delivery_statistics_job import DeliveryStatisticsJob
-from .schedule_statistics_job import ScheduleStatisticsJob
+from .schedule_parameters_job import ScheduleParametersJob
 
 logger = logging.getLogger(PackageManager.get_name())
 
@@ -22,12 +21,10 @@ class ScheduleGenerationJob(Job):
                  schedule_frequency: str,
                  num_evs: int,
                  _external_schedule_csv: str,
-                 _external_schedule_job: str,
+                 _external_schedule_parameters_job: str,
                  schedule_output_name: str,
                  starting_date: str,
                  ending_date: str,
-                 schedule_algorithm: str,
-                 schedule_generation_kwargs: dict,
                  **kwargs):
 
         super().__init__(**kwargs)
@@ -39,11 +36,10 @@ class ScheduleGenerationJob(Job):
         self.starting_date = starting_date
         self.ending_date = ending_date
 
-        self.schedule_algorithm = schedule_algorithm
-        self.schedule_generation_kwargs = schedule_generation_kwargs
-
-        if ((not _external_schedule_job and not _external_schedule_csv)
-                or (_external_schedule_job and _external_schedule_csv)):
+        if ((not _external_schedule_parameters_job
+             and not _external_schedule_csv)
+                or (_external_schedule_parameters_job
+                    and _external_schedule_csv)):
             raise ValueError(
                 "Must specify either a schedule job or a schedule csv file "
                 "- not neither or both.")
@@ -56,16 +52,18 @@ class ScheduleGenerationJob(Job):
                 "Invalid path to external schedule csv file: "
                 f"{_external_schedule_csv}")
 
-        self._external_schedule_job = (Path(_external_schedule_job)
-                                       if _external_schedule_job else None)
+        self._external_schedule_parameters_job = (
+            Path(_external_schedule_parameters_job)
+            if _external_schedule_parameters_job else None)
 
         if not schedule_output_name.endswith(".csv"):
             schedule_output_name += ".csv"
 
         self.schedule_output_name = schedule_output_name
 
+        self.schedule_algorithm: str
         self.schedule_output_csv: Path | None = None
-        self.schedule_statistics_job: ScheduleStatisticsJob
+        self.schedule_parameters_job: ScheduleParametersJob
         self.schedule_generator: ScheduleGenerator
 
     @staticmethod
@@ -76,8 +74,11 @@ class ScheduleGenerationJob(Job):
         if self._external_schedule_csv is not None:
             self.schedule_output_csv = self._external_schedule_csv
         else:
-            self.schedule_statistics_job = DeliveryStatisticsJob.from_job_directory(
-                self._external_schedule_job)
+            self.schedule_parameters_job = (
+                Job.from_job_directory(
+                    self._external_schedule_parameters_job)
+            )
+            self.schedule_algorithm = self.schedule_parameters_job.schedule_algorithm
 
             try:
                 # extract module and class of algorithm implementation
@@ -93,13 +94,13 @@ class ScheduleGenerationJob(Job):
                     ending_date=self.ending_date,
                     freq=self.schedule_frequency,
                     num_evs=self.num_evs,
-                    consumption=self.schedule_statistics_job.consumption,
-                    charger=self.schedule_statistics_job.charger,
-                    return_time=self.schedule_statistics_job.return_time,
-                    departure_time=self.schedule_statistics_job.departure_time,
-                    distance_travelled=self.schedule_statistics_job.distance_travelled,
-                    seed=self.seed,
-                    **self.schedule_generation_kwargs)
+                    consumption=self.schedule_parameters_job.consumption,
+                    charger=self.schedule_parameters_job.charger,
+                    return_time=self.schedule_parameters_job.return_time,
+                    departure_time=self.schedule_parameters_job.departure_time,
+                    distance_travelled=self.schedule_parameters_job.distance_travelled,
+                    seed=self.seed)
+                    #**self.schedule_generation_kwargs)
                 pass
             except ImportError as e:
                 raise ValueError(

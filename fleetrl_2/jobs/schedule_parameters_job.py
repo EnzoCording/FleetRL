@@ -74,9 +74,10 @@ class Charger:
         self.charging_power = charging_power
 
 
-class ScheduleStatisticsJob(Job):
+class ScheduleParametersJob(Job):
 
     def __init__(self,
+                 schedule_algorithm: str,
                  departure_time: dict,
                  return_time: dict,
                  distance_travelled: dict,
@@ -86,6 +87,7 @@ class ScheduleStatisticsJob(Job):
 
         super().__init__(**kwargs)
 
+        self.schedule_algorithm = schedule_algorithm
         self.departure_time = DepartureTime(**departure_time)
         self.return_time = ReturnTime(**return_time)
         self.distance_travelled = DistanceTravelled(**distance_travelled)
@@ -94,7 +96,7 @@ class ScheduleStatisticsJob(Job):
 
     @staticmethod
     def get_toml_key() -> str:
-        return "schedule_statistics"
+        return "schedule_parameters"
 
     def is_finished(self) -> bool:
         return True

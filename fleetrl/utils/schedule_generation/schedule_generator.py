@@ -3,11 +3,11 @@ from abc import abstractmethod
 
 import pandas as pd
 
-from fleetrl_2.jobs.schedule_statistics_job import Charger
-from fleetrl_2.jobs.schedule_statistics_job import Consumption
-from fleetrl_2.jobs.schedule_statistics_job import DepartureTime
-from fleetrl_2.jobs.schedule_statistics_job import DistanceTravelled
-from fleetrl_2.jobs.schedule_statistics_job import ReturnTime
+from fleetrl_2.jobs.schedule_parameters_job import Charger
+from fleetrl_2.jobs.schedule_parameters_job import Consumption
+from fleetrl_2.jobs.schedule_parameters_job import DepartureTime
+from fleetrl_2.jobs.schedule_parameters_job import DistanceTravelled
+from fleetrl_2.jobs.schedule_parameters_job import ReturnTime
 
 
 class ScheduleGenerator(ABC):
