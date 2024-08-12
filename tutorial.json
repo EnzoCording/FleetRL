@@ -1,0 +1,112 @@
+{
+  "data_path": "inputs",
+  "use_case": "custom",
+
+  "building_name": "load_lmd.csv",
+  "price_name": "spot_2021_new.csv",
+  "tariff_name": "spot_2021_new_tariff.csv",
+  "schedule_name": "1_lkw.csv",
+  "pv_name": null,
+
+  "seed": null,
+
+  "include_building": true,
+  "include_pv": true,
+  "include_price": true,
+
+  "time_picker": "static",
+
+  "max_batt_cap_in_all_use_cases": 600,
+  "init_soh": 1.0,
+
+  "log_data": true,
+  "deg_emp": false,
+  "calculate_degradation": true,
+
+  "verbose": 1,
+  "normalize_in_env": false,
+  "aux": true,
+
+  "ignore_price_reward": false,
+  "ignore_overloading_penalty": false,
+  "ignore_invalid_penalty": false,
+  "ignore_overcharging_penalty": false,
+
+
+  "gen_schedule": false,
+  "gen_start_date": "2021-01-01 00:00",
+  "gen_end_date": "2021-12-31 23:59",
+  "gen_name": "1_lkw.csv",
+  "gen_n_evs": 1,
+
+  "spot_markup": null,
+  "spot_mul": null,
+  "feed_in_ded": null,
+
+  "real_time": false,
+
+  "price_multiplier": 3.33,
+  "price_exponent": 1,
+  "fully_charged_reward": 1,
+  "penalty_invalid_action": -0.2,
+  "penalty_overcharging": -0.0055,
+  "penalty_overloading": 1,
+  "clip_overcharging": -0.2,
+
+  "episode_length": 24,
+  "end_cutoff": 60,
+
+  "price_lookahead": 8,
+  "bl_pv_lookahead": 4,
+
+  "freq": "15T",
+  "minutes": 15,
+
+  "time_steps_per_hour": 4,
+
+  "init_battery_cap": 600.0,
+  "obc_max_power": 250.0,
+  "charging_eff": 0.91,
+  "discharging_eff": 0.91,
+  "def_soc": 0.5,
+  "temperature": 25.0,
+  "target_soc": 0.85,
+  "target_soc_lunch": 0.65,
+  "min_laxity": 1.75,
+
+  "fixed_markup": 10,
+  "variable_multiplier": 1.5,
+  "feed_in_deduction": 0.25,
+
+  "custom_weekday_departure_time_mean": 7,
+  "custom_weekday_departure_time_std": 1,
+  "custom_weekday_return_time_mean": 19,
+  "custom_weekday_return_time_std": 1,
+
+  "custom_weekend_departure_time_mean": 9,
+  "custom_weekend_departure_time_std": 1.5,
+  "custom_weekend_return_time_mean": 17,
+  "custom_weekend_return_time_std": 1.5,
+
+  "custom_earliest_hour_of_departure": 3,
+  "custom_latest_hour_of_departure": 11,
+  "custom_earliest_hour_of_return": 12,
+  "custom_latest_hour_of_return": 23,
+
+  "custom_weekday_distance_mean": 300,
+  "custom_weekday_distance_std": 25,
+  "custom_weekend_distance_mean": 150,
+  "custom_weekend_distance_std": 25,
+  "custom_minimum_distance": 20,
+  "custom_max_distance": 400,
+
+  "custom_consumption_mean": 1.3,
+  "custom_consumption_std": 0.167463672468669,
+  "custom_minimum_consumption": 0.3,
+  "custom_maximum_consumption": 2.5,
+  "custom_maximum_consumption_per_trip": 500,
+
+  "custom_ev_charger_power_in_kw": 120,
+  "custom_ev_battery_size_in_kwh": 600,
+  "custom_grid_connection_in_kw": 500
+}

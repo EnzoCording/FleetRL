@@ -9,7 +9,7 @@ class StaticTimePicker(TimePicker):
     Picks a static / always the same starting time.
     """
 
-    def __init__(self, start_time: str = "01/01/2021 00:00"):
+    def __init__(self, start_time: str = "01/02/2021 19:00"):
         """
         :param start_time: When initialised, start time is specified
         """
