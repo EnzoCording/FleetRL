@@ -43,13 +43,9 @@ from fleetrl.utils.event_manager.event_manager import EventManager
 
 from fleetrl.utils.data_logger.data_logger import DataLogger
 
-from fleetrl.utils.schedule_generation.schedule_generator import ScheduleGenerator
+from fleetrl.utils.schedule.schedule_generator import ScheduleGenerator, ScheduleAlgorithm
 
 from fleetrl.utils.rendering.render import ParkingLotRenderer
-
-from fleetrl_2.jobs.environment_creation_job import EnvironmentCreationJob
-from fleetrl_2.jobs.environment_dataset_job import EnvironmentDatasetJob
-from fleetrl_2.jobs.reward_function_job import RewardFunctionJob
 
 class FleetEnv(gym.Env):
 
@@ -77,33 +73,70 @@ class FleetEnv(gym.Env):
     the SOC and time left at the charger, regardless of whether the vehicle is matching the charger one-to-one or not.
     """
 
-    def __init__(self,
-                 env_creation_job: EnvironmentCreationJob,
-                 env_dataset_job: EnvironmentDatasetJob,
-                 reward_function_job: RewardFunctionJob):
+    def __init__(self, env_config: str | dict):
 
         """
-        docstring
+        :param env_config: String to specify path of json config file, or dict with config
+
+        The following items are to be specified in the json or dict config:
+        - data_path: String to specify the absolute path of the input folder
+        - schedule_name: String to specify file name of schedule
+        - building_name: String to specify building load data, includes pv as well
+        - pv_name: String to optionally specify own pv dataset
+        - include_building: Flag to include building or not
+        - include_pv: Flag to include pv or not
+        - include_price: Flag to include price or not
+        - time_picker: Specify whether to pick time "static", "random" or "eval"
+        - target_soc: Target SOC that needs to be fulfilled before leaving for next trip
+        - max_batt_cap_in_all_use_cases: The largest battery size to be considered in the model
+        - init_soh: Initial state of health of batteries. SOH=1 -> no degradation
+        - deg_emp: Flag to use empirical degradation. Default False
+        - ignore_price_reward: Flag to ignore price reward
+        - ignore_overloading_penalty: Flag to ignore overloading penalty
+        - ignore_invalid_penalty: Flag to ignore invalid action penalty
+        - ignore_overcharging_penalty: Flag to ignore overcharging the battery penalty
+        - episode_length: Length of episode in hours
+        - log_data: Log SOC and SOH to csv files
+        - calculate_degradation: Calculate degradation flag
+        - verbose: Print statements
+        - normalize_in_env: Conduct normalization in environment
+        - use_case: String to specify the use-case
+        - aux: Flag to include auxiliary information in the model
+        - gen_schedule: Flag to generate schedule or not
+        - gen_start_date: Start date of the schedule
+        - gen_end_date: End date of the schedule
+        - gen_name: File name of the schedule
+        - gen_n_evs: How many EVs a schedule should be generated for
+        - spot_markup: markup on the spot price: new_price = spot + X ct/kWh
+        - spot_mul: Multiplied on the price: New price = (spot + markup) * (1+X)
+        - feed_in_ded: Deduction of the feed-in tariff: new_feed_in = (1-X) * feed_in
+        - seed: seed for random number generators
+        - real_time Bool for specifying real time flag
         """
 
         # call __init__() of parent class to ensure inheritance chain
         super().__init__()
 
-        self.env_creation = env_creation_job
-        self.env_dataset = env_dataset_job
-        self.reward_function = reward_function_job
+        # Check that the input parameter config is passed properly - either as json or dict
+        assert (env_config.__class__ == dict) or (env_config.__class__ == str), 'Invalid config type.'
+        if env_config.__class__ == str:
+            assert os.path.isfile(env_config), f'Config file not found at {env_config}.'
+            self.env_config = self.read_config(conf_path=env_config)
+        else:
+            self.env_config = env_config
 
         # setting seed
-        self.seed = self.env_dataset.seed
+        self.seed = self.env_config["seed"]
         np.random.seed(self.seed)
 
         # Loading configs
-        self.ev_config = self.env_dataset.ev_config_job
+        self.time_conf = TimeConfig(self.env_config)
+        self.ev_config = EvConfig(self.env_config)
         self.score_config = ScoreConfig(self.env_config)
 
         # Setting flags for the type of environment to build
         # NOTE: observations are appended to the db in the order specified here
-        self.include_price = self.reward_function.ignore.price
+        self.include_price = self.env_config["include_price"]
         self.include_building_load = self.env_config["include_building"]
         self.include_pv = self.env_config["include_pv"]
         self.aux_flag = self.env_config["aux"]  # include auxiliary information

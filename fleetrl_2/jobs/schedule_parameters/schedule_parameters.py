@@ -1,5 +1,5 @@
-from tomlchef.job import Job
-from tomlchef.job import registered_job
+from tidysci.task import Task
+
 
 class DepartureTime:
     def __init__(self,
@@ -74,7 +74,7 @@ class Charger:
         self.charging_power = charging_power
 
 
-class ScheduleParametersJob(Job):
+class ScheduleParameters(Task):
 
     def __init__(self,
                  schedule_algorithm: str,
@@ -83,9 +83,9 @@ class ScheduleParametersJob(Job):
                  distance_travelled: dict,
                  consumption: dict,
                  charger: dict,
-                 **kwargs):
-
-        super().__init__(**kwargs)
+                 _dir_root: str,
+                 rng_seed: int):
+        super().__init__(_dir_root, rng_seed)
 
         self.schedule_algorithm = schedule_algorithm
         self.departure_time = DepartureTime(**departure_time)
@@ -93,10 +93,6 @@ class ScheduleParametersJob(Job):
         self.distance_travelled = DistanceTravelled(**distance_travelled)
         self.consumption = Consumption(**consumption)
         self.charger = Charger(**charger)
-
-    @staticmethod
-    def get_toml_key() -> str:
-        return "schedule_parameters"
 
     def is_finished(self) -> bool:
         return True

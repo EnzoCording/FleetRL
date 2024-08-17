@@ -1,5 +1,5 @@
-from tomlchef.job import Job
-from tomlchef.job import registered_job
+from tidysci.task import Task
+from tidysci.task import register
 
 
 class _Battery:
@@ -11,7 +11,6 @@ class _Battery:
                  discharging_efficiency: float = 0.91,
                  default_soc: float = 0.5,
                  target_soc: float = 0.85):
-
         self.battery_capacity = battery_capacity
         self.initial_state_of_health = initial_state_of_health
         self.on_board_charger_max_power = on_board_charger_max_power
@@ -21,22 +20,20 @@ class _Battery:
         self.target_soc = target_soc
 
 
-@registered_job
-class EvConfigJob(Job):
+@register(alias=True)
+class EvConfigJob(Task):
 
     def __init__(self,
                  battery: dict,
                  auxiliary: dict,
-                 **kwargs):
-        super().__init__(**kwargs)
+                 _dir_root: str,
+                 rng_seed: int):
+
+        super().__init__(_dir_root, rng_seed)
 
         self.battery = _Battery(**battery)
         self.ambient_temperature: float = auxiliary['ambient_temperature']
         self.min_laxity: float = auxiliary['min_laxity']
-
-    @staticmethod
-    def get_toml_key() -> str:
-        return "ev_config"
 
     def is_finished(self) -> bool:
         return True

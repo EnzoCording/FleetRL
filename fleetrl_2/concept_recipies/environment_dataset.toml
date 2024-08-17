@@ -1,10 +1,10 @@
-[fleet_rl_dataset]
+[environment_dataset]
 _external_schedule_generation_job = "path"
 _external_site_parameters_job = "path"
 
-[fleet_rl_dataset.auxiliary_data]
+[environment_dataset.auxiliary_data]
 _external_building_load = ""
 _external_pv_production = ""
 
-[fleet_rl_dataset.config_jobs]
+[environment_dataset.config_jobs]
 _external_ev_config_job = "path"

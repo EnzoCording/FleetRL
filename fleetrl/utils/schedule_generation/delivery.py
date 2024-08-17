@@ -4,12 +4,11 @@ import math
 
 import numpy as np
 import pandas as pd
-from tomlchef.package_manager import PackageManager
 
 from fleetrl.utils.schedule_generation.schedule_generator import \
     ScheduleGenerator
 
-logger = logging.getLogger(PackageManager.get_name())
+logger = logging.getLogger()
 
 
 class DeliveryScheduleGenerator(ScheduleGenerator):

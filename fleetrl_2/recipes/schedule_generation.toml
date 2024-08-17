@@ -1,13 +1,13 @@
-[schedule_generation]
+type = "fleetrl_2.jobs.schedule_generation_job.ScheduleGenerationJob"
+
+[ScheduleGenerationJob]
 # Frequency of updates for the RL agent.
 # Can be defined with any valid Pandas offset alias, see:
 # https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases
 schedule_frequency = "15min"
 num_evs = 5
-_external_schedule_csv = "" # specify if you have an existing CSV file to use
-_external_schedule_parameters_job = "path" # otherwise specify a schedule job here
+_schedule_csv = "" # specify if you have an existing CSV file to use
+_schedule_parameters_path = "" # otherwise specify a schedule job here
 schedule_output_name = "schedule.csv"
 starting_date = "2020-01-24 00:00"
 ending_date = "2020-02-24 23:45"
-
-[schedule_generation.kwargs]

@@ -1,12 +1,9 @@
-[delivery_parameters] # TODO this is unnecessary
+type = "fleetrl_2.jobs.schedule_parameters.delivery.Delivery"
 
-# TODO would be nicer if below keys are [delivery_parameters.bla] and it still
-#   worked somehow
-
-[schedule_parameters]
+[ScheduleParameters]
 schedule_algorithm = "delivery.DeliveryScheduleGenerator"
 
-[schedule_parameters.departure_time]
+[ScheduleParameters.departure_time]
 dep_mean_wd = 7  # mean departure time weekday
 dep_dev_wd = 1  # std deviation departure time weekday
 
@@ -16,7 +13,7 @@ dep_dev_we = 1.5
 min_dep = 3
 max_dep = 11
 
-[schedule_parameters.return_time]
+[ScheduleParameters.return_time]
 ret_mean_wd = 19  # mean return time weekday
 ret_dev_wd = 1  # std deviation return time weekday
 ret_mean_we = 17
@@ -25,7 +22,7 @@ ret_dev_we = 1.5
 min_return = 12  # Return hour must be bigger or equal to this value
 max_return = 23  # Return hour must be smaller or equal to this value
 
-[schedule_parameters.distance_travelled]
+[ScheduleParameters.distance_travelled]
 avg_distance_wd = 150  # mean distance travelled weekday
 dev_distance_wd = 25  # std deviation distance weekday
 avg_distance_we = 75  # mean distance weekend
@@ -33,12 +30,12 @@ dev_distance_we = 25
 min_distance = 20
 max_distance = 280
 
-[schedule_parameters.consumption]
+[ScheduleParameters.consumption]
 consumption_mean = 0.213  # Average consumption in kWh/km of Benz e-Vito
 consumption_std = 0.167463672468669  # Standard deviation of consumption in kWh/km
 consumption_min = 0.0994  # Minimum value of consumption, used as a floor for consumption levels
 consumption_max = 0.453  # Maximum consumption, ceiling of consumption levels
 total_cons_clip = 50  # max kWh that a trip can use
 
-[schedule_parameters.charger]
+[ScheduleParameters.charger]
 charging_power = 11  # Charging power in kW  # TODO connect with company type

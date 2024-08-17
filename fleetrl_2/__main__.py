@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from tomlchef.application import Application
+from tidysci.application import Application
 
 
 def main():
     here = Path(__file__).parent
-    app = Application(here, here / "recipes")
+    app = Application([(here, here / "recipes")])
     app.run()
 
 

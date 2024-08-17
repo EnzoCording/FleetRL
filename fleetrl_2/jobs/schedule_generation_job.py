@@ -4,30 +4,33 @@ from pathlib import Path
 from typing import Type
 
 import pandas as pd
-from tomlchef.job import Job
-from tomlchef.job import registered_job
-from tomlchef.package_manager import PackageManager
+from tidysci.package_manager import PackageManager
+from tidysci.task import Task
+from tidysci.task import register
+from tidysci.util.types import external_path
 
-from fleetrl.utils.schedule_generation.schedule_generator import \
-    ScheduleGenerator
-from .schedule_parameters_job import ScheduleParametersJob
+from fleetrl.utils.schedule_generation.schedule_generator import (
+    ScheduleGenerator)
+from fleetrl_2.jobs.schedule_parameters.schedule_parameters import (
+    ScheduleParameters)
 
 logger = logging.getLogger(PackageManager.get_name())
 
 
-@registered_job
-class ScheduleGenerationJob(Job):
+@register(alias=True)
+class ScheduleGenerationJob(Task):
     def __init__(self,
                  schedule_frequency: str,
                  num_evs: int,
-                 _external_schedule_csv: str,
-                 _external_schedule_parameters_job: str,
+                 _schedule_csv: str,
+                 _schedule_parameters_path: str,
                  schedule_output_name: str,
                  starting_date: str,
                  ending_date: str,
-                 **kwargs):
+                 _dir_root: str,
+                 rng_seed: int):
 
-        super().__init__(**kwargs)
+        super().__init__(_dir_root, rng_seed)
 
         self.schedule_frequency = schedule_frequency
         self.num_evs = num_evs
@@ -36,25 +39,23 @@ class ScheduleGenerationJob(Job):
         self.starting_date = starting_date
         self.ending_date = ending_date
 
-        if ((not _external_schedule_parameters_job
-             and not _external_schedule_csv)
-                or (_external_schedule_parameters_job
-                    and _external_schedule_csv)):
+        if ((not _schedule_parameters_path
+             and not _schedule_csv)
+                or (_schedule_parameters_path
+                    and _schedule_csv)):
             raise ValueError(
                 "Must specify either a schedule job or a schedule csv file "
                 "- not neither or both.")
 
-        self._external_schedule_csv = (Path(_external_schedule_csv)
-                                       if _external_schedule_csv else None)
-        if (self._external_schedule_csv is not None
-                and (not self._external_schedule_csv.is_file())):
+        self._schedule_csv = (Path(_schedule_csv) if _schedule_csv else None)
+        if (self._schedule_csv is not None
+                and (not self._schedule_csv.is_file())):
             raise ValueError(
-                "Invalid path to external schedule csv file: "
-                f"{_external_schedule_csv}")
+                f"Invalid path to external schedule csv file: {_schedule_csv}")
 
-        self._external_schedule_parameters_job = (
-            Path(_external_schedule_parameters_job)
-            if _external_schedule_parameters_job else None)
+        self._schedule_parameters_path = (
+            Path(_schedule_parameters_path)
+            if _schedule_parameters_path else None)
 
         if not schedule_output_name.endswith(".csv"):
             schedule_output_name += ".csv"
@@ -63,22 +64,19 @@ class ScheduleGenerationJob(Job):
 
         self.schedule_algorithm: str
         self.schedule_output_csv: Path | None = None
-        self.schedule_parameters_job: ScheduleParametersJob
+        self.schedule_parameters: ScheduleParameters
         self.schedule_generator: ScheduleGenerator
 
-    @staticmethod
-    def get_toml_key() -> str:
-        return "schedule_generation"
-
     def _setup(self) -> None:
-        if self._external_schedule_csv is not None:
-            self.schedule_output_csv = self._external_schedule_csv
+        if self._schedule_csv is not None:
+            self.schedule_output_csv = self._schedule_csv
         else:
-            self.schedule_parameters_job = (
-                Job.from_job_directory(
-                    self._external_schedule_parameters_job)
+            self.schedule_parameters = (
+                ScheduleParameters.from_task_directory(
+                    self._schedule_parameters_path)
             )
-            self.schedule_algorithm = self.schedule_parameters_job.schedule_algorithm
+            self.schedule_algorithm = (
+                self.schedule_parameters.schedule_algorithm)
 
             try:
                 # extract module and class of algorithm implementation
@@ -94,14 +92,12 @@ class ScheduleGenerationJob(Job):
                     ending_date=self.ending_date,
                     freq=self.schedule_frequency,
                     num_evs=self.num_evs,
-                    consumption=self.schedule_parameters_job.consumption,
-                    charger=self.schedule_parameters_job.charger,
-                    return_time=self.schedule_parameters_job.return_time,
-                    departure_time=self.schedule_parameters_job.departure_time,
-                    distance_travelled=self.schedule_parameters_job.distance_travelled,
+                    consumption=self.schedule_parameters.consumption,
+                    charger=self.schedule_parameters.charger,
+                    return_time=self.schedule_parameters.return_time,
+                    departure_time=self.schedule_parameters.departure_time,
+                    distance_travelled=self.schedule_parameters.distance_travelled,
                     seed=self.seed)
-                    #**self.schedule_generation_kwargs)
-                pass
             except ImportError as e:
                 raise ValueError(
                     f"Invalid schedule algorithm: {self.schedule_algorithm}.\n"

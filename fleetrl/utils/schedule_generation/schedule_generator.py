@@ -3,11 +3,11 @@ from abc import abstractmethod
 
 import pandas as pd
 
-from fleetrl_2.jobs.schedule_parameters_job import Charger
-from fleetrl_2.jobs.schedule_parameters_job import Consumption
-from fleetrl_2.jobs.schedule_parameters_job import DepartureTime
-from fleetrl_2.jobs.schedule_parameters_job import DistanceTravelled
-from fleetrl_2.jobs.schedule_parameters_job import ReturnTime
+from fleetrl_2.jobs.schedule_parameters.schedule_parameters import Charger
+from fleetrl_2.jobs.schedule_parameters.schedule_parameters import Consumption
+from fleetrl_2.jobs.schedule_parameters.schedule_parameters import DepartureTime
+from fleetrl_2.jobs.schedule_parameters.schedule_parameters import DistanceTravelled
+from fleetrl_2.jobs.schedule_parameters.schedule_parameters import ReturnTime
 
 
 class ScheduleGenerator(ABC):
@@ -45,6 +45,14 @@ class ScheduleGenerator(ABC):
     def generate(self) -> pd.DataFrame:
         """
         TODO MULTICORE
+        - Easiest distribution: one ev per core
+        - downside: 1 EV schedules are generated on one core and its slow
+        - if i split it per month or number of rows, i need to ensure coherence
+        - so that the first entry of core 2 matches the last entry of core 1
+        - splitting cores inbetween trips is not a good idea
+        - times where the car is there or not depends on the schedule algo
+        - maybe there is a way to split it and recognising when a trip is done
+
         """
         schedules = []
         for i in range(self.num_evs):
