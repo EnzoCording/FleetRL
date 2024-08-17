@@ -57,9 +57,14 @@ class LinearOptimization(Benchmark):
         # adjust length of df for n_steps
         # We don't need to optimise over an entire year if the eval period is just 48 hours
         # Lambda function filters out unnecessary data, but preserves database structure
+
+        lin_norm_vec_env.reset()
+        start_time = lin_norm_vec_env.env_method("get_start_time")[0]
+        end_time = pd.to_datetime(start_time) + dt.timedelta(hours=self.n_steps) - dt.timedelta(minutes=15)
+
         first_date = df["date"].min()
         last_date = df["date"].min() + dt.timedelta(hours=self.n_steps) - dt.timedelta(minutes=15)
-        df = df[df.groupby(by="ID").date.transform(lambda x: x <= last_date)]
+        df = df[df.groupby(by="ID").date.transform(lambda x: ((x <= end_time) & (x >= start_time)))].reset_index(drop=True)
 
         # Extracting information from the df
         ev_data = [df.loc[df["ID"] == i, "There"] for i in range(self.n_evs)]
@@ -239,7 +244,7 @@ class LinearOptimization(Benchmark):
             for i in range(length_time_load_pv)]
         actions = pd.DataFrame({"action": actions})
 
-        actions.index = pd.date_range(start=first_date, end=last_date, freq="15T")
+        actions.index = pd.date_range(start=start_time, end=end_time, freq="15T")
 
         actions["hid"] = actions.index.hour + actions.index.minute / 60
 
@@ -251,8 +256,7 @@ class LinearOptimization(Benchmark):
         # plt.show()
 
         lin_norm_vec_env.reset()
-        start_time = lin_norm_vec_env.env_method("get_start_time")[0]
-        end_time = pd.to_datetime(start_time) + dt.timedelta(hours=self.n_steps)
+
         env_actions = actions.loc[(actions.index >= start_time) & (actions.index <= end_time), "action"].reset_index(
             drop=True)
 
