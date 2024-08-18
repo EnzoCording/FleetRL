@@ -1,0 +1,12 @@
+type = "fleetrl_2.jobs.environment_dataset_job.EnvironmentDatasetJob"
+
+[EnvironmentDatasetJob]
+_schedule_generation_job = ""
+_site_parameters_job = ""
+
+[EnvironmentDatasetJob.auxiliary_data]
+_building_load = ""
+_pv_production = ""
+
+[EnvironmentDatasetJob.config_jobs]
+_ev_config_job = ""

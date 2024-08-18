@@ -1,19 +1,19 @@
-[rl_environment]
-_external_fleet_rl_dataset_job = "path"
-_external_reward_function_job = "path"
-_external_site_paramaters_job = "path"
+type = "fleetrl_2.jobs.environment_creation_job.EnvironmentCreationJob"
+[EnvironmentCreationJob]
+_environement_dataset_job = ""
+_reward_function_job = ""
 
 # recommended, improves performance by adding redundant information to the observation space
 use_auxiliary_data = true
 
 normalization_strategy = "MIN_MAX" # NONE, MIN_MAX or ROLLING, todo explain
 
-[rl_environment.episode]
+[EnvironmentCreationJob.episode]
 episode_length = 24 # in hours
 end_cutoff_days = 60 # todo describe
 price_lookahead = 8 # in hours, maximum 12
 building_load_lookahead = 4 # in hours
 pv_production_lookahead = 4 # in hours
 
-[rl_environment.misc]
+[EnvironmentCreationJob.misc]
 battery_degradation_type = "NONLINEAR" # NONE, NONLINEAR, EMPIRICAL

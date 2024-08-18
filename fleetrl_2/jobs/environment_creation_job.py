@@ -4,11 +4,9 @@ from pathlib import Path
 from tidysci.package_manager import PackageManager
 from tidysci.task import Task
 from tidysci.task import register
-from tidysci.util.types import external_path
 
 from fleetrl_2.jobs.environment_dataset_job import EnvironmentDatasetJob
 from fleetrl_2.jobs.reward_function_job import RewardFunctionJob
-from fleetrl_2.jobs.site_parameters_job import SiteParametersJob
 
 logger = logging.getLogger(PackageManager.get_name())
 
@@ -17,37 +15,41 @@ logger = logging.getLogger(PackageManager.get_name())
 class EnvironmentCreationJob(Task):
 
     def __init__(self,
-                 _fleet_rl_dataset_: external_path,
-                 _reward_function_job: external_path,
-                 _site_parameters_job: external_path,
+                 _environment_dataset_job: str,
+                 _reward_function_job: str,
+                 use_auxiliary_data: bool,
+                 normalization_strategy: str,
+                 episode: dict,
+                 misc: dict,
                  _dir_root: str,
                  rng_seed: int):
         super().__init__(_dir_root, rng_seed)
 
-        self._fleet_rl_dataset_path = Path(_fleet_rl_dataset_)
-        self._reward_function_path = Path(
-            _reward_function_job)
-        self._site_parameters_path = Path(
-            _site_parameters_job)
+        self._environment_dataset_path = Path(_environment_dataset_job)
+        self._environment_dataset_job: EnvironmentDatasetJob
+        self._reward_function_path = Path(_reward_function_job)
+        self._reward_function_job: RewardFunctionJob
 
-        self.reward_function_job: RewardFunctionJob
-        self.site_parameters_job: SiteParametersJob
-        self.fleet_rl_dataset: EnvironmentDatasetJob
+        self.use_auxiliary_data = use_auxiliary_data
+        self.normalization_strategy = normalization_strategy
+        self.episode = _Episode(**episode)
+        self.misc = _Misc(**misc)
 
     def _setup(self):
-        self.reward_function_job = RewardFunctionJob.from_task_directory(
-            self._reward_function_path)
-        self.site_parameters_job = SiteParametersJob.from_task_directory(
-            self._site_parameters_path)
-        self.fleet_rl_dataset = EnvironmentDatasetJob.from_task_directory(
-            self._fleet_rl_dataset_path)
+        self._environment_dataset_job = (
+            EnvironmentDatasetJob.from_task_directory(
+                self._environment_dataset_path))
+
+        self._reward_function_job = RewardFunctionJob.from_task_directory(
+            self._reward_function_path
+        )
 
     def _run(self) -> None:
-        # create env
+        # todo create env
         pass
 
     def is_finished(self) -> bool:
-        return True
+        return True  # todo
 
 
 class _Episode:
@@ -63,3 +65,8 @@ class _Episode:
         self.price_lookahead = price_lookahead
         self.building_load_lookahead = building_load_lookahead
         self.pv_production_lookahead = pv_production_lookahead
+
+
+class _Misc:
+    def __init__(self, battery_degradation_type: str):
+        self.battery_degradation_type = battery_degradation_type

@@ -1,9 +1,11 @@
-[site_parameters]
+type = "fleetrl_2.jobs.site_parameters_job.SiteParametersJob"
+
+[SiteParametersJob]
 max_grid_connection = 100 # kW
 fixed_markup = 10 # todo
 variable_multiplier = 1.5 # todo
 feed_in_deduction = 0.25 # todo
 
-[site_parameters.data]
+[SiteParametersJob.data]
 _external_electricity_price = ""
 _external_feed_in_tariff = ""
