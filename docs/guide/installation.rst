@@ -9,12 +9,16 @@ Installation
 
 .. note::
 
-    Python >= 3.10 is strongly recommended.
+    Python == 3.10 is strongly recommended.
 
 .. note::
 
     The creation of a virtual environment is strongly recommended. To be able to use GPU compute,
     CUDA drivers must be installed (11.8 was mostly used during development).
+
+.. note::
+
+    Github: https://github.com/EnzoCording/FleetRL
 
 Installation via Github repository:
  * Unzip the package
