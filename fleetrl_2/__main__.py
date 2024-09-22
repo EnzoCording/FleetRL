@@ -1,12 +1,11 @@
 from pathlib import Path
 
-from tidysci.application import Application
+from tidysci.application import run
 
 
 def main():
     here = Path(__file__).parent
-    app = Application([(here, here / "recipes")])
-    app.run()
+    run([(here, here / "recipes")])
 
 
 if __name__ == '__main__':

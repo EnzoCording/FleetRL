@@ -63,7 +63,7 @@ class ScheduleGenerationJob(Task):
         self.schedule_output_name = schedule_output_name
 
         self.schedule_algorithm: str
-        self.schedule_output_csv: Path | None = None
+        self.schedule_output_csv: Path = self._dir_root / self.schedule_output_name
         self.schedule_parameters: ScheduleParameters
         self.schedule_generator: ScheduleGenerator
 
@@ -107,8 +107,7 @@ class ScheduleGenerationJob(Task):
                 ) from e
 
     def is_finished(self) -> bool:
-        return (self.schedule_output_csv is not None
-                and self.schedule_output_csv.is_file())
+        return self.schedule_output_csv.is_file()
 
     def _run(self):
         self._generate_schedule()
@@ -122,7 +121,6 @@ class ScheduleGenerationJob(Task):
         complete_schedule = self.schedule_generator.generate()
 
         # os independent path with pathlib
-        p = self._dir_root / self.schedule_output_name
-        complete_schedule.to_csv(p)
-        logger.info(f"Schedule generation complete. Saved in: {p}")
-        self.schedule_output_csv = p
+        complete_schedule.to_csv(self.schedule_output_csv)
+        logger.info("Schedule generation complete. Saved in: "
+                    f"{self.schedule_output_csv}")

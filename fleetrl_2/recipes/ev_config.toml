@@ -1,6 +1,6 @@
 type = "fleetrl_2.jobs.ev_config_job.EvConfigJob"
 
-[EvConfig.battery]
+[EvConfigJob.battery]
 battery_capacity = 60.0 # in kWh
 initial_state_of_health = 1.0
 on_board_charger_max_power = 100.0 # in kW
@@ -9,7 +9,7 @@ discharging_efficiency = 0.91
 default_soc = 0.5 # todo
 target_soc = 0.85 # SoC to reach when EV leaves
 
-[EvConfig.auxiliary]
+[EvConfigJob.auxiliary]
 ambient_temperature = 25.0 # in °C
 min_laxity = 2 # todo
 
