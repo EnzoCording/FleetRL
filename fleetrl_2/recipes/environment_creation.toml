@@ -6,7 +6,8 @@ _reward_function_job = ""
 # recommended, improves performance by adding redundant information to the observation space
 use_auxiliary_data = true
 
-normalization_strategy = "MIN_MAX" # NONE, MIN_MAX or ROLLING, todo explain
+normalization_strategy = "NONE" # NONE or ORACLE todo explain
+model_frequency = '15min'
 
 [EnvironmentCreationJob.episode]
 episode_length = 24 # in hours
@@ -17,3 +18,5 @@ pv_production_lookahead = 4 # in hours
 
 [EnvironmentCreationJob.misc]
 battery_degradation_type = "NONLINEAR" # NONE, NONLINEAR, EMPIRICAL
+time_picker = 'RANDOM'  # STATIC, RANDOM, EVAL
+real_time = false  # use model frequency data or feed input data as it comes

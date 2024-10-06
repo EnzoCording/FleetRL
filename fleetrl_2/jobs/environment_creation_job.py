@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 from pathlib import Path
 
 from tidysci.package_manager import PackageManager
@@ -10,6 +11,9 @@ from fleetrl_2.jobs.reward_function_job import RewardFunctionJob
 
 logger = logging.getLogger(PackageManager.get_name())
 
+class NormalizationStrategy(Enum):
+    NONE = "NONE"
+    ORACLE = "ORACLE"
 
 @register(alias=True)
 class EnvironmentCreationJob(Task):
@@ -22,7 +26,8 @@ class EnvironmentCreationJob(Task):
                  episode: dict,
                  misc: dict,
                  _dir_root: str,
-                 rng_seed: int):
+                 rng_seed: int,
+                 verbose: bool):
         super().__init__(_dir_root, rng_seed)
 
         self._environment_dataset_path = Path(_environment_dataset_job)
@@ -32,8 +37,10 @@ class EnvironmentCreationJob(Task):
 
         self.use_auxiliary_data = use_auxiliary_data
         self.normalization_strategy = normalization_strategy
-        self.episode = _Episode(**episode)
-        self.misc = _Misc(**misc)
+        self.episode = EpisodeParams(**episode)
+        self.misc = MiscParams(**misc)
+
+        self.verbose = verbose
 
     def _setup(self):
         self._environment_dataset_job = (
@@ -52,7 +59,7 @@ class EnvironmentCreationJob(Task):
         return True  # todo
 
 
-class _Episode:
+class EpisodeParams:
     def __init__(self,
                  episode_length: int = 24,  # in hours
                  end_cutoff_days: int = 60,  # todo describe
@@ -60,6 +67,7 @@ class _Episode:
                  building_load_lookahead: int = 4,  # in hours
                  pv_production_lookahead: int = 4,  # in hours
                  ):
+
         self.episode_length = episode_length
         self.end_cutoff_days = end_cutoff_days
         self.price_lookahead = price_lookahead
@@ -67,6 +75,12 @@ class _Episode:
         self.pv_production_lookahead = pv_production_lookahead
 
 
-class _Misc:
-    def __init__(self, battery_degradation_type: str):
+class MiscParams:
+    def __init__(self,
+                 battery_degradation_type: str,
+                 time_picker: str,
+                 real_time: bool):
+
         self.battery_degradation_type = battery_degradation_type
+        self.time_picker: str = time_picker
+        self.real_time = real_time

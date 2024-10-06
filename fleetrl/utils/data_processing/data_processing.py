@@ -1,11 +1,15 @@
 import datetime
 import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from fleetrl.fleet_env.config.ev_config import EvConfig
-from fleetrl.fleet_env.config.time_config import TimeConfig
+from fleetrl.fleet_env.fleet_environment_v2 import ModelTimeUnit
+from fleetrl_2.jobs.environment_creation_job import EpisodeParams
+from fleetrl_2.jobs.ev_config_job import EvConfigJob
+from fleetrl_2.jobs.schedule_parameters.schedule_parameters import ScheduleParameters
+from fleetrl_2.jobs.site_parameters_job import SiteParametersJob
 
 
 # this class contains all the necessary information from the vehicle and its schedule
@@ -18,11 +22,23 @@ class DataLoader:
     Cython could further improve this initial processing step. It only happens once when instantiating env objects.
     """
 
-    def __init__(self, path_name, schedule_name,
-                 spot_name, tariff_name,
-                 building_name, pv_name,
-                 time_conf: TimeConfig, ev_conf: EvConfig,
-                 target_soc, building_flag, pv_flag, real_time: bool):
+    def __init__(self,
+                 path_name: str | Path,
+                 schedule_name: str | Path,
+                 spot_name: str | Path,
+                 tariff_name: str | Path,
+                 building_name: str | Path,
+                 pv_name: str | Path,
+                 model_frequency: str,
+                 model_time_unit: ModelTimeUnit,
+                 model_step_size: int,
+                 time_conf: EpisodeParams,
+                 ev_conf: EvConfigJob,
+                 target_soc: float,
+                 building_flag: bool,
+                 pv_flag: bool,
+                 real_time: bool,
+                 schedule_parameters: ScheduleParameters):
 
         """
         Initial information that is required for loading data
@@ -42,6 +58,23 @@ class DataLoader:
         # save the time_conf within DataLoader as well because it is used in some functions
         self.time_conf = time_conf
 
+        self.freq: str = model_frequency
+        self.model_time_unit = model_time_unit
+        self.model_step_size: int = model_step_size
+
+        if model_time_unit == 's':
+            self.minutes = int(self.model_step_size / 60)
+            self.time_steps_per_hour = int(60 / self.minutes)
+        elif model_time_unit == 'min':
+            self.minutes = self.model_step_size
+            self.time_steps_per_hour = int(60 / self.minutes)
+        elif model_time_unit == 'h':
+            self.minutes = self.model_step_size * 60
+            self.time_steps_per_hour = int(60 / self.minutes)
+        elif model_time_unit == 'd':
+            self.minutes = self.model_step_size * 60 * 24
+            self.time_steps_per_hour = int(60 / self.minutes)
+
         # schedule import from excel
         # db = pd.read_excel(os.path.dirname(__file__) + '/test_simple.xlsx')
         self.schedule = pd.read_csv(os.path.join(path_name, schedule_name), parse_dates=["date"])
@@ -55,7 +88,7 @@ class DataLoader:
             # resampling the df. consumption and distance are summed, power rating mean like in emobpy
             # group by ID is needed so the different cars don't get overwritten (they have the same dates)
             # NB: up-sampling does not work here, would require filling the empty cells with new data (e.g. ffill)
-            self.schedule = self.schedule.groupby("ID").resample(time_conf.freq).agg(
+            self.schedule = self.schedule.groupby("ID").resample(self.freq).agg(
                 {'Location': 'first', 'ID': 'first', 'Consumption_kWh': 'sum',
                  'ChargingStation': 'first', 'PowerRating_kW': 'mean',
                  'Distance_km': 'sum', 'date': 'first'})
@@ -64,7 +97,7 @@ class DataLoader:
         self.schedule.index = range(len(self.schedule))
 
         # compute / preprocess from loaded schedule
-        self.compute_from_schedule(ev_conf, time_conf, target_soc)
+        self.compute_from_schedule(ev_conf, time_conf, target_soc, schedule_parameters)
 
         # create a date range with the chosen frequency
         # Given the desired frequency, create a (down-sampled) column of timestamps
@@ -74,7 +107,7 @@ class DataLoader:
             # date_range according to model frequency
             self.date_range["date"] = pd.date_range(start=self.schedule["date"].min(),
                                                     end=self.schedule["date"].max(),
-                                                    freq=time_conf.freq)
+                                                    freq=self.freq)
         else:
             # date_range according to dataset
             self.date_range["date"] = self.schedule["date"].unique()
@@ -117,7 +150,11 @@ class DataLoader:
             self.db = None
             raise RuntimeError("Problem with building database. Check building and PV flags.")
 
-    def compute_from_schedule(self, ev_conf, time_conf, target_soc):
+    def compute_from_schedule(self,
+                              ev_config: EvConfigJob,
+                              time_config: EpisodeParams,
+                              target_soc: float,
+                              schedule_parameters: ScheduleParameters):
         """
         This function pre-processes the input data and adds additional rows to the file.
         There flag, time left at charger, soc on return, consumption, etc.
@@ -160,7 +197,7 @@ class DataLoader:
 
         # the return dates are on the next timestep
         # drop duplicates because the date is iterated through for each ev anyway
-        return_dates = last_dates.add(datetime.timedelta(minutes=time_conf.minutes))
+        return_dates = last_dates.add(datetime.timedelta(minutes=self.minutes))
         # get the vehicle ids of the trips
         # resetting the index so the group index goes away
         # dropping duplicates because the loop iterates through both dates and ids anyway
@@ -211,7 +248,7 @@ class DataLoader:
 
         # add computed information to db
         self.schedule["last_trip_total_consumption"] = merged_cons.loc[:, "consumption"]
-        self.schedule["last_trip_total_length_hours"] = merged_cons.loc[:, "len"].div(self.time_conf.time_steps_per_hour)
+        self.schedule["last_trip_total_length_hours"] = merged_cons.loc[:, "len"].div(self.time_steps_per_hour)
         self.schedule["time_left"] = merged_time_left.loc[:, "time_left"]
 
         # create SOC column and populate with zeros
@@ -219,11 +256,11 @@ class DataLoader:
         # maybe this could be changed in the future to make it more complex (future SOC depends on previous SOC)
 
         self.schedule["SOC_on_return"] = target_soc - self.schedule["last_trip_total_consumption"].div(
-            ev_conf.init_battery_cap)
+            ev_config.battery.battery_capacity)
         self.schedule.loc[self.schedule["There"] == 0, "SOC_on_return"] = 0
 
 
-    def load_prices_original(self, path_name, spot_name, date_range):
+    def load_prices_original(self, path_name: str, spot_name: str, date_range: pd.DataFrame) -> pd.DataFrame:
         """
         Load prices from csv
         :param path_name: Parent directory string
@@ -258,7 +295,7 @@ class DataLoader:
         # return the spot price at the right granularity
         return spot_price
 
-    def load_prices(self, path_name, spot_name, date_range):
+    def load_prices(self, path_name: str, spot_name: str, date_range: pd.DataFrame) -> pd.DataFrame:
         """
         Load prices from csv
         :param path_name: Parent directory string
@@ -294,7 +331,7 @@ class DataLoader:
         # return the spot price at the right granularity
         return spot_price
 
-    def load_feed_in(self, path_name, tariff_name, date_range):
+    def load_feed_in(self, path_name: str, tariff_name: str, date_range: pd.DataFrame) -> pd.DataFrame:
         """
         Load feed-in from csv
         :param path_name: Parent directory string
@@ -317,7 +354,7 @@ class DataLoader:
         # return the tariff at the right granularity
         return tariff
 
-    def load_building_load(self, path_name, file_name, date_range):
+    def load_building_load(self, path_name: str, file_name: str, date_range: pd.DataFrame) -> pd.DataFrame:
 
         """
         Load building load from csv
@@ -344,7 +381,7 @@ class DataLoader:
         return building_load
 
 
-    def load_pv(self, path_name, pv_name, date_range):
+    def load_pv(self, path_name: str, pv_name: str, date_range: pd.DataFrame) -> pd.DataFrame:
         """
         Load pv from csv
         :param path_name: Parent directory string
@@ -370,7 +407,7 @@ class DataLoader:
         return pv
 
     @staticmethod
-    def shape_price_reward(db: pd.DataFrame, ev_conf: EvConfig):
+    def shape_price_reward(db: pd.DataFrame, site_parameters: SiteParametersJob):
         """
         - de-trend prices, so they can be used as a reward function
         - agent should not be penalised more if the general price level is higher
@@ -385,8 +422,8 @@ class DataLoader:
         """
 
         price = db["DELU"].dropna()
-        price = price.add(ev_conf.fixed_markup)
-        price = price.mul(ev_conf.variable_multiplier)
+        price = price.add(site_parameters.fixed_markup)
+        price = price.mul(site_parameters.variable_multiplier)
         price_total_avg = price.mean()
         price.index = db.loc[db["ID"]==0, "date"]
         resampled_price = price.resample("M")
@@ -400,7 +437,7 @@ class DataLoader:
         db = pd.concat((db, result["price_reward_curve"]), axis=1)
 
         tariff = db["tariff"].dropna()
-        tariff = tariff.mul(1 - ev_conf.feed_in_deduction)
+        tariff = tariff.mul(1 - site_parameters.feed_in_deduction)
         tariff_total_avg = tariff.mean()
         tariff.index = db.loc[db["ID"]==0, "date"]
         resampled_tariff = tariff.resample("M")
@@ -416,7 +453,7 @@ class DataLoader:
         return db
 
     @staticmethod
-    def _date_checker(df: pd.DataFrame, date_range: pd.DatetimeIndex) -> pd.DataFrame:
+    def _date_checker(df: pd.DataFrame, date_range: pd.DataFrame) -> pd.DataFrame:
 
         input_start_year = df.iloc[0]["date"].year
         date_range_start_year = date_range.iloc[0][0].year

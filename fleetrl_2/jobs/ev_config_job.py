@@ -11,6 +11,7 @@ class _Battery:
                  discharging_efficiency: float = 0.91,
                  default_soc: float = 0.5,
                  target_soc: float = 0.85):
+
         self.battery_capacity = battery_capacity
         self.initial_state_of_health = initial_state_of_health
         self.on_board_charger_max_power = on_board_charger_max_power

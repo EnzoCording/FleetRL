@@ -4,6 +4,9 @@ import pandas as pd
 from fleetrl.utils.observation.observer import Observer
 from fleetrl.utils.load_calculation.load_calculation import LoadCalculation
 from fleetrl.fleet_env.config.ev_config import EvConfig
+from fleetrl_2.jobs.ev_config_job import EvConfigJob
+from fleetrl_2.jobs.site_parameters_job import SiteParametersJob
+
 
 class ObserverSocTimeOnly(Observer):
 
@@ -16,7 +19,8 @@ class ObserverSocTimeOnly(Observer):
                 price_lookahead: int,
                 bl_pv_lookahead: int,
                 time: pd.Timestamp,
-                ev_conf: EvConfig,
+                ev_conf: EvConfigJob,
+                site_parameters: SiteParametersJob,
                 load_calc: LoadCalculation,
                 aux: bool,
                 target_soc: list) -> dict:
@@ -28,6 +32,7 @@ class ObserverSocTimeOnly(Observer):
         - resample data to only include one value per hour (the others are duplicates)
         - only take into account the current value, and the specified hours of lookahead
 
+        :param site_parameters:
         :param db: Database from env
         :param price_lookahead: Lookahead in hours for price
         :param bl_pv_lookahead: Lookahead in hours for PV and building
@@ -50,7 +55,7 @@ class ObserverSocTimeOnly(Observer):
         target_soc = target_soc * there
         # maybe need to typecast to list
         charging_left = np.subtract(target_soc, soc)
-        hours_needed = charging_left * load_calc.batt_cap / (load_calc.evse_max_power * ev_conf.charging_eff)
+        hours_needed = charging_left * load_calc.batt_cap / (load_calc.evse_max_power * ev_conf.battery.charging_eff)
         laxity = np.subtract(hours_left / (np.add(hours_needed, 0.001)), 1) * there
         laxity = np.clip(laxity, 0, 5)
         # could also be a vector

@@ -3,7 +3,9 @@ import pandas as pd
 
 from fleetrl.utils.normalization.unit_normalization import Normalization
 from fleetrl.utils.load_calculation.load_calculation import LoadCalculation
-from fleetrl.fleet_env.config.ev_config import EvConfig
+from fleetrl_2.jobs.ev_config_job import EvConfigJob
+from fleetrl_2.jobs.site_parameters_job import SiteParametersJob
+
 
 # This normalizes based on the global maximum values. These could be in the future, hence the oracle prefix.
 # For more realistic approaches, a rolling average could be used, or the sb3 vec normalize function
@@ -13,12 +15,14 @@ class OracleNormalization(Normalization):
     a global min/max normalization. Alternatively, a rolling normalization could be implemented.
     """
     def __init__(self,
-                 db,
-                 building_flag,
-                 pv_flag,
-                 price_flag,
-                 ev_conf: EvConfig,
-                 load_calc: LoadCalculation, aux: bool):
+                 db: pd.DataFrame,
+                 building_flag: bool,
+                 pv_flag: bool,
+                 price_flag: bool,
+                 ev_conf: EvConfigJob,
+                 site_parameters: SiteParametersJob,
+                 load_calc: LoadCalculation,
+                 aux: bool):
         """
         Initialize max and min values of the dataset, globally.
 
@@ -32,10 +36,10 @@ class OracleNormalization(Normalization):
         """
 
         self.max_time_left = max(db["time_left"])
-        self.max_price = (max(db["DELU"]) + ev_conf.fixed_markup) * ev_conf.variable_multiplier
-        self.min_price = (min(db["DELU"]) + ev_conf.fixed_markup) * ev_conf.variable_multiplier
-        self.max_tariff = (max(db["tariff"])) * (1 - ev_conf.feed_in_deduction)
-        self.min_tariff = (min(db["tariff"])) * (1 - ev_conf.feed_in_deduction)
+        self.max_price = (max(db["DELU"]) + site_parameters.fixed_markup) * site_parameters.variable_multiplier
+        self.min_price = (min(db["DELU"]) + site_parameters.fixed_markup) * site_parameters.variable_multiplier
+        self.max_tariff = (max(db["tariff"])) * (1 - site_parameters.feed_in_deduction)
+        self.min_tariff = (min(db["tariff"])) * (1 - site_parameters.feed_in_deduction)
         self.building_flag = building_flag
         self.pv_flag = pv_flag
         self.price_flag = price_flag
@@ -46,9 +50,9 @@ class OracleNormalization(Normalization):
         if self.pv_flag:
             self.max_pv = max(db["pv"])
         if self.aux:
-            self.max_soc = ev_conf.target_soc
-            self.max_hours_needed = ((ev_conf.target_soc * ev_conf.init_battery_cap)
-                                     /(load_calc.evse_max_power * ev_conf.charging_eff))
+            self.max_soc = ev_conf.battery.target_soc
+            self.max_hours_needed = ((ev_conf.battery.target_soc * ev_conf.battery.init_battery_cap)
+                                     /(load_calc.evse_max_power * ev_conf.battery.charging_eff))
             self.max_laxity = 5
             self.max_evse = load_calc.evse_max_power
             self.max_grid = load_calc.grid_connection

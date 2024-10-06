@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 from fleetrl.utils.load_calculation.load_calculation import LoadCalculation
 from fleetrl.fleet_env.config.ev_config import EvConfig
+from fleetrl_2.jobs.ev_config_job import EvConfigJob
+from fleetrl_2.jobs.site_parameters_job import SiteParametersJob
+
 
 class Observer:
     """
@@ -12,12 +15,14 @@ class Observer:
                 price_lookahead: int,
                 bl_pv_lookahead:int,
                 time: pd.Timestamp,
-                ev_conf: EvConfig,
+                ev_conf: EvConfigJob,
+                site_parameters: SiteParametersJob,
                 load_calc: LoadCalculation,
                 aux: bool,
                 target_soc: list) -> dict:
 
         """
+        :param site_parameters:
         :param db: database from the env
         :param price_lookahead: lookahead window for spot price
         :param bl_pv_lookahead: lookahead window for building load and pv

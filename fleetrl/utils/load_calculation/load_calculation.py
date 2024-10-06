@@ -1,5 +1,10 @@
 from enum import Enum
 
+from fleetrl_2.jobs.ev_config_job import EvConfigJob
+from fleetrl_2.jobs.schedule_parameters.schedule_parameters import ScheduleParameters
+from fleetrl_2.jobs.site_parameters_job import SiteParametersJob
+
+
 class CompanyType(Enum):
     Delivery = 1
     Caretaker = 2
@@ -59,26 +64,28 @@ class LoadCalculation:
 
         return grid_connection, evse_power, batt_cap
 
-    def __init__(self, env_config: dict, company_type: CompanyType, max_load: float, num_cars: int):
+    def __init__(self,
+                 ev_config: EvConfigJob,
+                 site_parameters: SiteParametersJob,
+                 max_load: float,
+                 num_cars: int,
+                 schedule_parameters: ScheduleParameters):
         """
-        Initialise load calculation module
+        Initialize the Load Calculation module
 
-        :param company_type: LMD, CT, UT, Custom
-        :param max_load: Max building load
-        :param num_cars: Number of EVs
+        :param ev_config: Stores ev related data
+        :param site_parameters: Stores site related data
+        :param max_load: Max load in the dataset
+        :param num_cars: Number of cars to be optimized
+        :param schedule_parameters: The charger capacity is stored in here
         """
 
         # setting parameters of the company site
-        self.company_type = company_type
         self.max_load = max_load
         self.num_cars = num_cars
-
-        # Grid connection: grid connection point max capacity in kW
-        # EVSE (ev supply equipment aka charger) max power in kW
-        self.grid_connection, self.evse_max_power, self.batt_cap = LoadCalculation._import_company(env_config,
-                                                                                                   self.company_type,
-                                                                                                   self.max_load,
-                                                                                                   self.num_cars)
+        self.grid_connection = site_parameters.max_grid_connection
+        self.evse_max_power = schedule_parameters.charger.charging_power
+        self.batt_cap = ev_config.battery.battery_capacity
 
     def check_violation(self, actions: list[float], there: list[int], building_load: float, pv: float) -> (bool, float):
         """

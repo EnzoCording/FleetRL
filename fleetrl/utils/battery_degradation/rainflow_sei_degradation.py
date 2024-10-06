@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from fleetrl.utils.battery_degradation.batt_deg import BatteryDegradation
-from fleetrl.fleet_env.config.time_config import TimeConfig
+from fleetrl_2.jobs.environment_creation_job import EpisodeParams
 
 
 class RainflowSeiDegradation(BatteryDegradation):
@@ -88,7 +88,12 @@ class RainflowSeiDegradation(BatteryDegradation):
     @staticmethod
     def l_without_sei(l, fd): return 1 - (1 - l) * np.e ** (-fd)
 
-    def calculate_degradation(self, soc_log: list, charging_power: float, time_conf: TimeConfig, temp: float) -> np.array:
+    def calculate_degradation(self,
+                              soc_log: list,
+                              charging_power: float,
+                              time_conf: EpisodeParams,
+                              temp: float,
+                              time_steps_per_hour: int) -> np.array:
 
         """
         Calculates degradation. SOC from environment is converted to the necessary format for rainflow counting.
@@ -97,6 +102,7 @@ class RainflowSeiDegradation(BatteryDegradation):
         the SOH calculations. If a new rainflow result entry appears, a calculation iteration is conducted. For
         calculation, the second most recent rainflow result is used.
 
+        :param time_steps_per_hour:
         :param soc_log: SOC list for each time step t: t1:[soc_car1, soc_car2, ...], t2:[soc_car1, soc_car2,...]
         :param charging_power: kW of the charger
         :param time_conf: Time config instance from the environment
@@ -108,7 +114,7 @@ class RainflowSeiDegradation(BatteryDegradation):
         # go from: t1:[soc_car1, soc_car2, ...], t2:[soc_car1, soc_car2,...]
         # to this: car 1: [soc_t1, soc_t2, ...], car 2: [soc_t1, soc_t2, ...]
 
-        sorted_soc_list = []
+        sorted_soc_list: list = []
 
         for j in range(self.num_cars):
 
@@ -135,7 +141,7 @@ class RainflowSeiDegradation(BatteryDegradation):
                 rainflow_result = pd.concat([rainflow_result, new_row], ignore_index=True)
 
             # battery age in seconds for calendar aging
-            battery_age = np.max(rainflow_result["End"]) * time_conf.dt * 3600
+            battery_age = np.max(rainflow_result["End"]) * (1/time_steps_per_hour) * 3600
             # mean soc over the lifetime for calendar aging
             mean_soc_cal = rainflow_result["Mean"].mean()
 

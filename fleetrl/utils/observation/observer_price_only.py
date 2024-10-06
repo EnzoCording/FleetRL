@@ -4,6 +4,9 @@ import pandas as pd
 from fleetrl.utils.observation.observer import Observer
 from fleetrl.utils.load_calculation.load_calculation import LoadCalculation
 from fleetrl.fleet_env.config.ev_config import EvConfig
+from fleetrl_2.jobs.ev_config_job import EvConfigJob
+from fleetrl_2.jobs.site_parameters_job import SiteParametersJob
+
 
 class ObserverPriceOnly(Observer):
     """
@@ -14,7 +17,8 @@ class ObserverPriceOnly(Observer):
                 price_lookahead: int,
                 bl_pv_lookahead: int,
                 time: pd.Timestamp,
-                ev_conf: EvConfig,
+                ev_conf: EvConfigJob,
+                site_parameters: SiteParametersJob,
                 load_calc: LoadCalculation,
                 aux: bool,
                 target_soc: list) -> dict:
@@ -26,6 +30,7 @@ class ObserverPriceOnly(Observer):
         - resample data to only include one value per hour (the others are duplicates)
         - only take into account the current value, and the specified hours of lookahead
 
+        :param site_parameters:
         :param db: Database from env
         :param price_lookahead: Lookahead in hours for price
         :param bl_pv_lookahead: Lookahead in hours for PV and building
@@ -58,8 +63,8 @@ class ObserverPriceOnly(Observer):
         price = price.resample("H", on="date").first()["DELU"].values
         tariff = tariff.resample("H", on="date").first()["tariff"].values
         # only take into account the current value, and the specified hours of lookahead
-        price = np.multiply(np.add(price[0:price_lookahead+1], ev_conf.fixed_markup), ev_conf.variable_multiplier)
-        tariff = np.multiply(tariff[0:price_lookahead+1], 1-ev_conf.feed_in_deduction)
+        price = np.multiply(np.add(price[0:price_lookahead+1], site_parameters.fixed_markup), site_parameters.variable_multiplier)
+        tariff = np.multiply(tariff[0:price_lookahead+1], 1-site_parameters.feed_in_deduction)
 
         ###
         # Auxiliary observations that might make it easier for the agent
@@ -68,7 +73,7 @@ class ObserverPriceOnly(Observer):
         target_soc = target_soc * there
         # maybe need to typecast to list
         charging_left = np.subtract(target_soc, soc)
-        hours_needed = charging_left * load_calc.batt_cap / (load_calc.evse_max_power * ev_conf.charging_eff)
+        hours_needed = charging_left * load_calc.batt_cap / (load_calc.evse_max_power * ev_conf.battery.charging_eff)
         laxity = np.subtract(hours_left / (np.add(hours_needed, 0.001)), 1) * there
         laxity = np.clip(laxity, 0, 5)
         # could also be a vector

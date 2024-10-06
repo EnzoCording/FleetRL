@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from fleetrl.fleet_env.config.time_config import TimeConfig
+from fleetrl_2.jobs.environment_creation_job import EpisodeParams
 
 
 class Episode:
@@ -10,13 +10,16 @@ class Episode:
     The Episode class holds all / most of the values that are episode-specific
     """
 
-    def __init__(self, time_conf: TimeConfig):
+    def __init__(self, time_conf: EpisodeParams):
         """
         Instantiating variables with default values.
         :param time_conf: Time config object
         """
 
-        self.time_conf = time_conf  # time config object
+        self.time_conf: EpisodeParams = time_conf  # time config object
+
+        self.dt: float = None
+        self.time_steps_per_hour: int = None
 
         self.time: pd.Timestamp = None  # information of current time of the model
         self.start_time: pd.Timestamp = None  # starting date of the model (year needs to be the same as the schedule's)
@@ -32,6 +35,7 @@ class Episode:
         self.soh: np.ndarray = None  # state of health per car
         self.hours_left: list[float] = None  # Hours left at the charger
         self.price: list[float] = None  # Price in €/kWh
+        self.tariff: list[float] = None  # Commercial feed in tariff in €/kWh
         self.done: bool = None  # Episode done or not
         self.truncated: bool = None  # Episode done due to time limit
 
