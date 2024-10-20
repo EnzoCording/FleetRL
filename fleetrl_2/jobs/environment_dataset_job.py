@@ -23,6 +23,7 @@ class EnvironmentDatasetJob(Task):
                  auxiliary_data: dict,
                  _dir_root: str,
                  rng_seed: int):
+
         super().__init__(_dir_root, rng_seed)
 
         self.config_jobs = _ConfigJobs(**config_jobs)
