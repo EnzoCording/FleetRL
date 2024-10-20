@@ -163,11 +163,13 @@ class FleetEnv(gym.Env):
         self.event_manager: EventManager = EventManager()
 
         # Class simulating EV charging
-        self.ev_charger: EvCharger = EvCharger(site_parameters=self.site_parameters)
+        self.ev_charger: EvCharger = EvCharger(feed_in_deduction=self.site_parameters.feed_in_deduction,
+                                               variable_multiplier=self.site_parameters.variable_multiplier,
+                                               fixed_markup=self.site_parameters.fixed_markup)
 
         # Choose time picker based on input string time_picker
         self.time_picker = env_util.choose_time_picker(time_picker=misc_params.time_picker,
-                                                       time_conf=self.episode_params)
+                                                       episode_length=self.episode_params.episode_length)
 
         # Choose the right observer module based on the environment settings
         self.observer = env_util.choose_observer(include_price=self.include_price,
@@ -177,7 +179,7 @@ class FleetEnv(gym.Env):
         # Instantiating episode object
         # Episode object contains all episode-specific information
         self.episode: Episode = Episode(self.episode_params)
-        self.episode.dt = (1/self.time_steps_per_hour)
+        self.episode.dt = (1 / self.time_steps_per_hour)
         self.episode.time_steps_per_hour = self.time_steps_per_hour
 
         # Setting EV parameters
@@ -208,13 +210,11 @@ class FleetEnv(gym.Env):
                                                   model_frequency=self.model_frequency,
                                                   model_step_size=self.model_step_size,
                                                   model_time_unit=self.model_time_unit,
-                                                  time_conf=self.episode_params,
-                                                  ev_conf=self.ev_config,
+                                                  battery_capacity=self.ev_config.battery.battery_capacity,
                                                   target_soc=self.ev_config.battery.target_soc,
                                                   building_flag=self.include_building_load,
                                                   pv_flag=self.include_pv,
                                                   real_time=self.real_time,
-                                                  schedule_parameters=self.schedule_generation_job.schedule_parameters
                                                   )
 
         # get the total database
@@ -245,11 +245,11 @@ class FleetEnv(gym.Env):
         - This can be changed in the load calculation module, e.g. replacing it with a fixed value.
         """
 
-        self.load_calculation = LoadCalculation(ev_config=self.ev_config,
-                                                site_parameters=self.site_parameters,
+        self.load_calculation = LoadCalculation(battery_capacity=self.ev_config.battery.battery_capacity,
+                                                max_grid_connection=self.site_parameters.max_grid_connection,
                                                 num_cars=self.num_cars,
                                                 max_load=max_load,
-                                                schedule_parameters=self.schedule_generation_job.schedule_parameters)
+                                                charging_power=self.schedule_generation_job.schedule_parameters.charger.charging_power)
 
         # choosing degradation methodology: empirical linear or non-linear mathematical model
         if self.calc_deg == 'emp_deg':
@@ -259,7 +259,10 @@ class FleetEnv(gym.Env):
 
         # de-trend prices to make them usable as agent rewards
         if self.include_price:
-            self.db = DataLoader.shape_price_reward(db=self.db, site_parameters=self.site_parameters)
+            self.db = DataLoader.shape_price_reward(db=self.db,
+                                                    feed_in_deduction=self.site_parameters.feed_in_deduction,
+                                                    variable_multiplier=self.site_parameters.variable_multiplier,
+                                                    fixed_markup=self.site_parameters.fixed_markup)
 
         """
         - Normalizing observations (Oracle) or just concatenating (Unit)
@@ -270,14 +273,20 @@ class FleetEnv(gym.Env):
         """
 
         if self.normalize_in_env:
-            self.normalizer: Normalization = OracleNormalization(self.db,
-                                                                 self.include_building_load,
-                                                                 self.include_pv,
-                                                                 self.include_price,
+            self.normalizer: Normalization = OracleNormalization(db=self.db,
+                                                                 building_flag=self.include_building_load,
+                                                                 pv_flag=self.include_pv,
+                                                                 price_flag=self.include_price,
                                                                  aux=self.aux_flag,
-                                                                 ev_conf=self.ev_config,
-                                                                 site_parameters=self.site_parameters,
-                                                                 load_calc=self.load_calculation)
+                                                                 battery_capacity=self.ev_config.battery.battery_capacity,
+                                                                 target_soc=self.ev_config.battery.target_soc,
+                                                                 charging_efficiency=self.ev_config.battery.charging_efficiency,
+                                                                 feed_in_deduction=self.site_parameters.feed_in_deduction,
+                                                                 variable_multiplier=self.site_parameters.variable_multiplier,
+                                                                 fixed_markup=self.site_parameters.fixed_markup,
+                                                                 max_charger_power=self.load_calculation.evse_max_power,
+                                                                 max_grid_connection=self.load_calculation.grid_connection,
+                                                                 )
         else:
             self.normalizer: Normalization = UnitNormalization()
 
@@ -288,7 +297,9 @@ class FleetEnv(gym.Env):
                                                            normalizer=self.normalizer,
                                                            include_pv=self.include_pv,
                                                            include_building_load=self.include_building_load,
-                                                           time_conf=self.episode_params)
+                                                           price_lookahead=self.episode_params.price_lookahead,
+                                                           building_load_lookahead=self.episode_params.building_load_lookahead
+                                                           )
 
         self.observation_space = gym.spaces.Box(
             low=low_obs,
@@ -301,7 +312,7 @@ class FleetEnv(gym.Env):
             high=1,
             shape=(self.num_cars,), dtype=np.float32)
 
-        self.render_mode = "human"
+        self.render_mode = "human"  # todo: explain
         self.pl_render: ParkingLotRenderer = ParkingLotRenderer()
 
     def reset(self, **kwargs) -> tuple[np.array, dict]:
@@ -325,8 +336,10 @@ class FleetEnv(gym.Env):
         self.episode.battery_cap = self.episode.soh * self.ev_config.init_battery_cap
 
         # choose a start time based on the type of choice: same, random, deterministic
-        self.episode.start_time = self.time_picker.choose_time(self.db, self.model_frequency,
-                                                               self.episode_params.end_cutoff_days)
+        self.episode.start_time = self.time_picker.choose_time(db=self.db,
+                                                               freq=self.model_frequency,
+                                                               end_cutoff=self.episode_params.end_cutoff_days
+                                                               )
 
         # calculate the finish time based on the episode length
         self.episode.finish_time = self.episode.start_time + np.timedelta64(self.episode_params.episode_length, 'h')
@@ -335,14 +348,20 @@ class FleetEnv(gym.Env):
         self.episode.time = self.episode.start_time
 
         # get observation from observer module
-        obs = self.observer.get_obs(self.db,
-                                    self.episode_params.price_lookahead,
-                                    self.episode_params.building_load_lookahead,
-                                    self.episode.time,
-                                    ev_conf=self.ev_config,
-                                    load_calc=self.load_calculation,
+        obs = self.observer.get_obs(db=self.db,
+                                    price_lookahead=self.episode_params.price_lookahead,
+                                    bl_pv_lookahead=self.episode_params.building_load_lookahead,
+                                    time=self.episode.time,
+                                    battery_capacity=self.ev_config.battery.battery_capacity,
+                                    target_soc=self.target_soc,
+                                    grid_connection=self.load_calculation.grid_connection,
+                                    max_charger_power=self.load_calculation.evse_max_power,
                                     aux=self.aux_flag,
-                                    target_soc=self.target_soc)
+                                    fixed_markup=self.site_parameters.fixed_markup,
+                                    variable_multiplier=self.site_parameters.variable_multiplier,
+                                    feed_in_deduction=self.site_parameters.feed_in_deduction,
+                                    charging_efficiency=self.ev_config.battery.charging_efficiency
+                                    )
 
         # get the first soc and hours_left observation
         self.episode.soc = obs["soc"]
@@ -356,19 +375,21 @@ class FleetEnv(gym.Env):
         time left), soc is set in such a way that the agent always has a chance to fulfil the objective
         """
 
-        for car in range(self.num_cars):
-            p_avail = min([self.ev_config.obc_max_power, self.load_calculation.evse_max_power])
-            time_needed = (self.target_soc[car] - self.episode.soc[car]) * self.episode.battery_cap[car] / p_avail
+        # dont adjust in case of real time data stream from real world operation
+        if not self.real_time:
+            for car in range(self.num_cars):
+                p_avail = min([self.ev_config.obc_max_power, self.load_calculation.evse_max_power])
+                time_needed = (self.target_soc[car] - self.episode.soc[car]) * self.episode.battery_cap[car] / p_avail
 
-            # Gives some tolerance, check if hours_left > 0 because car has to be plugged in
-            # Makes sure that enough laxity is present, in this case 50% is default
-            if (self.episode.hours_left[car] > 0) and (
-                    self.ev_config.min_laxity * time_needed > self.episode.hours_left[car]):
-                self.episode.soc[car] = (self.target_soc[car] -
-                                         (time_needed * p_avail / self.episode.battery_cap[
-                                             car]) / self.ev_config.min_laxity)
-                if self.print_updates:
-                    print("Initial SOC modified due to unfavourable starting condition.")
+                # Gives some tolerance, check if hours_left > 0 because car has to be plugged in
+                # Makes sure that enough laxity is present, in this case 50% is default
+                if (self.episode.hours_left[car] > 0) and (
+                        self.ev_config.min_laxity * time_needed > self.episode.hours_left[car]):
+                    self.episode.soc[car] = (self.target_soc[car] -
+                                             (time_needed * p_avail / self.episode.battery_cap[
+                                                 car]) / self.ev_config.min_laxity)
+                    if self.print_updates:
+                        print("Initial SOC modified due to unfavourable starting condition.")
 
         # soc for battery degradation
         self.episode.soc_deg = self.episode.soc.copy()
@@ -429,6 +450,7 @@ class FleetEnv(gym.Env):
 
         self.episode.current_actions = actions
 
+        # this loop is needed if real_time is True, then the loop is broken by the event manager
         while True:
 
             self.episode.dt = self.get_next_dt()  # get next dt in case time frequency changes
@@ -449,12 +471,18 @@ class FleetEnv(gym.Env):
                                                            num_cars=self.num_cars,
                                                            actions=actions,
                                                            episode=self.episode,
-                                                           load_calculation=self.load_calculation,
-                                                           ev_conf=self.ev_config,
-                                                           score_conf=self.score_config,
-                                                           print_updates=self.print_updates,
                                                            target_soc=self.target_soc,
-                                                           time_steps_per_hour=self.time_steps_per_hour)
+                                                           max_charger_power=self.load_calculation.evse_max_power,
+                                                           max_onboard_charger_power=self.ev_config.battery.on_board_charger_max_power,
+                                                           charging_efficiency=self.ev_config.battery.charging_efficiency,
+                                                           discharging_efficiency=self.ev_config.battery.discharging_efficiency,
+                                                           penalty_invalid_action=self.score_config.penalty.invalid_action,
+                                                           penalty_overcharging=self.score_config.penalty.overcharging,
+                                                           price_multiplier=self.score_config.price_multiplier,
+                                                           clip_overcharging=self.score_config.penalty.clip_overcharging,
+                                                           print_updates=self.print_updates,
+                                                           time_steps_per_hour=self.time_steps_per_hour
+                                                           )
 
             # set the soc to the next soc
             self.episode.old_soc = self.episode.soc.copy()
@@ -499,14 +527,21 @@ class FleetEnv(gym.Env):
             self.episode.time += np.timedelta64(self.minutes, 'm')
 
             # get the next observation entry from the dataset to get new arrivals or departures
-            next_obs = self.observer.get_obs(self.db,
-                                             self.episode_params.price_lookahead,
-                                             self.episode_params.building_load_lookahead,
-                                             self.episode.time,
-                                             ev_conf=self.ev_config,
-                                             load_calc=self.load_calculation,
+            next_obs = self.observer.get_obs(db=self.db,
+                                             price_lookahead=self.episode_params.price_lookahead,
+                                             bl_pv_lookahead=self.episode_params.building_load_lookahead,
+                                             time=self.episode.time,
+                                             battery_capacity=self.ev_config.battery.battery_capacity,
+                                             target_soc=self.target_soc,
+                                             grid_connection=self.load_calculation.grid_connection,
+                                             max_charger_power=self.load_calculation.evse_max_power,
                                              aux=self.aux_flag,
-                                             target_soc=self.target_soc)
+                                             fixed_markup=self.site_parameters.fixed_markup,
+                                             variable_multiplier=self.site_parameters.variable_multiplier,
+                                             feed_in_deduction=self.site_parameters.feed_in_deduction,
+                                             charging_efficiency=self.ev_config.battery.charging_efficiency
+                                             )
+
             next_obs_soc = next_obs["soc"]
             next_obs_time_left = next_obs["hours_left"]
             if self.include_price:
@@ -522,7 +557,7 @@ class FleetEnv(gym.Env):
                 if (self.episode.hours_left[car] != 0) and (next_obs_time_left[car] == 0):
                     self.episode.events += 1  # relevant event detected
 
-                    # todo what to do with the company
+                    # todo what to do with the company case
                     # caretaker is a special case because of the lunch break
                     # it is not long enough to fully recharge, so a different target soc is applied
                     if self.company == CompanyType.Caretaker:
@@ -584,7 +619,7 @@ class FleetEnv(gym.Env):
 
                 # still charging
                 if (next_obs_time_left[car] != 0) and (self.episode.hours_left[car] != 0):
-                    self.episode.hours_left[car] -= (1/self.time_steps_per_hour)
+                    self.episode.hours_left[car] -= (1 / self.time_steps_per_hour)
 
                 # no car in the next time step
                 elif next_obs_time_left[car] == 0:

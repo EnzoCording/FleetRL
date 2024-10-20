@@ -19,9 +19,13 @@ class ObserverWithBuildingLoad(Observer):
                 price_lookahead: int,
                 bl_pv_lookahead:int,
                 time: pd.Timestamp,
-                ev_conf: EvConfigJob,
-                site_parameters: SiteParametersJob,
-                load_calc: LoadCalculation,
+                charging_efficiency: float,
+                variable_multiplier: float,
+                fixed_markup: float,
+                feed_in_deduction: float,
+                battery_capacity: float,
+                max_charger_power: float,
+                grid_connection: float,
                 aux: bool,
                 target_soc: list) -> dict:
 
@@ -32,6 +36,13 @@ class ObserverWithBuildingLoad(Observer):
         - resample data to only include one value per hour (the others are duplicates)
         - only take into account the current value, and the specified hours of lookahead
 
+        :param grid_connection:
+        :param max_charger_power:
+        :param feed_in_deduction:
+        :param battery_capacity:
+        :param fixed_markup:
+        :param variable_multiplier:
+        :param charging_efficiency:
         :param site_parameters:
         :param db: Database from env
         :param price_lookahead: Lookahead in hours for price
@@ -66,8 +77,8 @@ class ObserverWithBuildingLoad(Observer):
         price = price.resample("H", on="date").first()["DELU"].values
         tariff = tariff.resample("H", on="date").first()["tariff"].values
         # only take into account the current value, and the specified hours of lookahead
-        price = np.multiply(np.add(price[0:price_lookahead + 1], site_parameters.fixed_markup), site_parameters.variable_multiplier)
-        tariff = np.multiply(tariff[0:price_lookahead + 1], 1 - site_parameters.feed_in_deduction)
+        price = np.multiply(np.add(price[0:price_lookahead + 1], fixed_markup), variable_multiplier)
+        tariff = np.multiply(tariff[0:price_lookahead + 1], 1 - feed_in_deduction)
 
         bl_start = np.where(db["date"] == time)[0][0]
         bl_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead + 2, 'h')))[0][0]
@@ -83,13 +94,13 @@ class ObserverWithBuildingLoad(Observer):
         target_soc = target_soc * there
         # maybe need to typecast to list
         charging_left = np.subtract(target_soc, soc)
-        hours_needed = charging_left * load_calc.batt_cap / (load_calc.evse_max_power * ev_conf.battery.charging_eff)
+        hours_needed = charging_left * battery_capacity / (max_charger_power * charging_efficiency)
         laxity = np.subtract(hours_left / (np.add(hours_needed, 0.001)), 1) * there
         laxity = np.clip(laxity, 0, 5)
         # could also be a vector
-        evse_power = load_calc.evse_max_power * np.ones(1)
+        evse_power = max_charger_power * np.ones(1)
 
-        grid_cap = load_calc.grid_connection * np.ones(1)
+        grid_cap = grid_connection * np.ones(1)
         avail_grid_cap = (grid_cap - building_load[0]) * np.ones(1)
         num_cars = db["ID"].max() + 1
         possible_avg_action_per_car = min(avail_grid_cap / (num_cars * evse_power), 1) * np.ones(1)

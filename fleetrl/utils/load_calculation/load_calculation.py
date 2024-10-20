@@ -66,10 +66,11 @@ class LoadCalculation:
 
     def __init__(self,
                  ev_config: EvConfigJob,
-                 site_parameters: SiteParametersJob,
+                 battery_capacity: float,
+                 max_grid_connection: float,
                  max_load: float,
                  num_cars: int,
-                 schedule_parameters: ScheduleParameters):
+                 charging_power: float):
         """
         Initialize the Load Calculation module
 
@@ -83,9 +84,9 @@ class LoadCalculation:
         # setting parameters of the company site
         self.max_load = max_load
         self.num_cars = num_cars
-        self.grid_connection = site_parameters.max_grid_connection
-        self.evse_max_power = schedule_parameters.charger.charging_power
-        self.batt_cap = ev_config.battery.battery_capacity
+        self.grid_connection = max_grid_connection
+        self.evse_max_power = charging_power
+        self.batt_cap = battery_capacity
 
     def check_violation(self, actions: list[float], there: list[int], building_load: float, pv: float) -> (bool, float):
         """

@@ -20,7 +20,8 @@ def detect_dim_and_bounds(include_price: bool,
                           normalizer: Normalization,
                           include_pv: bool,
                           include_building_load: bool,
-                          time_conf: EpisodeParams):
+                          price_lookahead: int,
+                          building_load_lookahead: int):
     """
     This function chooses the right dimension of the observation space based on the chosen configuration.
     Each increase of dim is explained below. The low_obs and high_obs are built in the normalizer object,
@@ -47,7 +48,7 @@ def detect_dim_and_bounds(include_price: bool,
         low_obs, high_obs = normalizer.make_boundaries((dim,))
 
     elif not include_building_load and not include_pv:
-        dim = 2 * num_cars + (time_conf.price_lookahead + 1) * 2
+        dim = 2 * num_cars + (price_lookahead + 1) * 2
         if aux_flag:
             dim += num_cars  # there
             dim += num_cars  # target soc
@@ -60,8 +61,8 @@ def detect_dim_and_bounds(include_price: bool,
 
     elif include_building_load and not include_pv:
         dim = (2 * num_cars
-               + (time_conf.price_lookahead + 1) * 2
-               + time_conf.building_load_lookahead + 1
+               + (price_lookahead + 1) * 2
+               + building_load_lookahead + 1
                )
         if aux_flag:
             dim += num_cars  # there
@@ -78,8 +79,8 @@ def detect_dim_and_bounds(include_price: bool,
 
     elif not include_building_load and include_pv:
         dim = (2 * num_cars
-               + (time_conf.price_lookahead + 1) * 2
-               + time_conf.building_load_lookahead + 1
+               + (price_lookahead + 1) * 2
+               + building_load_lookahead + 1
                )
         if aux_flag:
             dim += num_cars  # there
@@ -93,8 +94,8 @@ def detect_dim_and_bounds(include_price: bool,
 
     elif include_building_load and include_pv:
         dim = (2 * num_cars  # soc and time left
-               + (time_conf.price_lookahead + 1) * 2  # price and tariff
-               + 2 * (time_conf.building_load_lookahead + 1)  # pv and building load
+               + (price_lookahead + 1) * 2  # price and tariff
+               + 2 * (building_load_lookahead + 1)  # pv and building load
                )
         if aux_flag:
             dim += num_cars  # there
@@ -148,14 +149,15 @@ def choose_observer(include_price: bool,
 
 
 def choose_time_picker(time_picker: str,
-                       time_conf: EpisodeParams
+                       episode_length: int
                        ):
+
     """
     Chooses the right time picker based on the specified in input string.
     Static: Always the same time is picked to start an episode
     Random: Start an episode randomly from the training set
     Eval: Start an episode randomly from the validation set
-    :param time_conf: Object containing length of training episode, etc.
+    :param episode_length: Length of episode in hours
     :param time_picker: (string), specifies which time picker to choose: "static", "eval", "random"
     :return: tp (TimePicker) -> time picker object
     """
@@ -166,7 +168,7 @@ def choose_time_picker(time_picker: str,
         tp: TimePicker = StaticTimePicker()
     elif time_picker == "EVAL":
         # picks a random starting times from test set (nov - dez)
-        tp: TimePicker = EvalTimePicker(time_conf.episode_length)
+        tp: TimePicker = EvalTimePicker(episode_length)
     elif time_picker == "RANDOM":
         # picks random starting times from training set (jan - oct)
         tp: TimePicker = RandomTimePicker()

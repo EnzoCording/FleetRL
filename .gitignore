@@ -158,7 +158,6 @@ cython_debug/
 inputs/big_schedules/*
 fleetrl/Benchmarks/logs/*
 fleetrl/Internal_Files/*
-tests/
 test-runs/
 generated/
 

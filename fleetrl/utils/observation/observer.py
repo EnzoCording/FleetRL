@@ -15,14 +15,24 @@ class Observer:
                 price_lookahead: int,
                 bl_pv_lookahead:int,
                 time: pd.Timestamp,
-                ev_conf: EvConfigJob,
-                site_parameters: SiteParametersJob,
-                load_calc: LoadCalculation,
+                charging_efficiency: float,
+                variable_multiplier: float,
+                fixed_markup: float,
+                feed_in_deduction: float,
+                battery_capacity: float,
+                max_charger_power: float,
+                grid_connection: float,
                 aux: bool,
                 target_soc: list) -> dict:
 
         """
-        :param site_parameters:
+        :param grid_connection:
+        :param max_charger_power:
+        :param feed_in_deduction:
+        :param variable_multiplier:
+        :param fixed_markup:
+        :param battery_capacity: Energy capacity in kWh
+        :param charging_efficiency: Charging efficiency
         :param db: database from the env
         :param price_lookahead: lookahead window for spot price
         :param bl_pv_lookahead: lookahead window for building load and pv

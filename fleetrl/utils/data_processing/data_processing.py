@@ -32,13 +32,11 @@ class DataLoader:
                  model_frequency: str,
                  model_time_unit: ModelTimeUnit,
                  model_step_size: int,
-                 time_conf: EpisodeParams,
-                 ev_conf: EvConfigJob,
+                 battery_capacity: float,
                  target_soc: float,
                  building_flag: bool,
                  pv_flag: bool,
-                 real_time: bool,
-                 schedule_parameters: ScheduleParameters):
+                 real_time: bool):
 
         """
         Initial information that is required for loading data
@@ -56,7 +54,6 @@ class DataLoader:
         """
 
         # save the time_conf within DataLoader as well because it is used in some functions
-        self.time_conf = time_conf
 
         self.freq: str = model_frequency
         self.model_time_unit = model_time_unit
@@ -97,7 +94,7 @@ class DataLoader:
         self.schedule.index = range(len(self.schedule))
 
         # compute / preprocess from loaded schedule
-        self.compute_from_schedule(ev_conf, time_conf, target_soc, schedule_parameters)
+        self.compute_from_schedule(battery_capacity=battery_capacity, target_soc=target_soc)
 
         # create a date range with the chosen frequency
         # Given the desired frequency, create a (down-sampled) column of timestamps
@@ -151,10 +148,9 @@ class DataLoader:
             raise RuntimeError("Problem with building database. Check building and PV flags.")
 
     def compute_from_schedule(self,
-                              ev_config: EvConfigJob,
-                              time_config: EpisodeParams,
+                              battery_capacity: float,
                               target_soc: float,
-                              schedule_parameters: ScheduleParameters):
+                              ):
         """
         This function pre-processes the input data and adds additional rows to the file.
         There flag, time left at charger, soc on return, consumption, etc.
@@ -163,6 +159,7 @@ class DataLoader:
     
         :return: None
         """
+
         # new column with flag if EV is there or not
         self.schedule["There"] = (np.array(self.schedule["PowerRating_kW"] != 0, dtype=int))
 
@@ -255,8 +252,7 @@ class DataLoader:
         # calculate SOC on return, assuming the previous trip charged to the target soc
         # maybe this could be changed in the future to make it more complex (future SOC depends on previous SOC)
 
-        self.schedule["SOC_on_return"] = target_soc - self.schedule["last_trip_total_consumption"].div(
-            ev_config.battery.battery_capacity)
+        self.schedule["SOC_on_return"] = target_soc - self.schedule["last_trip_total_consumption"].div(battery_capacity)
         self.schedule.loc[self.schedule["There"] == 0, "SOC_on_return"] = 0
 
 
@@ -407,7 +403,10 @@ class DataLoader:
         return pv
 
     @staticmethod
-    def shape_price_reward(db: pd.DataFrame, site_parameters: SiteParametersJob):
+    def shape_price_reward(db: pd.DataFrame,
+                           fixed_markup: float,
+                           variable_multiplier: float,
+                           feed_in_deduction: float):
         """
         - de-trend prices, so they can be used as a reward function
         - agent should not be penalised more if the general price level is higher
@@ -422,8 +421,8 @@ class DataLoader:
         """
 
         price = db["DELU"].dropna()
-        price = price.add(site_parameters.fixed_markup)
-        price = price.mul(site_parameters.variable_multiplier)
+        price = price.add(fixed_markup)
+        price = price.mul(variable_multiplier)
         price_total_avg = price.mean()
         price.index = db.loc[db["ID"]==0, "date"]
         resampled_price = price.resample("M")
@@ -437,7 +436,7 @@ class DataLoader:
         db = pd.concat((db, result["price_reward_curve"]), axis=1)
 
         tariff = db["tariff"].dropna()
-        tariff = tariff.mul(1 - site_parameters.feed_in_deduction)
+        tariff = tariff.mul(1 - feed_in_deduction)
         tariff_total_avg = tariff.mean()
         tariff.index = db.loc[db["ID"]==0, "date"]
         resampled_tariff = tariff.resample("M")

@@ -19,9 +19,14 @@ class OracleNormalization(Normalization):
                  building_flag: bool,
                  pv_flag: bool,
                  price_flag: bool,
-                 ev_conf: EvConfigJob,
-                 site_parameters: SiteParametersJob,
-                 load_calc: LoadCalculation,
+                 battery_capacity: float,
+                 target_soc: float,
+                 charging_efficiency: float,
+                 feed_in_deduction: float,
+                 variable_multiplier: float,
+                 fixed_markup: float,
+                 max_charger_power: float,
+                 max_grid_connection: float,
                  aux: bool):
         """
         Initialize max and min values of the dataset, globally.
@@ -36,10 +41,10 @@ class OracleNormalization(Normalization):
         """
 
         self.max_time_left = max(db["time_left"])
-        self.max_price = (max(db["DELU"]) + site_parameters.fixed_markup) * site_parameters.variable_multiplier
-        self.min_price = (min(db["DELU"]) + site_parameters.fixed_markup) * site_parameters.variable_multiplier
-        self.max_tariff = (max(db["tariff"])) * (1 - site_parameters.feed_in_deduction)
-        self.min_tariff = (min(db["tariff"])) * (1 - site_parameters.feed_in_deduction)
+        self.max_price = (max(db["DELU"]) + fixed_markup) * variable_multiplier
+        self.min_price = (min(db["DELU"]) + fixed_markup) * variable_multiplier
+        self.max_tariff = (max(db["tariff"])) * (1 - feed_in_deduction)
+        self.min_tariff = (min(db["tariff"])) * (1 - feed_in_deduction)
         self.building_flag = building_flag
         self.pv_flag = pv_flag
         self.price_flag = price_flag
@@ -50,12 +55,12 @@ class OracleNormalization(Normalization):
         if self.pv_flag:
             self.max_pv = max(db["pv"])
         if self.aux:
-            self.max_soc = ev_conf.battery.target_soc
-            self.max_hours_needed = ((ev_conf.battery.target_soc * ev_conf.battery.init_battery_cap)
-                                     /(load_calc.evse_max_power * ev_conf.battery.charging_eff))
+            self.max_soc = target_soc
+            self.max_hours_needed = ((target_soc * battery_capacity)
+                                     /(max_charger_power * charging_efficiency))
             self.max_laxity = 5
-            self.max_evse = load_calc.evse_max_power
-            self.max_grid = load_calc.grid_connection
+            self.max_evse = max_charger_power
+            self.max_grid = max_grid_connection
 
     def normalize_obs(self, input_obs: dict) -> np.ndarray:
         """

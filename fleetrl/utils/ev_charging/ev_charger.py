@@ -16,7 +16,12 @@ class EvCharger:
     commercial electricity tariff that takes into account grid fees, and markups. Discharging at PV feed-in levels.
     """
 
-    def __init__(self, site_parameters: SiteParametersJob):
+    def __init__(self,
+                 variable_multiplier: float,
+                 fixed_markup: float,
+                 feed_in_deduction: float
+                 ):
+
         """
         Initialising parameters for the commercial tariff scenario
 
@@ -28,13 +33,11 @@ class EvCharger:
         - If energy is injected to the grid, it can be treated like solar feed-in from households
         - https://echtsolar.de/einspeiseverguetung/#t-1677761733663
         - Fees for handling of 25% are assumed
-
-        :param ev_conf: Ev config object
         """
 
-        self.spot_multiplier = site_parameters.variable_multiplier  # no unit
-        self.spot_offset = site_parameters.fixed_markup / 1000  # from €/MWh to €/kWh
-        self.handling_fees = site_parameters.feed_in_deduction  # %
+        self.spot_multiplier = variable_multiplier  # no unit
+        self.spot_offset = fixed_markup / 1000  # from €/MWh to €/kWh
+        self.handling_fees = feed_in_deduction  # %
 
 
     def charge(self,
@@ -42,9 +45,14 @@ class EvCharger:
                num_cars: int,
                actions,
                episode: Episode,
-               load_calculation: LoadCalculation,
-               ev_conf: EvConfigJob,
-               score_conf: RewardFunctionJob,
+               max_charger_power: float,
+               max_onboard_charger_power: float,
+               charging_efficiency: float,
+               discharging_efficiency: float,
+               penalty_overcharging: float,
+               clip_overcharging: float,
+               penalty_invalid_action: float,
+               price_multiplier: float,
                print_updates: bool,
                target_soc: np.ndarray,
                time_steps_per_hour: int):
@@ -54,16 +62,19 @@ class EvCharger:
         Positive actions -> charging, negative actions -> discharging. Penalties are taken into account if the battery
         would be overcharged (agent sends a charging action to a full battery).
 
+        :param price_multiplier:
+        :param penalty_invalid_action:
+        :param clip_overcharging:
+        :param penalty_overcharging:
+        :param discharging_efficiency:
+        :param charging_efficiency:
+        :param max_onboard_charger_power:
+        :param max_charger_power:
         :param time_steps_per_hour:
-        :param model_frequency:
         :param db: The schedule database of the EVs
         :param num_cars: Number of cars in the model
         :param actions: Actions taken by the agent
         :param episode: Episode object with its parameters and functions
-        :param load_calculation: Load calc object with its parameters and functions
-        :param ev_conf: Config of the EVs
-        :param time_conf: Time configuration
-        :param score_conf: Score and penalty configuration
         :param print_updates: Bool whether to print statements or not (maybe lower fps)
         :param target_soc: target soc for each car
         :return: soc, next soc, the reward and the monetary value (cashflow)
@@ -95,7 +106,7 @@ class EvCharger:
             there = db.loc[(db["ID"] == car) & (db["date"] == episode.time), "There"].values[0]
 
             # max possible power in kW depends on the onboard charger equipment and the charging station
-            possible_power = min([ev_conf.battery.on_board_charger_max_power, load_calculation.evse_max_power])
+            possible_power = min([max_onboard_charger_power, max_charger_power])
 
             # car is charging
             if actions[car] >= 0:
@@ -104,9 +115,9 @@ class EvCharger:
                 demanded_charge = possible_power * actions[car] * (1/time_steps_per_hour)  # demanded energy in kWh by the agent
 
                 # if the agent wants to charge more than the battery can hold, give a small penalty
-                if demanded_charge * ev_conf.battery.charging_efficiency > ev_total_energy_demand:
-                    current_oc_pen = score_conf.penalty.penalty_overcharging * (demanded_charge - ev_total_energy_demand) ** 2
-                    current_oc_pen = max(current_oc_pen, score_conf.penalty.clip_overcharging)
+                if demanded_charge * charging_efficiency > ev_total_energy_demand:
+                    current_oc_pen = penalty_overcharging * (demanded_charge - ev_total_energy_demand) ** 2
+                    current_oc_pen = max(current_oc_pen, clip_overcharging)
                     overcharging_penalty += current_oc_pen
                     episode.events += 1  # relevant event detected - car fully charged and/or penalty triggered
                     if print_updates:
@@ -114,21 +125,21 @@ class EvCharger:
 
                 # if the car is there, allocate charging energy to the battery in kWh
                 if there == 1:
-                    charging_energy = min(ev_total_energy_demand / ev_conf.battery.charging_eff, demanded_charge)
+                    charging_energy = min(ev_total_energy_demand / charging_efficiency, demanded_charge)
 
                 # the car is not there, no charging
                 else:
                     charging_energy = 0
                     # if agent gives an action even if no car is there, give a small penalty
                     if np.abs(actions[car]) > 0.05:
-                        current_inv_pen = score_conf.penalty.penalty_invalid_action * (actions[car] ** 2)
+                        current_inv_pen = penalty_invalid_action * (actions[car] ** 2)
                         invalid_action_penalty += current_inv_pen
                         episode.events += 1  # relevant event detected
                         if print_updates:
                             print(f"Invalid action, penalty given: {round(current_inv_pen, 3)}.")
 
                 # next soc is calculated based on charging energy
-                episode.next_soc.append(episode.soc[car] + charging_energy * ev_conf.battery.charging_eff / episode.battery_cap[car])
+                episode.next_soc.append(episode.soc[car] + charging_energy * charging_efficiency / episode.battery_cap[car])
 
                 # get pv energy and subtract from charging energy needed from the grid
                 # assuming pv is equally distributed to the connected cars
@@ -154,7 +165,7 @@ class EvCharger:
                 # save the total charging energy in a variable
                 episode.total_charging_energy += charging_energy
 
-                charging_reward += (-1 * score_conf.price_multiplier
+                charging_reward += (-1 * price_multiplier
                                    * db.loc[db["date"]==episode.time, "price_reward_curve"].values[0] / 1000
                                    * grid_energy_demand)
 
@@ -165,8 +176,8 @@ class EvCharger:
                 demanded_discharge = possible_power * actions[car] * (1/time_steps_per_hour)  # demanded discharge in kWh by agent
 
                 # energy discharge command bigger than what is left in the battery
-                if (demanded_discharge * ev_conf.battery.discharging_eff < ev_total_energy_left) and (there != 0):
-                    current_oc_pen = score_conf.penalty.penalty_overcharging * (ev_total_energy_left - demanded_discharge) ** 2
+                if (demanded_discharge * discharging_efficiency < ev_total_energy_left) and (there != 0):
+                    current_oc_pen = penalty_overcharging * (ev_total_energy_left - demanded_discharge) ** 2
                     overcharging_penalty += current_oc_pen
                     episode.events += 1  # relevant event detected
                     if print_updates:
@@ -181,7 +192,7 @@ class EvCharger:
                     discharging_energy = 0.0
                     # if discharge command is sent even if no car is there
                     if np.abs(actions[car]) > 0.05:
-                        current_inv_pen = score_conf.penalty.penalty_invalid_action * (actions[car] ** 2)
+                        current_inv_pen = penalty_invalid_action * (actions[car] ** 2)
                         invalid_action_penalty += current_inv_pen
                         episode.events += 1  # relevant event detected
                         if print_updates:
@@ -197,14 +208,14 @@ class EvCharger:
                 current_tariff = db.loc[db["date"] == episode.time, "tariff"].values[0]
 
                 episode.discharging_revenue += (-1 * discharging_energy
-                                                * ev_conf.battery.discharging_eff
+                                                * discharging_efficiency
                                                 * current_tariff / 1000
                                                 * (1-self.handling_fees))  # €
 
                 # save the total charging energy in a self variable
                 episode.total_charging_energy += discharging_energy
 
-                discharging_reward += (-1 * score_conf.price_multiplier
+                discharging_reward += (-1 * price_multiplier
                                       * db.loc[db["date"]==episode.time, "tariff_reward_curve"].values[0] / 1000
                                       * discharging_energy)
 

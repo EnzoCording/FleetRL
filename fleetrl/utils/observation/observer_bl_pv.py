@@ -12,13 +12,18 @@ class ObserverWithBoth(Observer):
     """
     Observer for price, PV, and load (full model).
     """
-    def get_obs(self, db: pd.DataFrame,
+    def get_obs(self,
+                db: pd.DataFrame,
                 price_lookahead: int,
                 bl_pv_lookahead:int,
                 time: pd.Timestamp,
-                ev_conf: EvConfigJob,
-                site_parameters: SiteParametersJob,
-                load_calc: LoadCalculation,
+                charging_efficiency: float,
+                variable_multiplier: float,
+                fixed_markup: float,
+                feed_in_deduction: float,
+                battery_capacity: float,
+                max_charger_power: float,
+                grid_connection: float,
                 aux: bool,
                 target_soc: list) -> dict:
 
@@ -29,16 +34,22 @@ class ObserverWithBoth(Observer):
         - resample data to only include one value per hour (the others are duplicates)
         - only take into account the current value, and the specified hours of lookahead
 
-        :param site_parameters:
-        :param db: Database from env
-        :param price_lookahead: Lookahead in hours for price
-        :param bl_pv_lookahead: Lookahead in hours for PV and building
-        :param time: Current time
-        :param ev_conf: EV config data, used for battery capacity, etc.
-        :param load_calc: Load calc module, used for grid connection, etc.
-        :param aux: Flag to include extra information on the problem or not. Can help with training
-        :param target_soc: List for the current target SOC of each car
-        :return: Dict of lists with different parts of the observation
+        :param grid_connection:
+        :param max_charger_power:
+        :param feed_in_deduction:
+        :param variable_multiplier:
+        :param fixed_markup:
+        :param battery_capacity: Energy capacity in kWh
+        :param charging_efficiency: Charging efficiency
+        :param db: database from the env
+        :param price_lookahead: lookahead window for spot price
+        :param bl_pv_lookahead: lookahead window for building load and pv
+        :param time: current time of time step
+        :param ev_conf: EV config needed for batt capacity and other params
+        :param load_calc: Load calc module needed for grid connection and other params
+        :param aux: Include auxiliary information that might help the agent to learn the problem
+        :param target_soc: A list of target soc values, one for each car
+        :return: Returns a list of np arrays that make up different parts of the observation.
         """
 
         # soc and time left always present in environment
@@ -65,8 +76,8 @@ class ObserverWithBoth(Observer):
         price = price.resample("H", on="date").first()["DELU"].values
         tariff = tariff.resample("H", on="date").first()["tariff"].values
         # only take into account the current value, and the specified hours of lookahead
-        price = np.multiply(np.add(price[0:price_lookahead+1], site_parameters.fixed_markup), site_parameters.variable_multiplier)
-        tariff = np.multiply(tariff[0:price_lookahead+1], 1-site_parameters.feed_in_deduction)
+        price = np.multiply(np.add(price[0:price_lookahead+1], fixed_markup), variable_multiplier)
+        tariff = np.multiply(tariff[0:price_lookahead+1], 1-feed_in_deduction)
 
         bl_start = np.where(db["date"] == time)[0][0]
         #bl_end = np.where(db["date"] == (time + np.timedelta64(bl_pv_lookahead+2, 'h')))[0][0]
@@ -91,13 +102,13 @@ class ObserverWithBoth(Observer):
         target_soc = target_soc * there
         # maybe need to typecast to list
         charging_left = np.subtract(target_soc, soc)
-        hours_needed = charging_left * load_calc.batt_cap / (load_calc.evse_max_power * ev_conf.battery.charging_eff)
+        hours_needed = charging_left * battery_capacity / (max_charger_power * charging_efficiency)
         laxity = np.subtract(hours_left / (np.add(hours_needed, 0.001)), 1) * there
         laxity = np.clip(laxity, 0, 5)
         # could also be a vector
-        evse_power = load_calc.evse_max_power * np.ones(1)
+        evse_power = max_charger_power * np.ones(1)
 
-        grid_cap = load_calc.grid_connection * np.ones(1)
+        grid_cap = grid_connection * np.ones(1)
         avail_grid_cap = (grid_cap - building_load[0] + pv[0]) * np.ones(1)
         num_cars = db["ID"].max() + 1
         possible_avg_action_per_car = min(avail_grid_cap / (num_cars * evse_power), 1) * np.ones(1)
